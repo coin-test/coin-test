@@ -40,7 +40,7 @@ def lint(session: Session) -> None:
 def pyright(session: Session) -> None:
     """Type checking using pyright."""
     args = session.posargs or locations
-    session.install("pyright")
+    session.install("pyright", ".")
     session.run("pyright", *args)
 
 
