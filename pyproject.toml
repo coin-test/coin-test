@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "coin-test"
+version = "0.1.0"
+description = "Robust and rigorous backtesting framework for cryptocurrencies."
+authors = ["Eamon Ito-Fisher <eamon@itofisher.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "coin_test", from = "src"}]
+repository = "https://github.com/coin-test/coin-test"
+keywords = ["cryptocurrency", "backtesting"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
