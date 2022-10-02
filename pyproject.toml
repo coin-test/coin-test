@@ -22,6 +22,9 @@ black = "^22.8.0"
 flake8-black = "^0.3.3"
 flake8-bugbear = "^22.9.23"
 flake8-import-order = "^0.18.1"
+pyright = "^1.1.273"
+typeguard = "^2.13.3"
+flake8-annotations = "^2.9.1"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
@@ -33,6 +36,12 @@ source = ["coin_test"]
 [tool.coverage.report]
 fail_under = 100
 show_missing = true
+
+[tool.pyright]
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+stubPath = ""
 
 [build-system]
 requires = ["poetry-core"]

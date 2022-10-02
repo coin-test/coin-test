@@ -1,7 +1,10 @@
 [flake8]
-select = B,B9,BLK,C,E,F,I,W
+select = ANN,B,B9,BLK,C,E,F,I,W
 ignore = E203,E501,W503
 max-line-length = 80
 max-complexity = 10
 application-import-names = coin_test,tests
 import-order-style = google
+per-file-ignores =
+  noxfile.py:ANN
+  tests/conftest.py:ANN
