@@ -45,6 +45,14 @@ def pyright(session: Session) -> None:
 
 
 @session(python=python_versions)
+def typeguard(session: Session) -> None:
+    """Runtime type checking using Typeguard."""
+    args = session.posargs or ["-m", "not e2e"]
+    session.install("pytest", "pytest-mock", "typeguard", ".")
+    session.run("pytest", f"--typeguard-packages={package}", *args)
+
+
+@session(python=python_versions)
 def tests(session: Session) -> None:
     """Run the test suite."""
     args = session.posargs or ["--cov", "-m", "not e2e"]
@@ -53,8 +61,8 @@ def tests(session: Session) -> None:
 
 
 @session(python=python_versions)
-def typeguard(session: Session) -> None:
-    """Runtime type checking using Typeguard."""
-    args = session.posargs or ["-m", "not e2e"]
-    session.install("pytest", "pytest-mock", "typeguard", ".")
-    session.run("pytest", f"--typeguard-packages={package}", *args)
+def coverage(session: Session) -> None:
+    """Upload the coverage data."""
+    session.install("coverage[toml]", "codecov")
+    session.run("coverage", "xml", "--fail-under=0")
+    session.run("codecov", *session.posargs)
