@@ -19,7 +19,7 @@ pip install --user --upgrade nox nox-poetry pre-commit
 
 Poetry can be installed by following the instructions [here](https://python-poetry.org/docs/).
 
-Next, clone the repo, `cd` into the repo, and run `poetry install`. All other
+Next, clone the repo, `cd` into the repo and run `poetry install`. All other
 required packages will be automatically installed in virtual environment
 `.venv`.
 
@@ -43,6 +43,17 @@ execute linting, the test suite with coverage, and the test suite with runtime
 type checking.
 
 Tests are run on push to remote.
+
+### Dependency Management
+
+All dependencies are managed by poetry. To add a new dependency, run `poetry add
+<package>`. To add a new dev dependency, run `poetry add --group dev <package>`.
+Dev package will not ship with the published version of `coin-test`.
+
+Also note that since poetry installs all packages in a virtual environment,
+locally we must also run `coin-test` through the same environment. This means
+using `poetry run <cmd>` for each command (ex: `poetry run pytest`), or
+activating the virtual environment with `poetry shell`.
 
 ## Pull Request Process
 
