@@ -1,0 +1,14 @@
+[flake8]
+select = ANN,B,B9,BLK,C,D,DAR,E,F,I,W
+ignore = E203,E501,W503
+per-file-ignores =
+  noxfile.py:ANN
+  tests/conftest.py:ANN
+
+max-line-length = 80
+max-complexity = 10
+
+docstring-convention = google
+
+application-import-names = coin_test,tests
+import-order-style = google
