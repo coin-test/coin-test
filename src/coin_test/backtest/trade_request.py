@@ -12,7 +12,7 @@ class TradeRequest:
         notional: float | None = None,
         qty: float | None = None,
     ) -> None:
-        """Create a new TradeRequest object.
+        """Initialize a new TradeRequest object.
 
         Args:
             symbol: The symbol of the asset being traded
@@ -28,6 +28,8 @@ class TradeRequest:
         self.symbol = symbol
         self.side = side
         self.type_ = type_
+        self.notional = notional
+        self.qty = qty
 
         if notional is not None and qty is not None:
             raise ValueError("Notional and qty cannot be specified together.")
