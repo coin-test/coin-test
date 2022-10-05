@@ -62,7 +62,6 @@ def tests(session: Session) -> None:
 
 @session(python=python_versions)
 def coverage(session: Session) -> None:
-    """Upload the coverage data."""
+    """Generate the coverage data."""
     session.install("coverage[toml]", "codecov")
     session.run("coverage", "xml", "--fail-under=0")
-    session.run("codecov", *session.posargs)

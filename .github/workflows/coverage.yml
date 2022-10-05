@@ -12,6 +12,12 @@ jobs:
     - run: pip install nox==2022.8.7
     - run: pip install nox-poetry==1.0.1
     - run: pip install poetry==1.2.1
+      # Run our tests then generate a coverage report
     - run: nox --sessions tests-3.10 coverage
-      env:
-        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+      # Upload coverage report to codecov
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        file: coverage.xml
