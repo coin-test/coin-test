@@ -6,7 +6,9 @@ from datetime import datetime
 class Trade:
     """An object containing the details of a trade."""
 
-    def __init__(self, symbol: str, side: str, price: str, timestamp: datetime) -> None:
+    def __init__(
+        self, symbol: str, side: str, price: float, timestamp: datetime
+    ) -> None:
         """Initialize a Trade object.
 
         Args:
@@ -18,4 +20,4 @@ class Trade:
         self.symbol = symbol
         self.side = side
         self.price = price
-        self.timestamp = datetime
+        self.timestamp = timestamp
