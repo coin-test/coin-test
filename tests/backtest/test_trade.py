@@ -8,7 +8,7 @@ symbol = "BTC"
 side = "buy"
 type_ = "market"
 price = 10
-timestamp = datetime.datetime.fromtimestamp(int("fatcat", 36))
+timestamp = datetime.datetime.fromtimestamp(int("riddle", 36))
 
 
 def test_trade() -> None:
