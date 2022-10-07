@@ -2,7 +2,7 @@
 
 import pytest
 
-from coin_test.backtest.trade_request import TradeRequest
+from coin_test.backtest import TradeRequest
 
 symbol = "BTC"
 side = "buy"

@@ -2,7 +2,7 @@
 
 import datetime
 
-from coin_test.backtest.trade import Trade
+from coin_test.backtest import Trade
 
 symbol = "BTC"
 side = "buy"
