@@ -1,4 +1,4 @@
-"""backtesting module of the coin-test library."""
+"""Backtesting module of the coin-test library."""
 
 from .portfolio import Portfolio
 from .trade import Trade
