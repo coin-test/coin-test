@@ -3,7 +3,7 @@
 import pandas as pd
 from pandas import DataFrame
 
-from .processor import Processor
+from .processors import Processor
 
 
 class Dataset:
@@ -31,7 +31,7 @@ class Dataset:
 
     def _load_df(self, src: str) -> DataFrame:
         """Load the dataframe from src."""
-        return pd.read_csv(src, sep=None)
+        return pd.read_csv(src, sep=None)  # sep=None auto-detects the seperator
 
     def _clean(self, df: DataFrame, processors: list[Processor]) -> DataFrame:
         """Clean the dataframe."""
