@@ -31,9 +31,9 @@ class Dataset:
 
     def _load_df(self, src: str) -> DataFrame:
         """Load the dataframe from src."""
-        return pd.read_csv(src, sep=None)  # sep=None auto-detects the seperator
+        return pd.read_csv(src)
 
-    def _clean(self, df: DataFrame, processors: list[Processor]) -> DataFrame:
+    def _clean(self, df: pd.DataFrame, processors: list[Processor]) -> pd.DataFrame:
         """Clean the dataframe."""
         for processor in processors:
             df = processor.process(df)
