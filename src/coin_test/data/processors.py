@@ -11,7 +11,6 @@ class Processor(ABC):
     @abstractmethod
     def process(self, df: DataFrame) -> DataFrame:
         """Process a dataframe."""
-        pass
 
 
 class IdentityProcessor(Processor):
