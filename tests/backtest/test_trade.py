@@ -3,17 +3,17 @@
 import datetime
 
 from coin_test.backtest import Trade
+from coin_test.util import Side
 
 symbol = "BTC"
-side = "buy"
-type_ = "market"
+side = Side.BUY
 price = 10
 timestamp = datetime.datetime.fromtimestamp(int("riddle", 36))
 
 
 def test_trade() -> None:
     """Test the default Trade object."""
-    global symbol, side, type_, price, timestamp
+    global symbol, side, price, timestamp
 
     x = Trade(symbol=symbol, side=side, price=price, timestamp=timestamp)
 

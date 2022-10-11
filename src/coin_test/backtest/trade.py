@@ -2,12 +2,14 @@
 
 from datetime import datetime
 
+from ..util import Side
+
 
 class Trade:
     """An object containing the details of a trade."""
 
     def __init__(
-        self, symbol: str, side: str, price: float, timestamp: datetime
+        self, symbol: str, side: Side, price: float, timestamp: datetime
     ) -> None:
         """Initialize a Trade object.
 
