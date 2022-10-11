@@ -1,5 +1,7 @@
 """Trade request object."""
 
+from ..util import Side, TradeType
+
 
 class TradeRequest:
     """A request object for creating a trade."""
@@ -7,8 +9,8 @@ class TradeRequest:
     def __init__(
         self,
         symbol: str,
-        side: str,
-        type_: str = "market",
+        side: Side,
+        type_: TradeType = TradeType.MARKET,
         notional: float | None = None,
         qty: float | None = None,
     ) -> None:
@@ -17,7 +19,7 @@ class TradeRequest:
         Args:
             symbol: The symbol of the asset being traded
             side: buy or sell
-            type_: The type of trade, default is "market"
+            type_: The type of trade, default is TradeType.MARKET
             notional: The amount of money to trade, default None
             qty: The amount of shares to trade, can't be used with notional,
                 default None

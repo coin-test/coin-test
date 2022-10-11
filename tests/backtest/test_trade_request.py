@@ -3,10 +3,11 @@
 import pytest
 
 from coin_test.backtest import TradeRequest
+from coin_test.util import Side, TradeType
 
 symbol = "BTC"
-side = "buy"
-type_ = "market"
+side = Side.BUY
+type_ = TradeType.MARKET
 notional = 10  # buy $10 worth of Bitcoin
 qty = 2  # buy 2 Bitcoin
 
