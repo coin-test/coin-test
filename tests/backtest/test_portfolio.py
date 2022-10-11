@@ -2,18 +2,13 @@
 
 from coin_test.backtest import Portfolio
 
-assets = {"BTC": 2, "ETH": 1.5, "DOGE": 358.25}
-cash = 10000.0
 
-
-def test_portfolio() -> None:
+def test_portfolio(example_cash: float, example_assets: dict) -> None:
     """Test the initalization of a Portfolio object."""
-    global assets, cash
+    p = Portfolio(example_cash, example_assets)
 
-    p = Portfolio(cash, assets)
-
-    assert p.cash == cash
-    assert p.assets == assets
+    assert p.cash == example_cash
+    assert p.assets == example_assets
 
 
 def test_portfolio_no_constructor() -> None:
@@ -24,14 +19,8 @@ def test_portfolio_no_constructor() -> None:
     assert p.assets == {}
 
 
-def test_free_cash() -> None:
-    """Test the free cash functionality of a Portfolio object.
+def test_free_cash(example_cash: float, example_assets: dict) -> None:
+    """Test the free cash functionality of a Portfolio object with no assets shorted."""
+    p = Portfolio(example_cash, example_assets)
 
-    When no money is reserved for shorting, determine
-    the amount of cash available to buy assets.
-    """
-    global assets, cash
-
-    p = Portfolio(cash, assets)
-
-    assert cash == p.get_free_cash()
+    assert example_cash == p.get_free_cash()

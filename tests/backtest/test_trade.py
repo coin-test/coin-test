@@ -5,19 +5,22 @@ import datetime
 from coin_test.backtest import Trade
 from coin_test.util import Side
 
-symbol = "BTC"
-side = Side.BUY
-price = 10
-timestamp = datetime.datetime.fromtimestamp(int("riddle", 36))
 
-
-def test_trade() -> None:
+def test_trade(
+    example_symbol: str,
+    example_side: Side,
+    example_price: float,
+    example_timestamp: datetime.datetime,
+) -> None:
     """Test the default Trade object."""
-    global symbol, side, price, timestamp
+    x = Trade(
+        symbol=example_symbol,
+        side=example_side,
+        price=example_price,
+        timestamp=example_timestamp,
+    )
 
-    x = Trade(symbol=symbol, side=side, price=price, timestamp=timestamp)
-
-    assert x.symbol == symbol
-    assert x.side == side
-    assert x.price == price
-    assert x.timestamp == timestamp
+    assert x.symbol == example_symbol
+    assert x.side == example_side
+    assert x.price == example_price
+    assert x.timestamp == example_timestamp
