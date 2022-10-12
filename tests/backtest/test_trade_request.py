@@ -1,4 +1,4 @@
-"""Test the Trade Request object."""
+"""Test the TradeRequest class."""
 
 import pytest
 
@@ -12,7 +12,7 @@ def test_trade_request(
     example_trade_type: TradeType,
     example_notional: float,
 ) -> None:
-    """Test the default TradeRequest constructor."""
+    """Initialize correctly."""
     x = TradeRequest(example_symbol, example_side, example_trade_type, example_notional)
 
     assert x.symbol == example_symbol
@@ -28,7 +28,7 @@ def test_bad_trade_request(
     example_notional: float,
     example_qty: float,
 ) -> None:
-    """Check that TradeRequest fails with bad parameters."""
+    """Error on bad parameters."""
     with pytest.raises(ValueError):
         TradeRequest(
             example_symbol,

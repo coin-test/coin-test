@@ -1,4 +1,4 @@
-"""Trade object."""
+"""Define the Trade class."""
 
 from datetime import datetime
 
@@ -6,7 +6,7 @@ from ..util import Side
 
 
 class Trade:
-    """An object containing the details of a trade."""
+    """Store the details of a trade."""
 
     def __init__(
         self, symbol: str, side: Side, price: float, timestamp: datetime
@@ -15,7 +15,7 @@ class Trade:
 
         Args:
             symbol: The symbol of the asset being traded
-            side: buy or sell
+            side: The direction of the trade
             price: The price per share of the asset
             timestamp: When the trade takes place
         """

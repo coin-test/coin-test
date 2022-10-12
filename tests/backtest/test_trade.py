@@ -1,4 +1,4 @@
-"""Test the Trade object."""
+"""Test the Trade class."""
 
 import datetime
 
@@ -12,7 +12,7 @@ def test_trade(
     example_price: float,
     example_timestamp: datetime.datetime,
 ) -> None:
-    """Test the default Trade object."""
+    """Initialize correctly."""
     x = Trade(
         symbol=example_symbol,
         side=example_side,
