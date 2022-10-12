@@ -8,11 +8,12 @@ from coin_test.util import Side
 
 def test_trade(
     example_symbol: str,
-    example_side: Side,
-    example_price: float,
     example_timestamp: datetime.datetime,
 ) -> None:
     """Initialize correctly."""
+    example_price = 100.0
+    example_side = Side.BUY
+
     x = Trade(
         symbol=example_symbol,
         side=example_side,

@@ -6,13 +6,12 @@ from coin_test.backtest import TradeRequest
 from coin_test.util import Side, TradeType
 
 
-def test_trade_request(
-    example_symbol: str,
-    example_side: Side,
-    example_trade_type: TradeType,
-    example_notional: float,
-) -> None:
+def test_trade_request(example_symbol: str) -> None:
     """Initialize correctly."""
+    example_side = Side.BUY
+    example_trade_type = TradeType.MARKET
+    example_notional = 1000.0
+
     x = TradeRequest(example_symbol, example_side, example_trade_type, example_notional)
 
     assert x.symbol == example_symbol
@@ -21,14 +20,13 @@ def test_trade_request(
     assert x.notional == example_notional
 
 
-def test_bad_trade_request(
-    example_symbol: str,
-    example_side: Side,
-    example_trade_type: TradeType,
-    example_notional: float,
-    example_qty: float,
-) -> None:
+def test_bad_trade_request(example_symbol: str) -> None:
     """Error on bad parameters."""
+    example_side = Side.BUY
+    example_trade_type = TradeType.MARKET
+    example_notional = 1000.0
+    example_qty = 2.0
+
     with pytest.raises(ValueError):
         TradeRequest(
             example_symbol,
