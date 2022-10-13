@@ -109,7 +109,7 @@ python-versions = ">=3.6,<4.0"
 name = "data-science-types"
 version = "0.2.23"
 description = "Type stubs for Python machine learning libraries"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -275,7 +275,7 @@ test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
 name = "pandas-stubs"
 version = "1.5.0.221012"
 description = "Type annotations for pandas"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8,<3.11"
 
@@ -517,7 +517,7 @@ test = ["mypy", "pytest", "typing-extensions"]
 name = "types-pytz"
 version = "2022.4.0.0"
 description = "Typing stubs for pytz"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -537,7 +537,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10 <3.11"
-content-hash = "b73c93b151025aa347eadf578ecc0907540ff27e3d09968e5044f8e7eebf1bb6"
+content-hash = "07d8e3d3bf3000fea3d589da799f27f7b7ab3d9557fd8fd0fe6ec7cfe325f971"
 
 [metadata.files]
 attrs = [
