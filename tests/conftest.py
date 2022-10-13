@@ -1,6 +1,5 @@
 """Pytest config."""
 
-
 import pandas as pd
 import pytest
 
