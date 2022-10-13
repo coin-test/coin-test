@@ -13,7 +13,7 @@ def pytest_configure(config: pytest.Config) -> None:
 @pytest.fixture
 def simple_csv() -> str:
     """Simple CSV filepath."""
-    return "tests/test_data/simple.csv"
+    return "tests/assets/simple.csv"
 
 
 @pytest.fixture
