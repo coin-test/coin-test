@@ -1,4 +1,4 @@
-"""Test Processors."""
+"""Test the Dataset class."""
 
 from unittest.mock import Mock
 

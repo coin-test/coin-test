@@ -1,4 +1,4 @@
-"""Dataset object."""
+"""Define the Dataset class."""
 
 from collections import Counter
 
@@ -19,7 +19,7 @@ REQUIRED_COLS = {
 
 
 class Dataset:
-    """Object that manages a single dataset."""
+    """Manages a dataset."""
 
     def __init__(
         self,

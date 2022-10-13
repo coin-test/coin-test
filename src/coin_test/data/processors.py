@@ -1,4 +1,4 @@
-"""Dataset processors."""
+"""Define the Processor classes."""
 
 from abc import ABC, abstractmethod
 
@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 
 class Processor(ABC):
-    """A base class for processors that transform a dataframe."""
+    """Transform a DataFrame."""
 
     @abstractmethod
     def process(self, df: DataFrame) -> DataFrame:
@@ -14,8 +14,8 @@ class Processor(ABC):
 
 
 class IdentityProcessor(Processor):
-    """Identify processor for tests."""
+    """Identity Transform."""
 
     def process(self, df: DataFrame) -> DataFrame:
-        """Identify tranfsorm."""
+        """Identity tranfsorm."""
         return df
