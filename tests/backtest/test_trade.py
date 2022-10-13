@@ -1,6 +1,6 @@
 """Test the Trade class."""
 
-import datetime
+import datetime as dt
 
 from coin_test.backtest import Trade
 from coin_test.util import Side
@@ -8,7 +8,7 @@ from coin_test.util import Side
 
 def test_trade(
     example_symbol: str,
-    example_timestamp: datetime.datetime,
+    example_timestamp: dt.datetime,
 ) -> None:
     """Initialize correctly."""
     example_price = 100.0
