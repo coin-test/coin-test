@@ -1,1 +1,1 @@
-"""Summary object for a completed backtest."""
+"""Define the BacktestSummary class."""

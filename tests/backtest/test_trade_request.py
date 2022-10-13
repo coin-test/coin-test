@@ -21,7 +21,7 @@ def test_trade_request(example_symbol: str) -> None:
 
 
 def test_bad_trade_request(example_symbol: str) -> None:
-    """Error on bad parameters."""
+    """Error when supplying notional and buy argements or neither argument."""
     example_side = Side.BUY
     example_trade_type = TradeType.MARKET
     example_notional = 1000.0

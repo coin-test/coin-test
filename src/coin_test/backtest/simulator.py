@@ -1,1 +1,1 @@
-"""Simulator object for running a backtest."""
+"""Define the Simulator class."""
