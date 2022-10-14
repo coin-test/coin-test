@@ -16,6 +16,7 @@ jobs:
     - run: nox --sessions tests-3.10 coverage
       # Upload coverage report to codecov
     - uses: codecov/codecov-action@v3
+      if: success() || failure()
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         name: codecov-umbrella
