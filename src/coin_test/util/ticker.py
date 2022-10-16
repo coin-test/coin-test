@@ -28,3 +28,5 @@ class Ticker:
             return self.symbol == other.symbol
         elif isinstance(other, str):
             return self.symbol == other
+        else:
+            raise NotImplementedError
