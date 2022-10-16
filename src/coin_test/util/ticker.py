@@ -1,5 +1,10 @@
 """Ticker objects for use in the coin-test package."""
 
+<<<<<<< HEAD
+=======
+from typing import Union
+
+>>>>>>> Create ticker that keeps track of assets
 
 class Ticker:
     """Represents an asset."""
