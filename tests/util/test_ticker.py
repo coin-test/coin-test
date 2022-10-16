@@ -44,7 +44,21 @@ def test_ticker_inequality() -> None:
     assert not (ticker == ticker2)
 
 
+<<<<<<< HEAD
 @pytest.mark.exclude_typeguard
+=======
+def test_ticker_inequality_str() -> None:
+    """Inequivalent tickers and str compare correctly."""
+    ticker_symbol = " .BTC"
+    ticker2_symbol = " Btc"
+    ticker = Ticker(symbol=ticker_symbol)
+
+    assert ticker != ticker2_symbol
+    assert ticker2_symbol != ticker
+    assert not (ticker == ticker2_symbol)
+
+
+>>>>>>> Fix Ticker equality comparison to invalid types
 def test_ticker_invalid_comparison() -> None:
     """Errors on non-sensical type."""
     ticker_symbol = " .BTC"
