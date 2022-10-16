@@ -52,3 +52,26 @@ def test_ticker_inequality() -> None:
     assert ticker != ticker2
     assert ticker2 != ticker
     assert not (ticker == ticker2)
+
+
+def test_ticker_inequality_str() -> None:
+    """Inequivalent tickers and str compare correctly."""
+    ticker_symbol = " .BTC"
+    ticker2_symbol = " Btc"
+    ticker = Ticker(symbol=ticker_symbol)
+
+    assert ticker != ticker2_symbol
+    assert ticker2_symbol != ticker
+    assert not (ticker == ticker2_symbol)
+
+
+def test_ticker_invalid_comparison() -> None:
+    """Errors on non-sensical type."""
+    ticker_symbol = " .BTC"
+    ticker2_symbol = 5
+    ticker = Ticker(symbol=ticker_symbol)
+
+    with pytest.raises(NotImplementedError):
+        assert ticker == ticker2_symbol
+        assert ticker2_symbol == ticker
+        assert not (ticker != ticker2_symbol)
