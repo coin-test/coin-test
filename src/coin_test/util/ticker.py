@@ -1,7 +1,5 @@
 """Ticker objects for use in the coin-test package."""
 
-from typing import Union
-
 
 class Ticker:
     """Represents an asset."""
@@ -22,11 +20,9 @@ class Ticker:
             )
         self.symbol = cleaned_symbol
 
-    def __eq__(self, other: Union["Ticker", str]) -> bool:
+    def __eq__(self, other: "Ticker") -> bool:
         """Check equality between symbols."""
-        if isinstance(other, Ticker):
-            return self.symbol == other.symbol
-        elif isinstance(other, str):
-            return self.symbol == other
-        else:
+        if not isinstance(other, Ticker):
             raise NotImplementedError
+        else:
+            return self.symbol == other.symbol
