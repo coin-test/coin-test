@@ -32,16 +32,6 @@ def test_ticker_equality() -> None:
     assert not (ticker != ticker2)
 
 
-def test_ticker_equality_str() -> None:
-    """Equivalent tickers and str compare correctly."""
-    ticker_symbol = "BTC"
-    ticker2_symbol = "btc"
-    ticker = Ticker(symbol=ticker_symbol)
-
-    assert ticker == ticker2_symbol
-    assert not (ticker != ticker2_symbol)
-
-
 def test_ticker_inequality() -> None:
     """Inequivalent tickers compare correctly."""
     ticker_symbol = " .BTC"
@@ -52,17 +42,6 @@ def test_ticker_inequality() -> None:
     assert ticker != ticker2
     assert ticker2 != ticker
     assert not (ticker == ticker2)
-
-
-def test_ticker_inequality_str() -> None:
-    """Inequivalent tickers and str compare correctly."""
-    ticker_symbol = " .BTC"
-    ticker2_symbol = " Btc"
-    ticker = Ticker(symbol=ticker_symbol)
-
-    assert ticker != ticker2_symbol
-    assert ticker2_symbol != ticker
-    assert not (ticker == ticker2_symbol)
 
 
 def test_ticker_invalid_comparison() -> None:
