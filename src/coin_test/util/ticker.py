@@ -1,5 +1,7 @@
 """Ticker objects for use in the coin-test package."""
 
+from typing import NamedTuple
+
 
 class Ticker:
     """Represents an asset."""
@@ -26,3 +28,10 @@ class Ticker:
             raise NotImplementedError
         else:
             return self.symbol == other.symbol
+
+
+class TradingPair(NamedTuple):
+    """Pair of tickers that can be traded."""
+
+    asset: Ticker
+    currency: Ticker
