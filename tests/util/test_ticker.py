@@ -44,7 +44,7 @@ def test_ticker_inequality() -> None:
     assert not (ticker == ticker2)
 
 
-@pytest.mark.bad_types
+@pytest.mark.exclude_typeguard
 def test_ticker_invalid_comparison() -> None:
     """Errors on non-sensical type."""
     ticker_symbol = " .BTC"
