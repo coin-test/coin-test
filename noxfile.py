@@ -47,7 +47,7 @@ def pyright(session: Session) -> None:
 @session(python=python_versions)
 def typeguard(session: Session) -> None:
     """Runtime type checking using Typeguard."""
-    args = session.posargs or ["-m", "not e2e"]
+    args = session.posargs or ["-m", "not (e2e or exclude_typeguard)"]
     session.install("pytest", "pytest-mock", "typeguard", ".")
     session.run("pytest", f"--typeguard-packages={package}", *args)
 
