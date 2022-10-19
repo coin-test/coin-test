@@ -17,7 +17,7 @@ def test_invalid_ticker() -> None:
     """Error on bad initialization."""
     example_bad_symbol = " "
     with pytest.raises(ValueError):
-        _ = Ticker(symbol=example_bad_symbol)
+        Ticker(symbol=example_bad_symbol)
 
 
 def test_ticker_equality() -> None:
@@ -52,6 +52,5 @@ def test_ticker_invalid_comparison() -> None:
     ticker = Ticker(symbol=ticker_symbol)
 
     with pytest.raises(NotImplementedError):
-        assert ticker == ticker2_symbol
-        assert ticker2_symbol == ticker
-        assert not (ticker != ticker2_symbol)
+        assert ticker != ticker2_symbol
+        assert ticker2_symbol != ticker

@@ -18,7 +18,7 @@ class Ticker:
         cleaned_symbol = symbol.strip().lower()
         if len(cleaned_symbol) == 0:
             raise ValueError(
-                f"""Expecting symbol to contain more than whitespace got: {symbol}."""
+                f"""Expecting symbol to contain more than whitespace got: '{symbol}'."""
             )
         self.symbol = cleaned_symbol
 
