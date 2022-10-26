@@ -1,6 +1,6 @@
 """Define the TradeRequest class."""
 
-from ..util import Side, TradeType
+from ..util import AssetPair, Side, TradeType
 
 
 class TradeRequest:
@@ -8,7 +8,7 @@ class TradeRequest:
 
     def __init__(
         self,
-        symbol: str,
+        asset_pair: AssetPair,
         side: Side,
         type_: TradeType = TradeType.MARKET,
         notional: float | None = None,
@@ -17,7 +17,7 @@ class TradeRequest:
         """Initialize a TradeRequest.
 
         Args:
-            symbol: The symbol of the asset being traded
+            asset_pair: The TradingPair for the asset being traded
             side: The direction of the trade
             type_: The type of trade, default is TradeType.MARKET
             notional: The amount of money to trade, default None
@@ -27,7 +27,7 @@ class TradeRequest:
         Raises:
             ValueError: If arguments are not inputted correctly
         """
-        self.symbol = symbol
+        self.asset_pair = asset_pair
         self.side = side
         self.type_ = type_
         self.notional = notional
