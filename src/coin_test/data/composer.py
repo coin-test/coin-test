@@ -6,7 +6,7 @@ from .loaders import PriceDataLoader
 from .processors import Processor
 
 
-class Dataset:
+class Composer:
     """Manages a dataset."""
 
     def __init__(
