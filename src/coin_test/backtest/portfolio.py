@@ -24,11 +24,11 @@ class Portfolio:
             raise ValueError("Base currency must exist in assets.")
 
         for asset, money in self.assets.items():
-            if money.currency != asset:
+            if money.ticker != asset:
                 raise ValueError("Money must match ticker in assets.")
 
     # Currently just returns cash in a given asset TODO: support shorting
-    def free_cash(self, asset: Ticker) -> Money:
+    def available_assets(self, asset: Ticker) -> Money:
         """Return the available assets for a given ticker in a portfolio.
 
         Args:
