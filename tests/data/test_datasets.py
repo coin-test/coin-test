@@ -1,9 +1,18 @@
 """Test the Loader classes."""
+
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 from pytest_mock import MockerFixture
 
-from coin_test.data import CustomDataset, PriceDataset
+from coin_test.data import CustomDataset, Dataset, PriceDataset
+
+
+def test_dataset_construction_fails() -> None:
+    """Raises error when creating base class."""
+    with pytest.raises(ValueError):
+        Dataset()
 
 
 def test_validate_df_correct(hour_data_df: pd.DataFrame) -> None:
@@ -57,12 +66,12 @@ def test_init_price_dataframe_loader(
     CustomDataset._validate_df.return_value = True
     CustomDataset._infer_interval.return_value = interval
 
-    loader = CustomDataset(hour_data_df, asset, currency)
+    dataset = CustomDataset(hour_data_df, asset, currency)
 
-    pd.testing.assert_frame_equal(loader.df, hour_data_df)
-    assert loader.metadata.asset == asset
-    assert loader.metadata.currency == currency
-    assert loader.metadata.interval == interval
+    pd.testing.assert_frame_equal(dataset.df, hour_data_df)
+    assert dataset.metadata.asset == asset
+    assert dataset.metadata.currency == currency
+    assert dataset.metadata.interval == interval
 
     CustomDataset._validate_df.assert_called_once_with(hour_data_df)
     CustomDataset._infer_interval.assert_called_once_with(hour_data_df["Open Time"])
@@ -80,3 +89,25 @@ def test_init_dataset_invalid_df(
 
     with pytest.raises(ValueError):
         CustomDataset(simple_df, asset, currency)
+
+
+def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
+    """Calls processor properly."""
+    asset = "BTC"
+    currency = "USD"
+    interval = 100
+
+    mocker.patch("coin_test.data.CustomDataset._validate_df")
+    mocker.patch("coin_test.data.CustomDataset._infer_interval")
+    processor = Mock()
+
+    CustomDataset._validate_df.return_value = True
+    CustomDataset._infer_interval.return_value = interval
+    processor.process.return_value = hour_data_df
+
+    dataset = CustomDataset(hour_data_df, asset, currency)
+    processed_dataset = dataset.process([processor])
+
+    assert dataset == processed_dataset
+    pd.testing.assert_frame_equal(processed_dataset.df, hour_data_df)
+    processor.process.assert_called_once_with(hour_data_df)
