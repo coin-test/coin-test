@@ -3,7 +3,7 @@
 import pytest
 
 from coin_test.backtest import Portfolio
-from coin_test.util.ticker import Money, Ticker
+from coin_test.util import Money, Ticker
 
 
 def test_portfolio(example_assets: dict) -> None:
