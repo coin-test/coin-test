@@ -33,7 +33,7 @@ def test_bad_assets() -> None:
         Portfolio(example_base_currency, example_assets)
 
 
-def test_reserved_assets(example_assets: dict) -> None:
+def test_no_reserved_assets_on_init(example_assets: dict) -> None:
     """Return free cash property."""
     example_base_currency = Ticker("USDT")
 
@@ -42,13 +42,13 @@ def test_reserved_assets(example_assets: dict) -> None:
     assert Money(Ticker("USDT"), 0) == p.reserved[Ticker("USDT")]
 
 
-def test_free_cash(example_assets: dict) -> None:
-    """Initialize correctly."""
+def test_available_assets(example_assets: dict) -> None:
+    """Return correct amount of free cash."""
     example_base_currency = Ticker("USDT")
 
     p = Portfolio(example_base_currency, example_assets)
 
-    assert Money(Ticker("USDT"), 10000) == p.free_cash(Ticker("USDT"))
+    assert Money(Ticker("USDT"), 10000) == p.available_assets(Ticker("USDT"))
 
 
 def test_for_wrong_asset(example_assets: dict) -> None:
@@ -58,4 +58,4 @@ def test_for_wrong_asset(example_assets: dict) -> None:
     p = Portfolio(example_base_currency, example_assets)
 
     with pytest.raises(ValueError):
-        p.free_cash(Ticker("DOGE"))
+        p.available_assets(Ticker("DOGE"))

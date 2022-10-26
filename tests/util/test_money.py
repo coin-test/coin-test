@@ -9,7 +9,10 @@ def test_initialization() -> None:
     example_ticker = Ticker("BTC")
     example_qty = 12.5
 
-    Money(example_ticker, example_qty)
+    m = Money(example_ticker, example_qty)
+
+    assert m.ticker == example_ticker
+    assert m.qty == example_qty
 
 
 def test_compute_equality() -> None:

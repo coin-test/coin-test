@@ -4,35 +4,35 @@ from .ticker import Ticker
 
 
 class Money:
-    """Amount of money in a given currency."""
+    """Store a quantity of a given currency."""
 
-    def __init__(self, currency: Ticker, qty: float) -> None:
+    def __init__(self, ticker: Ticker, qty: float) -> None:
         """Initialize a Money object.
 
         Args:
-            currency: The currency the money is in.
+            ticker: The currency the money is in.
             qty: The amount of money that exists.
         """
-        self.currency = currency
+        self.ticker = ticker
         self.qty = qty
 
-    def _can_compare(self, other: "Money") -> None:
+    def _check_compatibility(self, other: "Money") -> None:
         """Check if Money objects can be compared."""
         if not isinstance(other, Money):
             raise NotImplementedError
 
-        if self.currency != other.currency:
+        if self.ticker != other.ticker:
             raise ValueError("Can't compare equality across different tickers")
 
     def __eq__(self, other: "Money") -> bool:
         """Check for equality between Money objects."""
-        self._can_compare(other)
+        self._check_compatibility(other)
 
         return self.qty == other.qty
 
     def __gt__(self, other: "Money") -> bool:
         """Check if this Money object is greater than another."""
-        self._can_compare(other)
+        self._check_compatibility(other)
 
         return self.qty > other.qty
 
@@ -46,12 +46,12 @@ class Money:
 
     def __add__(self, other: "Money") -> "Money":
         """Add two amounts of Money."""
-        self._can_compare(other)
+        self._check_compatibility(other)
 
-        return Money(self.currency, self.qty + other.qty)
+        return Money(self.ticker, self.qty + other.qty)
 
     def __sub__(self, other: "Money") -> "Money":
         """Subtract two amounts of Money."""
-        self._can_compare(other)
+        self._check_compatibility(other)
 
-        return Money(self.currency, self.qty - other.qty)
+        return Money(self.ticker, self.qty - other.qty)

@@ -1,4 +1,5 @@
 """Test the Ticker class."""
+
 import pytest
 
 from coin_test.util import Ticker
