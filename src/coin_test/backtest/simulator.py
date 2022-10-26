@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Callable
 
 from .portfolio import Portfolio
-from .scheduled_strategy import ScheduledStrategy
+from .strategy import Strategy
 from .trade_request import TradeRequest
 from ..data import Dataset
 
@@ -34,7 +34,7 @@ class Simulator:
         strategy: Callable[[dt.datetime, Portfolio, Dataset], list[TradeRequest]],
         schedule: str,
         lookback: None = None,
-    ) -> ScheduledStrategy:
+    ) -> Strategy:
         """Add a strategy to the simulator.
 
         Args:
@@ -43,9 +43,9 @@ class Simulator:
             lookback: The amount of data to send to the strategy function
 
         Returns:
-            ScheduledStrategy: The object representing this scheduled strategy
+            Strategy: The object representing this scheduled strategy
         """
-        job = ScheduledStrategy(strategy, schedule, lookback)
+        job = Strategy(strategy, schedule, lookback)
         self._jobs.append(job)
         return job
 
