@@ -19,7 +19,7 @@ REQUIRED_COLS = {
 }
 
 
-class Loader(ABC):
+class Dataset(ABC):
     """Load some data into a DataFrame.
 
     Use to provide the Dataset class a consistent interface to access data
@@ -32,7 +32,7 @@ class Loader(ABC):
         """The loaded dataframe."""
 
 
-class PriceDataLoader(Loader):
+class PriceDataset(Dataset):
     """Load a DataFrame with associated MetaData.
 
     DataFrame contained in PriceDataLoader expected to be validated using
@@ -64,24 +64,7 @@ class PriceDataLoader(Loader):
         return True
 
 
-class DataFrameLoader(Loader):
-    """Load a DataFrame.
-
-    Use when an appropriate DataFrame has already been created. Does no
-    loading, but fulfills the Loader interface.
-    """
-
-    def __init__(self, df: pd.DataFrame) -> None:
-        """Initialize a DataFrame Loader."""
-        self._df = df
-
-    @property
-    def df(self) -> pd.DataFrame:
-        """Return stored DataFrame."""
-        return self._df
-
-
-class PriceDataFrameLoader(PriceDataLoader):
+class CustomDataset(PriceDataset):
     """Load a DataFrame in the expected format of price data."""
 
     def __init__(self, df: pd.DataFrame, asset: str, currency: str) -> None:

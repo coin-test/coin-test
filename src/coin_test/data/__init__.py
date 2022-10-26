@@ -1,16 +1,15 @@
 """Data loading / processing module."""
 
 from .composer import Composer
-from .loaders import DataFrameLoader, Loader, PriceDataFrameLoader, PriceDataLoader
+from .datasets import CustomDataset, Dataset, PriceDataset
 from .metadata import MetaData
 from .processors import IdentityProcessor, Processor
 
 __all__ = [
     "Composer",
-    "DataFrameLoader",
-    "Loader",
-    "PriceDataFrameLoader",
-    "PriceDataLoader",
+    "CustomDataset",
+    "Dataset",
+    "PriceDataset",
     "MetaData",
     "IdentityProcessor",
     "Processor",

@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from .loaders import PriceDataLoader
+from .datasets import PriceDataset
 from .processors import Processor
 
 
@@ -11,7 +11,7 @@ class Composer:
 
     def __init__(
         self,
-        price_loader: PriceDataLoader,
+        price_loader: PriceDataset,
         processors: list[Processor],
     ) -> None:
         """Intialize a dataset.
