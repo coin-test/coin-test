@@ -32,6 +32,12 @@ codecov = "^2.1.12"
 data-science-types = "^0.2.23"
 pandas-stubs = "^1.5.0.221012"
 
+[tool.pytest.ini_options]
+markers = [
+    "e2e: mark as end-to-end test.",
+    "exclude_typeguard: mark tests that intentionally have bad types",
+]
+
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
 
