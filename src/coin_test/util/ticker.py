@@ -1,10 +1,10 @@
-"""Ticker objects for use in the coin-test package."""
+"""Define ticker classes for use in the coin-test package."""
 
 from typing import NamedTuple
 
 
 class Ticker:
-    """Represents an asset."""
+    """Represent an asset."""
 
     def __init__(self, symbol: str) -> None:
         """Initialize a Ticker.
@@ -29,8 +29,12 @@ class Ticker:
         else:
             return self.symbol == other.symbol
 
+    def __hash__(self) -> int:
+        """Hash a ticker based on the symbol name."""
+        return hash(self.symbol)
 
-class TradingPair(NamedTuple):
+
+class AssetPair(NamedTuple):
     """Pair of tickers that can be traded."""
 
     asset: Ticker

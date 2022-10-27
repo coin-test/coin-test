@@ -3,11 +3,11 @@
 import datetime as dt
 
 from coin_test.backtest import Trade
-from coin_test.util import Side
+from coin_test.util import AssetPair, Side
 
 
 def test_trade(
-    example_symbol: str,
+    example_asset_pair: AssetPair,
     example_timestamp: dt.datetime,
 ) -> None:
     """Initialize correctly."""
@@ -15,13 +15,13 @@ def test_trade(
     example_side = Side.BUY
 
     x = Trade(
-        symbol=example_symbol,
+        asset_pair=example_asset_pair,
         side=example_side,
         price=example_price,
         timestamp=example_timestamp,
     )
 
-    assert x.symbol == example_symbol
+    assert x.asset_pair == example_asset_pair
     assert x.side == example_side
     assert x.price == example_price
     assert x.timestamp == example_timestamp

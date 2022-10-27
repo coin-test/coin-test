@@ -4,17 +4,23 @@ import datetime
 
 import pytest
 
+from coin_test.util import AssetPair, Money, Ticker
+
 
 @pytest.fixture
 def example_assets() -> dict:
     """Example assets in a given portfolio."""
-    return {"BTC": 2, "ETH": 1.5, "DOGE": 358.25}
+    return {
+        Ticker("BTC"): Money(Ticker("BTC"), 1.51),
+        Ticker("ETH"): Money(Ticker("ETH"), 2),
+        Ticker("USDT"): Money(Ticker("USDT"), 10000),
+    }
 
 
 @pytest.fixture
-def example_symbol() -> str:
+def example_asset_pair() -> AssetPair:
     """Example symbol for a given trade."""
-    return "BTC"
+    return AssetPair(Ticker("BTC"), Ticker("USDT"))
 
 
 @pytest.fixture
