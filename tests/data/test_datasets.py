@@ -81,14 +81,11 @@ def test_init_dataset_invalid_df(
     simple_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
     """Errors on invalid df."""
-    asset = "BTC"
-    currency = "USD"
-
     mocker.patch("coin_test.data.CustomDataset._validate_df")
     CustomDataset._validate_df.return_value = False
 
     with pytest.raises(ValueError):
-        CustomDataset(simple_df, asset, currency)
+        CustomDataset(simple_df, "BTC", "USD")
 
 
 def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:

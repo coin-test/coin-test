@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from collections import Counter
+from typing import Any
 
 import pandas as pd
 
@@ -35,24 +36,18 @@ class Dataset(metaclass=DatasetMetaclass):
     """
 
     SCHEMA = {}
-    _df: pd.DataFrame
 
-    @property
-    def df(self) -> pd.DataFrame:
-        """The loaded dataframe."""
-        return self._df
-
-    @df.setter
-    def df(self, df: pd.DataFrame) -> None:
-        """The loaded dataframe."""
-        if not self._validate_df(df):
-            raise ValueError(
-                f"""
-                DataFrame has incorrect column names or column types.
-                Expecting {self.SCHEMA}, got {df.dtypes}.
-                """
-            )
-        self._df = df
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
+        """Validate setting of `df` attribute."""
+        if name == "df":
+            if not self._validate_df(value):
+                raise ValueError(
+                    f"""
+                    DataFrame has incorrect column names or column types.
+                    Expecting {self.SCHEMA}, got {value.dtypes}.
+                    """
+                )
+        super().__setattr__(name, value)
 
     @classmethod
     def _validate_df(cls, df: pd.DataFrame) -> bool:
