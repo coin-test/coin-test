@@ -100,11 +100,11 @@ def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
 
     CustomDataset._validate_df.return_value = True
     CustomDataset._infer_interval.return_value = interval
-    processor.process.return_value = hour_data_df
+    processor.return_value = hour_data_df
 
     dataset = CustomDataset(hour_data_df, asset, currency)
     processed_dataset = dataset.process([processor])
 
     assert dataset == processed_dataset
     pd.testing.assert_frame_equal(processed_dataset.df, hour_data_df)
-    processor.process.assert_called_once_with(hour_data_df)
+    processor.assert_called_once_with(hour_data_df)

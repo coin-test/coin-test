@@ -73,7 +73,7 @@ class Dataset(metaclass=DatasetMetaclass):
         """Process the dataset."""
         df = self.df
         for processor in processors:
-            df = processor.process(df)
+            df = processor(df)
         self.df = df
         return self  # Return self for caller's convenience
 

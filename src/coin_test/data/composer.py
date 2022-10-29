@@ -28,5 +28,5 @@ class Composer:
     def _clean(df: pd.DataFrame, processors: list[Processor]) -> pd.DataFrame:
         """Clean the dataframe."""
         for processor in processors:
-            df = processor.process(df)
+            df = processor(df)
         return df

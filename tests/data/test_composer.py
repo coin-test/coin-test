@@ -11,11 +11,11 @@ from coin_test.data import Composer, MetaData
 def test_clean(simple_df: pd.DataFrame) -> None:
     """Runs the processor."""
     processor = Mock()
-    processor.process.return_value = simple_df
+    processor.return_value = simple_df
     df = Composer._clean(simple_df, [processor])
 
     pd.testing.assert_frame_equal(df, simple_df)
-    processor.process.assert_called_once_with(simple_df)
+    processor.assert_called_once_with(simple_df)
 
 
 def test_init_composer(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
