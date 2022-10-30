@@ -3,7 +3,6 @@
 import pandas as pd
 
 from .datasets import PriceDataset
-from .processors import Processor
 
 
 class Composer:
@@ -11,22 +10,18 @@ class Composer:
 
     def __init__(
         self,
-        price_loader: PriceDataset,
-        processors: list[Processor],
+        datasets: list[PriceDataset],
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp,
     ) -> None:
         """Intialize a dataset.
 
         Args:
-            price_loader: PriceDataLoader containing price data DataFrame
-                and asset MetaData
-            processors: List of Processor objects to transform the data
+            datasets: List of PriceDatasets containing all price information for
+                use in a simulation run.
+            start_time: Expected start time to validate datasets against
+            end_time: Expected end time to validate datasets against
         """
-        self.df = self._clean(price_loader.df, processors)
-        self.metadata = price_loader.metadata
-
-    @staticmethod
-    def _clean(df: pd.DataFrame, processors: list[Processor]) -> pd.DataFrame:
-        """Clean the dataframe."""
-        for processor in processors:
-            df = processor(df)
-        return df
+        self.datasets = {ds.metadata: ds for ds in datasets}
+        self.start_time = start_time
+        self.end_time = end_time
