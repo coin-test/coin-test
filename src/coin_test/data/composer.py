@@ -1,4 +1,6 @@
-"""Define the Dataset class."""
+"""Define the Composer class."""
+
+from typing import cast
 
 import pandas as pd
 
@@ -46,6 +48,7 @@ class Composer:
             raise ValueError("Not all datasets share a single currency.")
         self.currency = shared_currency
 
+        self.freq = self._get_min_freq(datasets)
         self.datasets = {ds.metadata.pair: ds for ds in datasets}
 
     @staticmethod
@@ -61,3 +64,14 @@ class Composer:
             if dataset.metadata.pair.currency != base_currency:
                 return None
         return base_currency
+
+    @staticmethod
+    def _get_min_freq(datasets: list[PriceDataset]) -> pd.Timedelta:
+        def _to_timedelta(freq: str) -> pd.Timedelta:
+            """Convert frequency string to timedelta object."""
+            period_range = pd.period_range(start="2000", periods=2, freq=freq)
+            start = cast(pd.Period, period_range[0])
+            end = cast(pd.Period, period_range[1])
+            return end.start_time - start.start_time
+
+        return min([_to_timedelta(dataset.metadata.freq) for dataset in datasets])

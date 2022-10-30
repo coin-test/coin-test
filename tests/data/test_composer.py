@@ -96,6 +96,24 @@ def test_get_shared_currency_invalid() -> None:
     assert shared is None
 
 
+@pytest.mark.parametrize(
+    "freqs,target",
+    [(("Y", "M", "D"), "1D"), (("W", "M", "Q"), "1W"), (("H", "T", "S"), "1S")],
+)
+def test_get_min_freq(freqs: tuple[str], target: str) -> None:
+    """Return smallest timedelta."""
+    datasets = []
+    for freq in freqs:
+        metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USD")), freq)
+        dataset = Mock()
+        metadata_mock = PropertyMock(return_value=metadata)
+        type(dataset).metadata = metadata_mock
+        datasets.append(dataset)
+
+    min_delta = Composer._get_min_freq(datasets)
+    assert min_delta == pd.to_timedelta(target)
+
+
 def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initializes correctly."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
@@ -107,6 +125,7 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     metadata_mock = PropertyMock(return_value=metadata)
     mocker.patch("coin_test.data.Composer._is_within_range")
     mocker.patch("coin_test.data.Composer._get_shared_currency")
+    mocker.patch("coin_test.data.Composer._get_min_freq")
 
     type(dataset).df = df_mock
     type(dataset).metadata = metadata_mock
@@ -121,6 +140,13 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     metadata_mock.assert_called()
     Composer._is_within_range.assert_called_once_with(dataset, start_time, end_time)
     Composer._get_shared_currency.assert_called_once_with([dataset])
+    Composer._get_min_freq.assert_called_once_with([dataset])
+
+    assert hasattr(composer, "datasets")
+    assert hasattr(composer, "freq")
+    assert composer.start_time == start_time
+    assert composer.end_time == end_time
+    assert composer.currency == metadata.pair.currency
 
 
 def test_composer_invalid_range() -> None:
