@@ -7,6 +7,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.data import Composer, MetaData
+from coin_test.util import AssetPair, Ticker
 
 
 @pytest.fixture
@@ -70,7 +71,7 @@ def test_is_within_range_end_off(mocked_dataset: Mock) -> None:
 
 def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initializes correctly."""
-    metadata = MetaData("BTC", "USD", "H")
+    metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     start_time = pd.Timestamp("2020")
     end_time = pd.Timestamp("2021")
 
@@ -85,7 +86,7 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
 
     composer = Composer([dataset], start_time, end_time)
 
-    pd.testing.assert_frame_equal(composer.datasets[metadata].df, simple_df)
+    pd.testing.assert_frame_equal(composer.datasets[metadata.pair].df, simple_df)
 
     df_mock.assert_called_once_with()
     metadata_mock.assert_called_once_with()

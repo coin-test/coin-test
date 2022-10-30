@@ -8,6 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.data import CustomDataset, Dataset, PriceDataset
+from coin_test.util import AssetPair, Ticker
 
 
 def test_dataset_construction_fails() -> None:
@@ -88,8 +89,7 @@ def test_add_period_index(
 
 def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initializes correctly."""
-    asset = "BTC"
-    currency = "USD"
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
 
     mocker.patch("coin_test.data.CustomDataset._add_period_index")
@@ -98,11 +98,10 @@ def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) 
     CustomDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
 
-    dataset = CustomDataset(hour_data_df, freq, asset, currency)
+    dataset = CustomDataset(hour_data_df, freq, pair)
 
     pd.testing.assert_frame_equal(dataset.df, hour_data_df)
-    assert dataset.metadata.asset == asset
-    assert dataset.metadata.currency == currency
+    assert dataset.metadata.pair == pair
     assert dataset.metadata.freq == freq
 
     CustomDataset._add_period_index.assert_called_once_with(hour_data_df, freq)
@@ -119,13 +118,12 @@ def test_init_custom_dataset_invalid_df(
     CustomDataset._validate_df.return_value = False
 
     with pytest.raises(ValueError):
-        CustomDataset(simple_df, "H", "BTC", "USD")
+        CustomDataset(simple_df, "H", AssetPair(Ticker("BTC"), Ticker("USDT")))
 
 
 def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Calls processor properly."""
-    asset = "BTC"
-    currency = "USD"
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
 
     mocker.patch("coin_test.data.CustomDataset._add_period_index")
@@ -136,7 +134,7 @@ def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     CustomDataset._validate_df.return_value = True
     processor.return_value = hour_data_df
 
-    dataset = CustomDataset(hour_data_df, freq, asset, currency)
+    dataset = CustomDataset(hour_data_df, freq, pair)
     processed_dataset = dataset.process([processor])
 
     assert dataset == processed_dataset

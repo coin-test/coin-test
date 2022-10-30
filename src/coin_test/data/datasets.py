@@ -9,6 +9,7 @@ import pandas as pd
 
 from .metadata import MetaData
 from .processors import Processor
+from ..util import AssetPair
 
 
 class DatasetMetaclass(type):
@@ -103,7 +104,7 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
 class CustomDataset(PriceDataset):
     """Load a DataFrame in the expected format of price data."""
 
-    def __init__(self, df: pd.DataFrame, freq: str, asset: str, currency: str) -> None:
+    def __init__(self, df: pd.DataFrame, freq: str, pair: AssetPair) -> None:
         """Initialize a PriceDataLoader.
 
         Validate DataFrame format correctness and infer timestep interval.
@@ -111,11 +112,10 @@ class CustomDataset(PriceDataset):
         Args:
             df: DataFrame to load
             freq: Pandas period string representing price data interval
-            asset: Asset to store in MetaData
-            currency: Currency to store in MetaData
+            pair: AssetPair represented in datal
         """
         self.df = self._add_period_index(df, freq)
-        self._metadata = MetaData(asset, currency, freq)
+        self._metadata = MetaData(pair, freq)
 
     @classmethod
     def _add_period_index(cls, df: pd.DataFrame, freq: str) -> pd.DataFrame:

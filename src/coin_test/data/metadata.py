@@ -2,10 +2,11 @@
 
 from typing import NamedTuple
 
+from ..util import AssetPair
+
 
 class MetaData(NamedTuple):
     """Historical data metadata."""
 
-    asset: str
-    currency: str
+    pair: AssetPair
     freq: str

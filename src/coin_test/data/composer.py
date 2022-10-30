@@ -38,7 +38,7 @@ class Composer:
         ):
             raise ValueError("Not all datasets cover requested time range")
 
-        self.datasets = {ds.metadata: ds for ds in datasets}
+        self.datasets = {ds.metadata.pair: ds for ds in datasets}
 
     @staticmethod
     def _is_within_range(
