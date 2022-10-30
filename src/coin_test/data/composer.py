@@ -1,11 +1,12 @@
 """Define the Composer class."""
 
-from typing import cast
+from typing import cast, Iterable
 
+import numpy as np
 import pandas as pd
 
 from .datasets import PriceDataset
-from ..util import Ticker
+from ..util import AssetPair, Ticker
 
 
 class Composer:
@@ -30,8 +31,7 @@ class Composer:
                 align to start and end times or if datasets do not share a base
                 currency.
         """
-        if start_time >= end_time:
-            raise ValueError("Start time must be earlier than end time.")
+        self._validate_start_end(start_time, end_time)
         self.start_time = start_time
         self.end_time = end_time
 
@@ -50,6 +50,11 @@ class Composer:
 
         self.freq = self._get_min_freq(datasets)
         self.datasets = {ds.metadata.pair: ds for ds in datasets}
+
+    @staticmethod
+    def _validate_start_end(start: pd.Timestamp, end: pd.Timestamp) -> None:
+        if start >= end:
+            raise ValueError("Start time must be earlier than end time.")
 
     @staticmethod
     def _is_within_range(
@@ -79,3 +84,95 @@ class Composer:
             return end.start_time - start.start_time
 
         return min([_to_timedelta(dataset.metadata.freq) for dataset in datasets])
+
+    def get_timestep(
+        self,
+        timestamp: pd.Timestamp,
+        keys: Iterable[AssetPair] | None = None,
+        mask: bool = True,
+    ) -> dict[AssetPair, pd.Series]:
+        """Get single timestep of data.
+
+        Args:
+            timestamp: Timestamp to get data for.
+            keys: Optional. AssetPairs to filter results on.
+            mask: Optional. Whether to mask non-Open data to NaN.
+
+        Returns:
+            dict: Dictionary mapping asset pairs to timestamp data per asset
+                pair. Dictionary default to all datasets, but is filtered based
+                on `keys` parameter.
+        """
+        if keys is None:
+            keys = list(self.datasets.keys())
+
+        data = {}
+        for key in keys:
+            if key not in self.datasets:
+                continue
+            ds_data = self.datasets[key].df[timestamp]
+            if mask:
+                ds_data.loc[:, ds_data.columns != "Open"] = np.nan
+            data[key] = ds_data
+        return data
+
+    def get_range(
+        self,
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp,
+        keys: Iterable[AssetPair] | None = None,
+        mask: bool = True,
+    ) -> dict[AssetPair, pd.DataFrame]:
+        """Get range of data.
+
+        Args:
+            start_time: Starting timestamp of range.
+            end_time: Ending timestamp of range.
+            keys: Optional. AssetPairs to filter results on.
+            mask: Optional. Whether to mask non-Open data to NaN.
+
+        Returns:
+            dict: Dictionary mapping asset pairs to retrieved rows of data per
+                asset pair. Dictionary default to all datasets, but is filtered
+                based on `keys` parameter.
+        """
+        self._validate_start_end(start_time, end_time)
+        if keys is None:
+            keys = list(self.datasets.keys())
+
+        data = {}
+        for key in keys:
+            if key not in self.datasets:
+                continue
+            ds_data = self.datasets[key].df[start_time:end_time]
+            if mask:
+                ds_data.loc[-1, ds_data.columns != "Open"] = np.nan
+            data[key] = ds_data
+        return data
+
+    def get_lookback(
+        self,
+        timestamp: pd.Timestamp,
+        lookback: int,
+        keys: Iterable[AssetPair] | None = None,
+        mask: bool = True,
+    ) -> dict[AssetPair, pd.DataFrame]:
+        """Get lookback of data.
+
+        Wrapper for `get_range`. Convert integer number of lookback timesteps
+        into a time range based of Composer's `freq` attribute.
+
+        Args:
+            timestamp: Starting timestamp of lookback.
+            lookback: Number of timesteps to lookback.
+            keys: Optional. AssetPairs to filter results on.
+            mask: Optional. Whether to mask non-Open data to NaN.
+
+        Returns:
+            dict: Dictionary mapping asset pairs to retrieved rows of data per
+                asset pair. Dictionary default to all datasets, but is filtered
+                based on `keys` parameter.
+        """
+        end_time = timestamp
+        start_time = timestamp - self.freq * lookback
+        return self.get_range(start_time, end_time, keys=keys, mask=mask)
