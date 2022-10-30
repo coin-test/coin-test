@@ -3,6 +3,7 @@
 import pandas as pd
 
 from .datasets import PriceDataset
+from ..util import Ticker
 
 
 class Composer:
@@ -29,14 +30,21 @@ class Composer:
         """
         if start_time >= end_time:
             raise ValueError("Start time must be earlier than end time.")
-        print(start_time, end_time)
         self.start_time = start_time
         self.end_time = end_time
+
+        if len(datasets) == 0:
+            raise ValueError("At least one dataset must be defined.")
 
         if not all(
             [self._is_within_range(ds, start_time, end_time) for ds in datasets]
         ):
             raise ValueError("Not all datasets cover requested time range")
+
+        shared_currency = self._get_shared_currency(datasets)
+        if shared_currency is None:
+            raise ValueError("Not all datasets share a single currency.")
+        self.currency = shared_currency
 
         self.datasets = {ds.metadata.pair: ds for ds in datasets}
 
@@ -45,3 +53,11 @@ class Composer:
         dataset: PriceDataset, start_time: pd.Timestamp, end_time: pd.Timestamp
     ) -> bool:
         return not dataset.df[:start_time].empty and not dataset.df[end_time:].empty
+
+    @staticmethod
+    def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:
+        base_currency = datasets[0].metadata.pair.currency
+        for dataset in datasets[1:]:
+            if dataset.metadata.pair.currency != base_currency:
+                return None
+        return base_currency
