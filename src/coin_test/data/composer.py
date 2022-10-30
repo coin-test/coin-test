@@ -55,10 +55,12 @@ class Composer:
     def _is_within_range(
         dataset: PriceDataset, start_time: pd.Timestamp, end_time: pd.Timestamp
     ) -> bool:
+        """Check whether dataset has data for start and end time."""
         return not dataset.df[:start_time].empty and not dataset.df[end_time:].empty
 
     @staticmethod
     def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:
+        """Get shared currency among datasets."""
         base_currency = datasets[0].metadata.pair.currency
         for dataset in datasets[1:]:
             if dataset.metadata.pair.currency != base_currency:
@@ -67,6 +69,8 @@ class Composer:
 
     @staticmethod
     def _get_min_freq(datasets: list[PriceDataset]) -> pd.Timedelta:
+        """Get minimium frequency among datasets."""
+
         def _to_timedelta(freq: str) -> pd.Timedelta:
             """Convert frequency string to timedelta object."""
             period_range = pd.period_range(start="2000", periods=2, freq=freq)

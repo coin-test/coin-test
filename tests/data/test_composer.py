@@ -49,21 +49,21 @@ def mocked_dataset(hour_data_df: pd.DataFrame) -> Mock:
 
 
 def test_is_within_range_true(mocked_dataset: Mock) -> None:
-    """Validates dataset in time range."""
+    """Validate dataset in time range."""
     start_time = pd.Timestamp("2000-11")
     end_time = pd.Timestamp("2023-4")
     assert Composer._is_within_range(mocked_dataset, start_time, end_time)
 
 
 def test_is_within_range_start_off(mocked_dataset: Mock) -> None:
-    """Validates dataset in time range."""
+    """Reject dataset missing end date."""
     start_time = pd.Timestamp("2000-11")
     end_time = pd.Timestamp("2040-4")
     assert Composer._is_within_range(mocked_dataset, start_time, end_time) is False
 
 
 def test_is_within_range_end_off(mocked_dataset: Mock) -> None:
-    """Validates dataset in time range."""
+    """Reject dataset missing start date."""
     start_time = pd.Timestamp("1999-11")
     end_time = pd.Timestamp("2021-4")
     assert Composer._is_within_range(mocked_dataset, start_time, end_time) is False
@@ -84,7 +84,7 @@ def test_get_shared_currency() -> None:
 
 
 def test_get_shared_currency_invalid() -> None:
-    """Return shared currency."""
+    """Return None when no shared currency."""
     datasets = []
     for asset, currency in (("BTC", "USDT"), ("ETH", "USDC")):
         metadata = MetaData(AssetPair(Ticker(asset), Ticker(currency)), "H")
@@ -115,7 +115,7 @@ def test_get_min_freq(freqs: tuple[str], target: str) -> None:
 
 
 def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
-    """Initializes correctly."""
+    """Initialize correctly."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     start_time = pd.Timestamp("2020")
     end_time = pd.Timestamp("2021")
@@ -150,7 +150,7 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
 
 
 def test_composer_invalid_range() -> None:
-    """Errors on invalid time range."""
+    """Error on invalid time range."""
     start_time = pd.Timestamp("2021")
     end_time = pd.Timestamp("2020")
 
@@ -183,7 +183,7 @@ def test_composer_not_within_range(mocker: MockerFixture) -> None:
 
 
 def test_composer_not_shared_currency(mocker: MockerFixture) -> None:
-    """Errors on dataset not sharing currency."""
+    """Error on dataset not sharing currency."""
     start_time = pd.Timestamp("2020")
     end_time = pd.Timestamp("2021")
 

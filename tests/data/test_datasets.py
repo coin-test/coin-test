@@ -12,36 +12,36 @@ from coin_test.util import AssetPair, Ticker
 
 
 def test_dataset_construction_fails() -> None:
-    """Raises error when creating base class."""
+    """Raise error when creating base class."""
     with pytest.raises(ValueError):
         Dataset()
 
 
 def test_validate_df_correct(hour_data_df: pd.DataFrame) -> None:
-    """Validates a correctly formatted df."""
+    """Validate a correctly formatted df."""
     assert PriceDataset._validate_df(hour_data_df)
 
 
 def test_validate_df_missing_col(hour_data_df: pd.DataFrame) -> None:
-    """Rejects a df missing a require column."""
+    """Reject a df missing a required column."""
     hour_data_df = hour_data_df.drop(columns=["Open"])
     assert not PriceDataset._validate_df(hour_data_df)
 
 
 def test_validate_df_duplicate_col(hour_data_df: pd.DataFrame) -> None:
-    """Rejects a df missing a require column."""
+    """Reject a df with a duplicate column."""
     hour_data_df.insert(0, "Open", hour_data_df["Open"], allow_duplicates=True)
     assert not PriceDataset._validate_df(hour_data_df)
 
 
 def test_validate_df_incorrect_type(hour_data_df: pd.DataFrame) -> None:
-    """Rejects a df with an incorrect type."""
+    """Reject a df with an incorrect type."""
     hour_data_df["Open"] = hour_data_df["Open"].astype(int)
     assert not PriceDataset._validate_df(hour_data_df)
 
 
 def test_add_period_index_existing_index(hour_data_df: pd.DataFrame) -> None:
-    """Does nothing if period index exists."""
+    """Do nothing if period index exists."""
     years = ["20" + str(i) for i in range(10, len(hour_data_df) + 10)]
     index = pd.PeriodIndex(years, freq="Y")  # type: ignore
     hour_data_df.set_index(index, inplace=True)
@@ -50,13 +50,13 @@ def test_add_period_index_existing_index(hour_data_df: pd.DataFrame) -> None:
 
 
 def test_add_period_index_missing_col(simple_df: pd.DataFrame) -> None:
-    """Errors on missing Open Time column."""
+    """Error on missing Open Time column."""
     with pytest.raises(ValueError):
         CustomDataset._add_period_index(simple_df, "Y")
 
 
 def test_add_period_index_wrong_type(hour_data_df: pd.DataFrame) -> None:
-    """Errors on missing Open Time column."""
+    """Error on wrong column type."""
     hour_data_df["Open Time"] = hour_data_df["Open Time"].astype(float)
     with pytest.raises(ValueError):
         CustomDataset._add_period_index(hour_data_df, "H")
@@ -80,15 +80,15 @@ def test_add_period_index(
     freq: str,
     hour_data_df: pd.DataFrame,
 ) -> None:
-    """Errors on missing Open Time column."""
+    """Build index from various data types."""
     hour_data_df = hour_data_df[: len(data)].copy()
-    print(pd.Series(data))
     hour_data_df["Open Time"] = pd.Series(data)
-    CustomDataset._add_period_index(hour_data_df, freq)
+    df = CustomDataset._add_period_index(hour_data_df, freq)
+    assert isinstance(df.index, pd.PeriodIndex)
 
 
 def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
-    """Initializes correctly."""
+    """Initialize correctly."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
 
@@ -111,7 +111,7 @@ def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) 
 def test_init_custom_dataset_invalid_df(
     simple_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
-    """Errors on invalid df."""
+    """Error on invalid df."""
     mocker.patch("coin_test.data.CustomDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
     CustomDataset._add_period_index.return_value = simple_df
@@ -122,7 +122,7 @@ def test_init_custom_dataset_invalid_df(
 
 
 def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
-    """Calls processor properly."""
+    """Call processor properly."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
 
