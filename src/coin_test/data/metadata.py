@@ -8,4 +8,4 @@ class MetaData(NamedTuple):
 
     asset: str
     currency: str
-    interval: int
+    freq: str

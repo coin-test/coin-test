@@ -1,5 +1,6 @@
 """Test the Loader classes."""
 
+from datetime import datetime
 from unittest.mock import Mock
 
 import pandas as pd
@@ -38,71 +39,104 @@ def test_validate_df_incorrect_type(hour_data_df: pd.DataFrame) -> None:
     assert not PriceDataset._validate_df(hour_data_df)
 
 
-def test_infer_interval() -> None:
-    """Inferrs the correct interval."""
-    timestamps = pd.Series([10, 20, 30], dtype=int)
-    interval = CustomDataset._infer_interval(timestamps)
-    assert interval == 10
+def test_add_period_index_existing_index(hour_data_df: pd.DataFrame) -> None:
+    """Does nothing if period index exists."""
+    years = ["20" + str(i) for i in range(10, len(hour_data_df) + 10)]
+    index = pd.PeriodIndex(years, freq="Y")  # type: ignore
+    hour_data_df.set_index(index, inplace=True)
+    with_index = CustomDataset._add_period_index(hour_data_df, "Y")
+    pd.testing.assert_frame_equal(hour_data_df, with_index)
 
 
-def test_infer_interval_error() -> None:
-    """Errors on inconsistent timestamps."""
-    timestamps = pd.Series([10, 20, 40], dtype=int)
+def test_add_period_index_missing_col(simple_df: pd.DataFrame) -> None:
+    """Errors on missing Open Time column."""
     with pytest.raises(ValueError):
-        CustomDataset._infer_interval(timestamps)
+        CustomDataset._add_period_index(simple_df, "Y")
 
 
-def test_init_price_dataframe_loader(
-    hour_data_df: pd.DataFrame, mocker: MockerFixture
+def test_add_period_index_wrong_type(hour_data_df: pd.DataFrame) -> None:
+    """Errors on missing Open Time column."""
+    hour_data_df["Open Time"] = hour_data_df["Open Time"].astype(float)
+    with pytest.raises(ValueError):
+        CustomDataset._add_period_index(hour_data_df, "H")
+
+
+_dates = [datetime(2000, 1, 1), datetime(2001, 1, 1), datetime(2002, 1, 1)]
+
+
+@pytest.mark.parametrize(
+    "data,freq",
+    [
+        (["2000", "2001", "2002"], "Y"),
+        (_dates, "Y"),
+        ([pd.Timestamp(date) for date in _dates], "Y"),
+        ([pd.Period(date, freq="Y") for date in _dates], "Y"),  # type: ignore
+        ([int(date.timestamp()) for date in _dates], "Y"),
+    ],
+)
+def test_add_period_index(
+    data: list[str | datetime | pd.Timestamp | pd.Period],
+    freq: str,
+    hour_data_df: pd.DataFrame,
 ) -> None:
+    """Errors on missing Open Time column."""
+    hour_data_df = hour_data_df[: len(data)].copy()
+    print(pd.Series(data))
+    hour_data_df["Open Time"] = pd.Series(data)
+    CustomDataset._add_period_index(hour_data_df, freq)
+
+
+def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initializes correctly."""
     asset = "BTC"
     currency = "USD"
-    interval = 100
+    freq = "H"
 
+    mocker.patch("coin_test.data.CustomDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
-    mocker.patch("coin_test.data.CustomDataset._infer_interval")
 
+    CustomDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
-    CustomDataset._infer_interval.return_value = interval
 
-    dataset = CustomDataset(hour_data_df, asset, currency)
+    dataset = CustomDataset(hour_data_df, freq, asset, currency)
 
     pd.testing.assert_frame_equal(dataset.df, hour_data_df)
     assert dataset.metadata.asset == asset
     assert dataset.metadata.currency == currency
-    assert dataset.metadata.interval == interval
+    assert dataset.metadata.freq == freq
 
+    CustomDataset._add_period_index.assert_called_once_with(hour_data_df, freq)
     CustomDataset._validate_df.assert_called_once_with(hour_data_df)
-    CustomDataset._infer_interval.assert_called_once_with(hour_data_df["Open Time"])
 
 
-def test_init_dataset_invalid_df(
+def test_init_custom_dataset_invalid_df(
     simple_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
     """Errors on invalid df."""
+    mocker.patch("coin_test.data.CustomDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
+    CustomDataset._add_period_index.return_value = simple_df
     CustomDataset._validate_df.return_value = False
 
     with pytest.raises(ValueError):
-        CustomDataset(simple_df, "BTC", "USD")
+        CustomDataset(simple_df, "H", "BTC", "USD")
 
 
 def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Calls processor properly."""
     asset = "BTC"
     currency = "USD"
-    interval = 100
+    freq = "H"
 
+    mocker.patch("coin_test.data.CustomDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
-    mocker.patch("coin_test.data.CustomDataset._infer_interval")
     processor = Mock()
 
+    CustomDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
-    CustomDataset._infer_interval.return_value = interval
     processor.return_value = hour_data_df
 
-    dataset = CustomDataset(hour_data_df, asset, currency)
+    dataset = CustomDataset(hour_data_df, freq, asset, currency)
     processed_dataset = dataset.process([processor])
 
     assert dataset == processed_dataset

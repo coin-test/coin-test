@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from collections import Counter
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
@@ -39,14 +40,13 @@ class Dataset(metaclass=DatasetMetaclass):
 
     def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
         """Validate setting of `df` attribute."""
-        if name == "df":
-            if not self._validate_df(value):
-                raise ValueError(
-                    f"""
-                    DataFrame has incorrect column names or column types.
-                    Expecting {self.SCHEMA}, got {value.dtypes}.
-                    """
-                )
+        if name == "df" and not self._validate_df(value):
+            raise ValueError(
+                f"""
+                DataFrame has incorrect column names or column types.
+                Expecting {self.SCHEMA}, got {value.dtypes}.
+                """
+            )
         super().__setattr__(name, value)
 
     @classmethod
@@ -86,14 +86,13 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
     """Load a DataFrame with associated MetaData."""
 
     SCHEMA = {
-        "Open Time": int,
         "Open": float,
         "High": float,
         "Low": float,
         "Close": float,
         "Volume": float,
-        "Close Time": int,
     }
+    OPEN_TIME_NAME = "Open Time"
 
     @property
     @abstractmethod
@@ -104,38 +103,70 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
 class CustomDataset(PriceDataset):
     """Load a DataFrame in the expected format of price data."""
 
-    def __init__(self, df: pd.DataFrame, asset: str, currency: str) -> None:
+    def __init__(self, df: pd.DataFrame, freq: str, asset: str, currency: str) -> None:
         """Initialize a PriceDataLoader.
 
         Validate DataFrame format correctness and infer timestep interval.
 
         Args:
-            df: DataFrame to validate and infer interval for
+            df: DataFrame to load
+            freq: Pandas period string representing price data interval
             asset: Asset to store in MetaData
             currency: Currency to store in MetaData
         """
-        self.df = df
+        self.df = self._add_period_index(df, freq)
+        self._metadata = MetaData(asset, currency, freq)
 
-        interval = self._infer_interval(self.df["Open Time"])
-        self._metadata = MetaData(asset, currency, interval)
+    @classmethod
+    def _add_period_index(cls, df: pd.DataFrame, freq: str) -> pd.DataFrame:
+        """Add a Period index to passed Dataframe.
 
-    @staticmethod
-    def _infer_interval(timestamps: pd.Series) -> int:
-        """Infer interval from dataframe.
+        Immediately return if index already exists. Otherwise, check for
+        existence of cls.OPEN_TIME_NAME column, then build Period index based on
+        column type.
 
         Args:
-            timestamps: Series of timestamps in seconds
+            df: DataFrame to add Period index to.
+            freq: Pandas period string representing price data inteval
 
         Returns:
-            int: Inferred interval in seconds
+            DataFrame: DataFrame with Period index.
 
         Raises:
-            ValueError: Intervals are not consistent across timesteps
+            ValueError: Column is missing or type is un-supported.
         """
-        intervals = timestamps.diff().iloc[1:].astype(int)
-        if not all(intervals == intervals.iloc[0]):
-            raise ValueError("Timestamps intervals are not consistent")
-        return int(intervals.iloc[0])
+        if isinstance(df.index, pd.PeriodIndex):
+            return df
+        if cls.OPEN_TIME_NAME not in df.columns:
+            raise ValueError(
+                f"""
+                Custom price DataFrame requires either a PeriodIndex or a column
+                of name "{cls.OPEN_TIME_NAME}".
+                """
+            )
+
+        series = df[cls.OPEN_TIME_NAME]
+        if (
+            pd.api.types.is_period_dtype(series.dtype)
+            or pd.api.types.is_datetime64_dtype(series.dtype)
+            or pd.api.types.is_string_dtype(series.dtype)
+        ):
+            # Types that pandas can auto-infer from
+            index = pd.PeriodIndex(data=series, freq=freq)  # type: ignore
+        elif series.dtype == int:
+            # If int, assume time since epoch
+            index = pd.PeriodIndex(
+                data=[datetime.fromtimestamp(d) for d in series],
+                freq=freq,  # type: ignore
+            )
+        else:
+            raise ValueError(
+                f"""
+                Was not able to convert series of type {series.dtype} to a
+                pandas PeriodIndex.
+                """
+            )
+        return df.set_index(index, verify_integrity=True)
 
     @property
     def metadata(self) -> MetaData:

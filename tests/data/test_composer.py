@@ -21,7 +21,7 @@ def test_clean(simple_df: pd.DataFrame) -> None:
 def test_init_composer(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initializes correctly."""
     processors = []
-    metadata = MetaData("BTC", "USD", 100)
+    metadata = MetaData("BTC", "USD", "H")
     loader = Mock()
     df_mock = PropertyMock(return_value=simple_df)
     metadata_mock = PropertyMock(return_value=metadata)
