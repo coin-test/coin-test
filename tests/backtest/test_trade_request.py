@@ -2,7 +2,11 @@
 
 import pytest
 
-from coin_test.backtest import LimitTradeRequest, MarketTradeRequest
+from coin_test.backtest import (
+    LimitTradeRequest,
+    MarketTradeRequest,
+    StopLimitTradeRequest,
+)
 from coin_test.util import AssetPair, Side
 
 
@@ -38,6 +42,26 @@ def test_limit_trade_request(asset_pair: AssetPair) -> None:
 
     assert y.can_execute(above_limit_price) is True
     assert y.can_execute(below_limit_price) is False
+
+
+def test_stop_limit_trade_request(asset_pair: AssetPair) -> None:
+    """Check for a stop limit order correctly."""
+    side_1 = Side.BUY
+    side_2 = Side.SELL
+    limit_price = 1100
+    notional = 1000.0
+
+    above_limit_price = 1101
+    below_limit_price = 1099
+
+    x = StopLimitTradeRequest(asset_pair, side_1, limit_price, notional)
+    y = StopLimitTradeRequest(asset_pair, side_2, limit_price, notional)
+
+    assert x.can_execute(above_limit_price) is True
+    assert x.can_execute(below_limit_price) is False
+
+    assert y.can_execute(above_limit_price) is False
+    assert y.can_execute(below_limit_price) is True
 
 
 def test_bad_trade_request(asset_pair: AssetPair) -> None:

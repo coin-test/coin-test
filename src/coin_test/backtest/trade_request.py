@@ -71,7 +71,7 @@ class LimitTradeRequest(TradeRequest):
     """A TradeRequest implementation for limit orders.
 
     If buying, buy when the current price is less than the limit price.
-    If selling, sell when the current price is higher than the limit price.
+    If selling, sell when the current price is greater than the limit price.
     """
 
     def __init__(
@@ -102,3 +102,40 @@ class LimitTradeRequest(TradeRequest):
         else:
             # self.side == Side.SELL
             return self.limit_price < price
+
+
+class StopLimitTradeRequest(TradeRequest):
+    """A TradeRequest implementation for stop limit orders.
+
+    If buying, buy when the current price is greater than the limit price.
+    If selling, sell when the current price is less than the limit price.
+    """
+
+    def __init__(
+        self,
+        asset_pair: AssetPair,
+        side: Side,
+        stop_limit_price: float,
+        notional: float | None = None,
+        qty: float | None = None,
+    ) -> None:
+        """Initialize a LimitTradeRequest.
+
+        Args:
+            asset_pair: The TradingPair for the asset being traded
+            side: The direction of the trade
+            stop_limit_price: The limit price for triggering the trade
+            notional: The amount of money to trade, default None
+            qty: The amount of shares to trade, can't be used with notional,
+                default None
+        """
+        super().__init__(asset_pair, side, notional, qty)
+        self.stop_limit_price = stop_limit_price
+
+    def can_execute(self, price: float) -> bool:
+        """Execute when the stop limit price condition is reached."""
+        if self.side == Side.BUY:
+            return self.stop_limit_price < price
+        else:
+            # self.side == Side.SELL
+            return self.stop_limit_price > price
