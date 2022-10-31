@@ -2,41 +2,57 @@
 
 import pytest
 
-from coin_test.backtest import TradeRequest
-from coin_test.util import AssetPair, Side, TradeType
+from coin_test.backtest import LimitTradeRequest, MarketTradeRequest
+from coin_test.util import AssetPair, Side
 
 
-def test_trade_request(example_asset_pair: AssetPair) -> None:
+def test_market_trade_request(asset_pair: AssetPair) -> None:
     """Initialize correctly."""
-    example_side = Side.BUY
-    example_trade_type = TradeType.MARKET
-    example_notional = 1000.0
+    side = Side.BUY
+    notional = 1000.0
 
-    x = TradeRequest(
-        example_asset_pair, example_side, example_trade_type, example_notional
-    )
+    x = MarketTradeRequest(asset_pair, side, notional)
 
-    assert x.asset_pair == example_asset_pair
-    assert x.side == example_side
-    assert x.type_ == example_trade_type
-    assert x.notional == example_notional
+    assert x.asset_pair == asset_pair
+    assert x.side == side
+    assert x.notional == notional
+
+    assert x.can_execute(999.99) is True
 
 
-def test_bad_trade_request(example_asset_pair: AssetPair) -> None:
+def test_limit_trade_request(asset_pair: AssetPair) -> None:
+    """Check for a limit order correctly."""
+    side_1 = Side.BUY
+    side_2 = Side.SELL
+    limit_price = 1100
+    notional = 1000.0
+
+    above_limit_price = 1101
+    below_limit_price = 1099
+
+    x = LimitTradeRequest(asset_pair, side_1, limit_price, notional)
+    y = LimitTradeRequest(asset_pair, side_2, limit_price, notional)
+
+    assert x.can_execute(above_limit_price) is False
+    assert x.can_execute(below_limit_price) is True
+
+    assert y.can_execute(above_limit_price) is True
+    assert y.can_execute(below_limit_price) is False
+
+
+def test_bad_trade_request(asset_pair: AssetPair) -> None:
     """Error when supplying notional and buy argements or neither argument."""
-    example_side = Side.BUY
-    example_trade_type = TradeType.MARKET
-    example_notional = 1000.0
-    example_qty = 2.0
+    side = Side.BUY
+    notional = 1000.0
+    qty = 2.0
 
     with pytest.raises(ValueError):
-        TradeRequest(
-            example_asset_pair,
-            example_side,
-            example_trade_type,
-            example_notional,
-            example_qty,
+        MarketTradeRequest(
+            asset_pair,
+            side,
+            notional,
+            qty,
         )
 
     with pytest.raises(ValueError):
-        TradeRequest(example_asset_pair, example_side, example_trade_type)
+        MarketTradeRequest(asset_pair, side)
