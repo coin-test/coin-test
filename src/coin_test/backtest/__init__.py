@@ -4,7 +4,7 @@ from .portfolio import Portfolio
 from .simulator import Simulator
 from .strategy import TestStrategy, UserDefinedStrategy
 from .trade import Trade
-from .trade_request import LimitTradeRequest, MarketTradeRequest
+from .trade_request import LimitTradeRequest, MarketTradeRequest, TradeRequest
 
 __all__ = [
     "LimitTradeRequest",
@@ -14,4 +14,5 @@ __all__ = [
     "UserDefinedStrategy",
     "TestStrategy",
     "Trade",
+    "TradeRequest",
 ]
