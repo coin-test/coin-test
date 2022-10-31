@@ -38,6 +38,12 @@ class UserDefinedStrategy(ABC):
         """The amount of data to send to the strategy function."""
         pass
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Name of the strategy."""
+        pass
+
 
 class TestStrategy(UserDefinedStrategy):
     """Test Strategy abstract implementation."""
