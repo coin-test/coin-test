@@ -1,4 +1,4 @@
-"""Test the Loader classes."""
+"""Test the Dataset classes."""
 
 from datetime import datetime
 from unittest.mock import Mock
