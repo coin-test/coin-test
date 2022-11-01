@@ -1,4 +1,4 @@
-"""Test the Dataset class."""
+"""Test the Composer class."""
 
 from typing import cast
 from unittest.mock import Mock, PropertyMock
