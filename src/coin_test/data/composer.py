@@ -4,6 +4,7 @@ from typing import cast, Iterable
 
 import numpy as np
 import pandas as pd
+from pandas.tseries.frequencies import to_offset
 
 from .datasets import PriceDataset
 from ..util import AssetPair, Ticker
@@ -53,7 +54,7 @@ class Composer:
 
     @staticmethod
     def _validate_start_end(start: pd.Timestamp, end: pd.Timestamp) -> None:
-        if start >= end:
+        if start > end:
             raise ValueError("Start time must be earlier than end time.")
 
     @staticmethod
@@ -73,48 +74,19 @@ class Composer:
         return base_currency
 
     @staticmethod
-    def _get_min_freq(datasets: list[PriceDataset]) -> pd.Timedelta:
+    def _get_min_freq(datasets: list[PriceDataset]) -> pd.DateOffset:
         """Get minimium frequency among datasets."""
-
-        def _to_timedelta(freq: str) -> pd.Timedelta:
-            """Convert frequency string to timedelta object."""
-            period_range = pd.period_range(start="2000", periods=2, freq=freq)
-            start = cast(pd.Period, period_range[0])
-            end = cast(pd.Period, period_range[1])
-            return end.start_time - start.start_time
-
-        return min([_to_timedelta(dataset.metadata.freq) for dataset in datasets])
-
-    def get_timestep(
-        self,
-        timestamp: pd.Timestamp,
-        keys: Iterable[AssetPair] | None = None,
-        mask: bool = True,
-    ) -> dict[AssetPair, pd.Series]:
-        """Get single timestep of data.
-
-        Args:
-            timestamp: Timestamp to get data for.
-            keys: Optional. AssetPairs to filter results on.
-            mask: Optional. Whether to mask non-Open data to NaN.
-
-        Returns:
-            dict: Dictionary mapping asset pairs to timestamp data per asset
-                pair. Dictionary default to all datasets, but is filtered based
-                on `keys` parameter.
-        """
-        if keys is None:
-            keys = list(self.datasets.keys())
-
-        data = {}
-        for key in keys:
-            if key not in self.datasets:
-                continue
-            ds_data = self.datasets[key].df[timestamp]
-            if mask:
-                ds_data.loc[:, ds_data.columns != "Open"] = np.nan
-            data[key] = ds_data
-        return data
+        offsets = [
+            cast(pd.DateOffset, to_offset(dataset.metadata.freq))
+            for dataset in datasets
+        ]
+        min_offset = offsets[0]
+        timestamp = pd.Timestamp("2001")
+        for offset in offsets[1:]:
+            # Direct comparison of offsets is disallowed
+            if timestamp + offset < timestamp + min_offset:
+                min_offset = offset
+        return min_offset
 
     def get_range(
         self,
@@ -146,9 +118,30 @@ class Composer:
                 continue
             ds_data = self.datasets[key].df[start_time:end_time]
             if mask:
-                ds_data.loc[-1, ds_data.columns != "Open"] = np.nan
+                ds_data = ds_data.copy()
+                ds_data.loc[ds_data.index[-1], ds_data.columns != "Open"] = np.nan
             data[key] = ds_data
         return data
+
+    def get_timestep(
+        self,
+        timestamp: pd.Timestamp,
+        keys: Iterable[AssetPair] | None = None,
+        mask: bool = True,
+    ) -> dict[AssetPair, pd.DataFrame]:
+        """Get single timestep of data.
+
+        Args:
+            timestamp: Timestamp to get data for.
+            keys: Optional. AssetPairs to filter results on.
+            mask: Optional. Whether to mask non-Open data to NaN.
+
+        Returns:
+            dict: Dictionary mapping asset pairs to timestamp data per asset
+                pair. Dictionary default to all datasets, but is filtered based
+                on `keys` parameter.
+        """
+        return self.get_range(timestamp, timestamp, keys=keys, mask=mask)
 
     def get_lookback(
         self,
