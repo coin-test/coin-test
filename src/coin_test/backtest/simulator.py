@@ -5,7 +5,7 @@ import datetime as dt
 from croniter import croniter
 
 from .portfolio import Portfolio
-from .strategy import UserDefinedStrategy
+from .strategy import Strategy
 from .trade import Trade
 from .trade_request import TradeRequest
 from ..data import Dataset
@@ -29,7 +29,9 @@ class Simulator:
         self,
         simulation_data: Dataset,
         starting_portfolio: Portfolio,
-        strategies: list[UserDefinedStrategy],
+        strategies: list[Strategy],
+        start_time: dt.datetime | None = None,
+        end_time: dt.datetime | None = None,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -38,13 +40,19 @@ class Simulator:
             starting_portfolio: The starting portfolio for the backtest,
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
+            start_time: The starting time of the backtest
+            end_time: The ending time of the backtest
         """
         self._portfolio = starting_portfolio
         self._datastore = simulation_data
         self._strategies = strategies
 
-        self._start_time = dt.datetime.now()  # self._datastore.start_time
-        self._end_time = dt.datetime.now()  # self._datastore.end_time
+        self._start_time = (
+            start_time if start_time is not None else dt.datetime.now()
+        )  # self._datastore.start_time
+        self._end_time = (
+            end_time if end_time is not None else dt.datetime.now()
+        )  # self._datastore.end_time
         self._simulation_dt = dt.timedelta(days=1)  # self.datacomposer.interval
         # self._timesteps = simulation_data.data[simulation_data.base_asset].
         # ["time"].tolist()
@@ -54,7 +62,7 @@ class Simulator:
         }
         self._asset_pairs = Simulator.collect_asset_pairs()
 
-    def strategies_to_run(self, time: dt.datetime) -> list[UserDefinedStrategy]:
+    def strategies_to_run(self, time: dt.datetime) -> list[Strategy]:
         """Determine which strategies are triggered at a current timestep."""
         # TODO: Is this doing a big copy? should we be
         # passing id's of strategies?
@@ -67,11 +75,6 @@ class Simulator:
 
     def run(self) -> None:
         """Run a simulation."""
-
-        def Execute(TradeRequest: TradeRequest) -> None | Trade:
-            """Execute a TradeRequest and update the portfolio."""
-            return None
-
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = [[]]
@@ -87,12 +90,17 @@ class Simulator:
             pending_requests_to_remove: set[int] = set()
 
             # Try to execute existing orders
-            for index, pending_order in enumerate(pending_orders):
+            for pending_order in pending_orders:
                 # Fulfill existing orders if conditions are met
-                trade = Execute(pending_order)
-                if trade is not None:
+                price = 1000  # price for asset pair of this trade
+                if not pending_order.can_execute(price):
+                    continue
+
+                if trade := portfolio.can_execute_trade(pending_order, price):
                     historical_trades.append(trade)
-                    pending_requests_to_remove.add(index)
+                    portfolio.adjust(trade)
+
+                del pending_order
 
             # Now remove fulfilled pending requests oding it by index
             # instead of making another list lookup
@@ -109,11 +117,12 @@ class Simulator:
                 # _strategy.lookpack,))
                 pass
 
-            for request in trade_requests:
+            for _ in trade_requests:
                 # Execute the strategies output and update the portfolio
-                trade = Execute(request)
-                if trade is not None:
-                    historical_trades.append(trade)
+                # trade = Execute(request)
+                # if trade is not None:
+                #     historical_trades.append(trade)
+                pass
 
             time += self._simulation_dt
             historical_portfolios.append(portfolio)

@@ -1,5 +1,7 @@
 """Define the Portfolio class."""
 
+from .trade import Trade
+from .trade_request import TradeRequest
 from ..util import Money, Ticker
 
 
@@ -44,3 +46,29 @@ class Portfolio:
             raise ValueError("This asset does not exist in the portfolio.")
 
         return self.assets[asset] - self.reserved[asset]
+
+    def adjust(self, trade: Trade) -> "Portfolio":
+        """Adjust the portfolio after a given Trade is performed.
+
+        Args:
+            trade: The Trade object that is completed
+
+        Returns:
+            Portfolio: The new portfolio
+        """
+        # TODO: Actually implement this method
+        return Portfolio(self.base_currency, self.assets.copy())
+
+    def can_execute_trade(
+        self, trade_request: TradeRequest, price: float
+    ) -> Trade | None:
+        """Determine if a TradeRequest can be executed.
+
+        Args:
+            trade_request: The TradeRequest to be executed
+            price: The price of the asset
+
+        Returns:
+            Trade | None: The trade if it can be executed
+        """
+        return None
