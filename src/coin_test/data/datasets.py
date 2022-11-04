@@ -61,8 +61,11 @@ class Dataset(metaclass=DatasetMetaclass):
             bool: True if DataFrame has required column names with required types,
                 false otherwise
         """
-        # TODO: Validate period index
+        if not isinstance(df.index, pd.PeriodIndex):
+            return False
         col_names = Counter(df.columns)
+        if len(col_names) != len(cls.SCHEMA):
+            return False
         for required_col, required_type in cls.SCHEMA.items():
             if col_names.get(required_col, 0) != 1:
                 return False

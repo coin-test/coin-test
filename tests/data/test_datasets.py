@@ -17,27 +17,41 @@ def test_dataset_construction_fails() -> None:
         Dataset()
 
 
-def test_validate_df_correct(hour_data_df: pd.DataFrame) -> None:
+def test_validate_df_correct(hour_data_indexed_df: pd.DataFrame) -> None:
     """Validate a correctly formatted df."""
-    assert PriceDataset._validate_df(hour_data_df)
+    assert PriceDataset._validate_df(hour_data_indexed_df)
 
 
-def test_validate_df_missing_col(hour_data_df: pd.DataFrame) -> None:
+def test_validate_df_missing_col(hour_data_indexed_df: pd.DataFrame) -> None:
     """Reject a df missing a required column."""
-    hour_data_df = hour_data_df.drop(columns=["Open"])
-    assert not PriceDataset._validate_df(hour_data_df)
+    hour_data_indexed_df = hour_data_indexed_df.drop(columns=["Open"])
+    assert not PriceDataset._validate_df(hour_data_indexed_df)
 
 
-def test_validate_df_duplicate_col(hour_data_df: pd.DataFrame) -> None:
+def test_validate_df_duplicate_col(hour_data_indexed_df: pd.DataFrame) -> None:
     """Reject a df with a duplicate column."""
-    hour_data_df.insert(0, "Open", hour_data_df["Open"], allow_duplicates=True)
-    assert not PriceDataset._validate_df(hour_data_df)
+    hour_data_indexed_df.insert(
+        0, "Open", hour_data_indexed_df["Open"], allow_duplicates=True
+    )
+    assert not PriceDataset._validate_df(hour_data_indexed_df)
 
 
-def test_validate_df_incorrect_type(hour_data_df: pd.DataFrame) -> None:
+def test_validate_df_extra_col(hour_data_indexed_df: pd.DataFrame) -> None:
+    """Reject a df with an extra column."""
+    hour_data_indexed_df.insert(0, "Fake Col", hour_data_indexed_df["Open"])
+    assert not PriceDataset._validate_df(hour_data_indexed_df)
+
+
+def test_validate_df_wrong_index(hour_data_indexed_df: pd.DataFrame) -> None:
+    """Reject a df with a incorect index column."""
+    hour_data_indexed_df.reset_index(inplace=True)
+    assert not PriceDataset._validate_df(hour_data_indexed_df)
+
+
+def test_validate_df_incorrect_type(hour_data_indexed_df: pd.DataFrame) -> None:
     """Reject a df with an incorrect type."""
-    hour_data_df["Open"] = hour_data_df["Open"].astype(int)
-    assert not PriceDataset._validate_df(hour_data_df)
+    hour_data_indexed_df["Open"] = hour_data_indexed_df["Open"].astype(int)
+    assert not PriceDataset._validate_df(hour_data_indexed_df)
 
 
 def test_add_period_index_existing_index(hour_data_df: pd.DataFrame) -> None:
