@@ -21,7 +21,7 @@ def test_market_trade_request(asset_pair: AssetPair) -> None:
     assert x.side == side
     assert x.notional == notional
 
-    assert x.can_execute(999.99) is True
+    assert x.should_execute(999.99) is True
 
 
 def test_limit_trade_request(asset_pair: AssetPair) -> None:
@@ -37,11 +37,11 @@ def test_limit_trade_request(asset_pair: AssetPair) -> None:
     x = LimitTradeRequest(asset_pair, side_1, limit_price, notional)
     y = LimitTradeRequest(asset_pair, side_2, limit_price, notional)
 
-    assert x.can_execute(above_limit_price) is False
-    assert x.can_execute(below_limit_price) is True
+    assert x.should_execute(above_limit_price) is False
+    assert x.should_execute(below_limit_price) is True
 
-    assert y.can_execute(above_limit_price) is True
-    assert y.can_execute(below_limit_price) is False
+    assert y.should_execute(above_limit_price) is True
+    assert y.should_execute(below_limit_price) is False
 
 
 def test_stop_limit_trade_request(asset_pair: AssetPair) -> None:
@@ -57,11 +57,11 @@ def test_stop_limit_trade_request(asset_pair: AssetPair) -> None:
     x = StopLimitTradeRequest(asset_pair, side_1, limit_price, notional)
     y = StopLimitTradeRequest(asset_pair, side_2, limit_price, notional)
 
-    assert x.can_execute(above_limit_price) is True
-    assert x.can_execute(below_limit_price) is False
+    assert x.should_execute(above_limit_price) is True
+    assert x.should_execute(below_limit_price) is False
 
-    assert y.can_execute(above_limit_price) is False
-    assert y.can_execute(below_limit_price) is True
+    assert y.should_execute(above_limit_price) is False
+    assert y.should_execute(below_limit_price) is True
 
 
 def test_bad_trade_request(asset_pair: AssetPair) -> None:

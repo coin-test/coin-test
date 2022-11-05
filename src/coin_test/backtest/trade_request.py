@@ -38,7 +38,7 @@ class TradeRequest(ABC):
             raise ValueError("Must specify either notional or qty")
 
     @abstractmethod
-    def can_execute(self, price: float) -> bool:
+    def should_execute(self, price: float) -> bool:
         """Determine if a trade can execute given the current price.
 
         Args:
@@ -62,7 +62,7 @@ class MarketTradeRequest(TradeRequest):
         """Initialize a MarketTradeRequest."""
         super().__init__(asset_pair, side, notional, qty)
 
-    def can_execute(self, price: float) -> bool:
+    def should_execute(self, price: float) -> bool:
         """A MarketTrade object should always execute."""
         return True
 
@@ -95,7 +95,7 @@ class LimitTradeRequest(TradeRequest):
         super().__init__(asset_pair, side, notional, qty)
         self.limit_price = limit_price
 
-    def can_execute(self, price: float) -> bool:
+    def should_execute(self, price: float) -> bool:
         """Execute when the limit price condition is reached."""
         if self.side == Side.BUY:
             return self.limit_price > price
@@ -132,7 +132,7 @@ class StopLimitTradeRequest(TradeRequest):
         super().__init__(asset_pair, side, notional, qty)
         self.stop_limit_price = stop_limit_price
 
-    def can_execute(self, price: float) -> bool:
+    def should_execute(self, price: float) -> bool:
         """Execute when the stop limit price condition is reached."""
         if self.side == Side.BUY:
             return self.stop_limit_price < price
