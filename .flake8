@@ -12,3 +12,5 @@ docstring-convention = google
 
 application-import-names = coin_test,tests
 import-order-style = google
+
+allow-star-arg-any = true

@@ -1,5 +1,7 @@
 """Pytest config."""
 
+from datetime import datetime
+
 import pandas as pd
 import pytest
 
@@ -34,7 +36,27 @@ def hour_data_df(hour_data: str) -> pd.DataFrame:
         "Low": float,
         "Close": float,
         "Volume": float,
-        "Close Time": int,
     }
     df = pd.read_csv(hour_data, dtype=dtypes)
+    return df
+
+
+@pytest.fixture
+def hour_data_indexed_df(hour_data: str) -> pd.DataFrame:
+    """Hourly data contents with period index."""
+    dtypes = {
+        "Open Time": int,
+        "Open": float,
+        "High": float,
+        "Low": float,
+        "Close": float,
+        "Volume": float,
+    }
+    df = pd.read_csv(hour_data, dtype=dtypes)  # type: ignore
+    index = pd.PeriodIndex(
+        data=[datetime.fromtimestamp(d) for d in df["Open Time"]],
+        freq="H",  # type: ignore
+    )
+    df.set_index(index, inplace=True)
+    df.drop(columns=["Open Time"], inplace=True)
     return df
