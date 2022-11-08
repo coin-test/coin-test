@@ -79,8 +79,6 @@ class MarketTradeRequest(TradeRequest):
         Returns:
             Trade that the TradeRequest represents
         """
-        if self.notional is None and self.qty is None:
-            ValueError("Notional or Qty must be specified")
         if self.side == Side.BUY:
             price = current_asset_price[self.asset_pair]["High"].iloc[0]
         else:

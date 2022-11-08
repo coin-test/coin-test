@@ -25,17 +25,80 @@ def test_market_trade_request(asset_pair: AssetPair) -> None:
     assert x.should_execute(999.99) is True
 
 
-def test_market_trade_request_build_trade(
+def test_market_trade_request_build_trade_buy_notional(
     asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
 ) -> None:
-    """Build Trade correctly."""
+    """Build Buy Trade with notional correctly."""
     side = Side.BUY
     notional = 1000.0
 
-    MarketTradeRequest(asset_pair, side, notional)
+    trade_request = MarketTradeRequest(asset_pair, side, notional)
 
-    # trade = x.build_trade(time)
-    # TODO: Validate trade attributes
+    trade = trade_request.build_trade(timestamp_asset_price)
+
+    trade_price = timestamp_asset_price[asset_pair]["High"].iloc[0]
+
+    assert trade.side == side
+    assert trade.asset_pair == asset_pair
+    assert trade.price == trade_price
+    assert trade.amount == notional // trade_price
+
+
+def test_market_trade_request_build_trade_buy_amount(
+    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+) -> None:
+    """Build Buy Trade with notional correctly."""
+    side = Side.BUY
+    amount = 1000.0
+
+    trade_request = MarketTradeRequest(asset_pair, side, qty=amount)
+
+    trade = trade_request.build_trade(timestamp_asset_price)
+
+    trade_price = timestamp_asset_price[asset_pair]["High"].iloc[0]
+
+    assert trade.side == side
+    assert trade.asset_pair == asset_pair
+    assert trade.price == trade_price
+    assert trade.amount == amount
+
+
+def test_market_trade_request_build_trade_sell_notional(
+    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+) -> None:
+    """Build Sell Trade with Notional correctly."""
+    side = Side.SELL
+    notional = 1000.0
+
+    trade_request = MarketTradeRequest(asset_pair, side, notional)
+
+    trade = trade_request.build_trade(timestamp_asset_price)
+
+    trade_price = timestamp_asset_price[asset_pair]["Low"].iloc[0]
+
+    assert trade.side == side
+    assert trade.asset_pair == asset_pair
+    assert trade.price == trade_price
+    assert trade.amount == notional // trade_price
+
+
+def test_market_trade_request_build_trade_sell_amount(
+    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+) -> None:
+    """Build Sell Trade with Notional correctly."""
+    side = Side.SELL
+    amount = 1000.0
+
+    trade_request = MarketTradeRequest(asset_pair, side, qty=amount)
+
+    trade = trade_request.build_trade(timestamp_asset_price)
+
+    trade_price = timestamp_asset_price[asset_pair]["Low"].iloc[0]
+
+    assert trade.side == side
+    assert trade.asset_pair == asset_pair
+    assert trade.price == trade_price
+    assert trade.amount == amount
 
 
 def test_limit_trade_request(asset_pair: AssetPair) -> None:

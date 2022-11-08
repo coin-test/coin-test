@@ -33,4 +33,6 @@ def timestamp() -> datetime.datetime:
 @pytest.fixture
 def timestamp_asset_price(asset_pair: AssetPair) -> dict[AssetPair, pd.DataFrame]:
     """Example asset price dictionary."""
-    return {asset_pair: pd.DataFrame()}
+    column_names = ["High", "Low", "Open", "Close"]
+    data = [[5.0, 1.0, 2.0, 3.0]]
+    return {asset_pair: pd.DataFrame(data=data, columns=column_names)}
