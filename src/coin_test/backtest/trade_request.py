@@ -2,6 +2,9 @@
 
 from abc import ABC, abstractmethod
 
+import pandas as pd
+
+from .trade import Trade
 from ..util import AssetPair, Side
 
 
@@ -48,26 +51,49 @@ class TradeRequest(ABC):
             bool: True if the trade can execute
         """
 
+    @abstractmethod
+    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+        """Build Trade that represents a TradeRequest.
+
+        Args:
+            current_asset_price: Current price data from composer
+
+        Returns:
+            Trade that the TradeRequest represents
+        """
+
 
 class MarketTradeRequest(TradeRequest):
     """A TradeRequest implementation for market (GTC) orders."""
-
-    def __init__(
-        self,
-        asset_pair: AssetPair,
-        side: Side,
-        notional: float | None = None,
-        qty: float | None = None,
-    ) -> None:
-        """Initialize a MarketTradeRequest."""
-        super().__init__(asset_pair, side, notional, qty)
 
     def should_execute(self, price: float) -> bool:
         """A MarketTrade object should always execute."""
         return True
 
+    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+        """Build Trade that represents a TradeRequest for a MarketTradeRequest.
 
-class LimitTradeRequest(TradeRequest):
+        Args:
+            current_asset_price: Current price data from composer
+
+        Returns:
+            Trade that the TradeRequest represents
+        """
+        if self.notional is None and self.qty is None:
+            ValueError("Notional or Qty must be specified")
+        if self.side == Side.BUY:
+            price = current_asset_price[self.asset_pair]["High"].iloc[0]
+        else:
+            price = current_asset_price[self.asset_pair]["Low"].iloc[0]
+
+        amount = self.qty
+        if amount is None:
+            amount = self.notional // price  # TODO: yeah...
+
+        return Trade(self.asset_pair, self.side, amount, price)
+
+
+class LimitTradeRequest(MarketTradeRequest):
     """A TradeRequest implementation for limit orders.
 
     If buying, buy when the current price is less than the limit price.
@@ -104,7 +130,7 @@ class LimitTradeRequest(TradeRequest):
             return self.limit_price < price
 
 
-class StopLimitTradeRequest(TradeRequest):
+class StopLimitTradeRequest(MarketTradeRequest):
     """A TradeRequest implementation for stop limit orders.
 
     If buying, buy when the current price is greater than the limit price.

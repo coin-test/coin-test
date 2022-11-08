@@ -1,8 +1,9 @@
 """Define the Portfolio class."""
 
+from typing import Union
+
 from .trade import Trade
-from .trade_request import TradeRequest
-from ..util import Money, Ticker
+from ..util import Money, Side, Ticker
 
 
 class Portfolio:
@@ -47,28 +48,30 @@ class Portfolio:
 
         return self.assets[asset] - self.reserved[asset]
 
-    def adjust(self, trade: Trade) -> "Portfolio":
+    def adjust(self, trade: Trade) -> Union["Portfolio", None]:
         """Adjust the portfolio after a given Trade is performed.
 
         Args:
             trade: The Trade object that is completed
 
         Returns:
-            Portfolio: The new portfolio
+            Portfolio | None: The new adjusted portfolio or None if insufficient Money
         """
-        # TODO: Actually implement this method
-        return Portfolio(self.base_currency, self.assets.copy())
+        adjusted_assets = self.assets.copy()
 
-    def can_execute_trade(
-        self, trade_request: TradeRequest, price: float
-    ) -> Trade | None:
-        """Determine if a TradeRequest can be executed.
+        currency = trade.asset_pair.currency
+        asset = trade.asset_pair.asset
+        if trade.side == Side.BUY:
+            # Check for overspending
+            if adjusted_assets[currency] < Money(currency, trade.amount * trade.price):
+                return None
 
-        Args:
-            trade_request: The TradeRequest to be executed
-            price: The price of the asset
+            adjusted_assets[currency] -= Money(currency, trade.amount * trade.price)
+            adjusted_assets[asset] += Money(asset, trade.amount)
+        else:
+            if adjusted_assets[asset] < Money(asset, trade.amount):
+                return None
+            adjusted_assets[currency] += Money(currency, trade.amount * trade.price)
+            adjusted_assets[asset] -= Money(asset, trade.amount)
 
-        Returns:
-            Trade | None: The trade if it can be executed
-        """
-        return None
+        return Portfolio(self.base_currency, adjusted_assets)

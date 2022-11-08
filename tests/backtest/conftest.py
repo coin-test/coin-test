@@ -2,6 +2,7 @@
 
 import datetime
 
+import pandas as pd
 import pytest
 
 from coin_test.util import AssetPair, Money, Ticker
@@ -27,3 +28,9 @@ def asset_pair() -> AssetPair:
 def timestamp() -> datetime.datetime:
     """Example timestamp for a given trade."""
     return datetime.datetime.fromtimestamp(int("riddle", 36))
+
+
+@pytest.fixture
+def timestamp_asset_price(asset_pair: AssetPair) -> dict[AssetPair, pd.DataFrame]:
+    """Example asset price dictionary."""
+    return {asset_pair: pd.DataFrame()}

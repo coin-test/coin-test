@@ -2,7 +2,7 @@
 
 from .portfolio import Portfolio
 from .simulator import Simulator
-from .strategy import Strategy, TestStrategy
+from .strategy import Strategy
 from .trade import Trade
 from .trade_request import (
     LimitTradeRequest,
@@ -18,7 +18,6 @@ __all__ = [
     "Simulator",
     "StopLimitTradeRequest",
     "Strategy",
-    "TestStrategy",
     "Trade",
     "TradeRequest",
 ]

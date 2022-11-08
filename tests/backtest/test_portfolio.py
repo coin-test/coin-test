@@ -1,9 +1,12 @@
 """Test the Portfolio class."""
 
+from unittest.mock import Mock, PropertyMock
+
 import pytest
 
 from coin_test.backtest import Portfolio
 from coin_test.util import Money, Ticker
+from coin_test.util.ticker import AssetPair
 
 
 def test_portfolio(assets: dict) -> None:
@@ -59,3 +62,24 @@ def test_for_wrong_asset(assets: dict) -> None:
 
     with pytest.raises(ValueError):
         p.available_assets(Ticker("DOGE"))
+
+
+# def _mock_dataset(
+#     df: pd.DataFrame | None, metadata: MetaData | None
+# ) -> tuple[Mock, PropertyMock, PropertyMock]:
+#     dataset = Mock()
+#     df_mock = PropertyMock(return_value=df)
+#     metadata_mock = PropertyMock(return_value=metadata)
+#     type(dataset).df = df_mock
+#     type(dataset).metadata = metadata_mock
+#     return dataset, df_mock, metadata_mock
+
+
+def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
+    """Adjust a portfolio."""
+    trade = Mock()
+    type(trade).asset_pair = PropertyMock(return_value=asset_pair)
+
+    # portfolio.adjust(trade)
+    # type(trade).side =
+    # TODO: Create portfolio based on the assets. Use a mocked trade

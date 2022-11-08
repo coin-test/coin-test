@@ -1,7 +1,5 @@
 """Define the Trade class."""
 
-import datetime as dt
-
 from ..util import AssetPair, Side
 
 
@@ -9,7 +7,7 @@ class Trade:
     """Store the details of a trade."""
 
     def __init__(
-        self, asset_pair: AssetPair, side: Side, price: float, timestamp: dt.datetime
+        self, asset_pair: AssetPair, side: Side, amount: float, price: float
     ) -> None:
         """Initialize a Trade object.
 
@@ -17,9 +15,9 @@ class Trade:
             asset_pair: The asset pair being traded
             side: The direction of the trade
             price: The price per share of the asset
-            timestamp: When the trade takes place
+            amount: The number of shares of the asset
         """
         self.asset_pair = asset_pair
         self.side = side
+        self.amount = amount
         self.price = price
-        self.timestamp = timestamp

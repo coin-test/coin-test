@@ -3,12 +3,13 @@
 import datetime as dt
 
 from croniter import croniter
+import pandas as pd
 
 from .portfolio import Portfolio
 from .strategy import Strategy
 from .trade import Trade
 from .trade_request import TradeRequest
-from ..data import Dataset
+from ..data import Composer
 from ..util import AssetPair
 
 
@@ -16,65 +17,165 @@ class Simulator:
     """Manage the simulation of a backtest."""
 
     @staticmethod
-    def collect_asset_pairs() -> list[AssetPair]:
+    def collect_asset_pairs(strategies: list[Strategy]) -> set[AssetPair]:
         """Create asset pair list from strategies."""
-        return []
+        asset_list = []
+        for strat in strategies:
+            asset_list.extend(strat.asset_pairs)
+        return set(asset_list)
 
     @staticmethod
-    def validate() -> bool:
+    def validate(composer: Composer, strategies: list[Strategy]) -> bool:
         """Validate a simulation can be run."""
-        return True
+        strat_assets = Simulator.collect_asset_pairs(strategies)
+        data_assets = set(composer.datasets.keys())
+        return len(strat_assets - data_assets) == 0
 
     def __init__(
         self,
-        simulation_data: Dataset,
+        composer: Composer,
         starting_portfolio: Portfolio,
         strategies: list[Strategy],
-        start_time: dt.datetime | None = None,
-        end_time: dt.datetime | None = None,
     ) -> None:
         """Initialize a Simulator object.
 
         Args:
-            simulation_data: Data for the strategies to use during simulation
+            composer: Data composer for the strategies to use during simulation
             starting_portfolio: The starting portfolio for the backtest,
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
-            start_time: The starting time of the backtest
-            end_time: The ending time of the backtest
         """
         self._portfolio = starting_portfolio
-        self._datastore = simulation_data
+        self._composer = composer
         self._strategies = strategies
 
-        self._start_time = (
-            start_time if start_time is not None else dt.datetime.now()
-        )  # self._datastore.start_time
-        self._end_time = (
-            end_time if end_time is not None else dt.datetime.now()
-        )  # self._datastore.end_time
-        self._simulation_dt = dt.timedelta(days=1)  # self.datacomposer.interval
-        # self._timesteps = simulation_data.data[simulation_data.base_asset].
-        # ["time"].tolist()
+        self._start_time = composer.start_time
+        self._end_time = composer.end_time
+        self._simulation_dt = composer.freq
 
-        self._schedule = {
-            s: croniter(s.schedule, self._start_time) for s in self._strategies
-        }
-        self._asset_pairs = Simulator.collect_asset_pairs()
+        if not self.validate(composer, strategies):
+            ValueError("Strategy uses AssetPair that composer does not")
 
-    def strategies_to_run(self, time: dt.datetime) -> list[Strategy]:
+    def _strategies_to_run(
+        self, schedule: list[tuple[Strategy, croniter]], time: dt.datetime
+    ) -> list[Strategy]:
         """Determine which strategies are triggered at a current timestep."""
-        # TODO: Is this doing a big copy? should we be
-        # passing id's of strategies?
         strategies_to_run = []
-        for strat, cron in self._schedule.items():
-            if time - self._simulation_dt < cron.get_current(dt.datetime) <= time:
+        for strat, cron in schedule:
+            if time <= cron.get_current(dt.datetime) < time + self._simulation_dt:
                 cron.get_next(dt.datetime)
                 strategies_to_run.append(strat)
         return strategies_to_run
 
-    def run(self) -> None:
+    def run_strategies(
+        self,
+        schedule: list[tuple[Strategy, croniter]],
+        time: pd.Timestamp,
+        portfolio: Portfolio,
+    ) -> list[TradeRequest]:
+        """Create TradeRequests for a given timestamp.
+
+        Args:
+            schedule: List of strategies indicating their next run time
+            time: Current timestamp used to determine which strategies should run
+            portfolio: Current Portfolio at given timestamp
+
+        Returns:
+            _type_: _description_
+        """
+        trade_requests = []
+        for strat in self._strategies_to_run(schedule, time):
+            lookback_data = self._composer.get_range(
+                time - strat.lookback, time, strat.asset_pairs
+            )
+            trade_requests.extend(strat(time, portfolio, lookback_data))
+        return trade_requests
+
+    @staticmethod
+    def _split_pending_orders(
+        pending_orders: list[TradeRequest],
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+    ) -> tuple[list[TradeRequest], list[TradeRequest]]:
+        """Split pending orders into executable and remaining orders.
+
+        Args:
+            pending_orders: Uncompleted TradeRequests
+            current_asset_price: Current timestamp's price by AssetPair
+
+        Returns:
+            (executable orders, pending orders)
+        """
+        remaining_orders = []
+        executable_orders = []
+        for order in pending_orders:
+            # Fulfill existing orders if conditions are met
+            if not order.should_execute(
+                current_asset_price[order.asset_pair]["Open"].iloc[0]
+            ):
+                remaining_orders.append(order)
+            else:
+                executable_orders.append(order)
+        return executable_orders, remaining_orders
+
+    @staticmethod
+    def _execute_orders(
+        portfolio: Portfolio,
+        orders: list[TradeRequest],
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+    ) -> tuple[Portfolio, list[Trade]]:
+        """Execute orders by adjusting portfolio.
+
+        Args:
+            portfolio: Current Portfolio at given timestamp
+            orders: TradeRequests to execute
+            current_asset_price: Current timestamp's price by AssetPair
+
+        Returns:
+            (updated portfolio, completed Trade objects)
+        """
+        completed_trades = []
+        for order in orders:
+            trade = order.build_trade(current_asset_price)
+            adjusted_portfolio = portfolio.adjust(trade)
+
+            # Check if adjusting the portfolio failed
+            if adjusted_portfolio is None:
+                continue
+            completed_trades.append(trade)
+            portfolio = adjusted_portfolio
+
+        return portfolio, completed_trades
+
+    @staticmethod
+    def handle_pending_orders(
+        pending_orders: list[TradeRequest],
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+        portfolio: Portfolio,
+    ) -> tuple[list[TradeRequest], Portfolio, list[Trade]]:
+        """Process pending orders by adjusting the Portfolio appropriately.
+
+        Args:
+            pending_orders: Uncompleted TradeRequests
+            current_asset_price: Current timestamp's price by AssetPair
+            portfolio: Current Portfolio at given timestamp
+
+        Returns:
+            (remaining pending orders, updated portfolio, executed trades)
+        """
+        executable_orders, pending_orders = Simulator._split_pending_orders(
+            pending_orders, current_asset_price
+        )
+        portfolio, executed_trades = Simulator._execute_orders(
+            portfolio, executable_orders, current_asset_price
+        )
+        return pending_orders, portfolio, executed_trades
+
+    def run(self) -> tuple[list[Portfolio], list[Trade], list[list[TradeRequest]]]:
         """Run a simulation."""
+        schedule = [
+            (s, croniter(s.schedule, self._start_time)) for s in self._strategies
+        ]
+
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = [[]]
@@ -84,50 +185,26 @@ class Simulator:
         portfolio = self._portfolio
         pending_orders: list[TradeRequest] = []
 
-        while time <= self._end_time:  # Refactor to use self._timesteps
-            # Per-Timestep State
-            trade_requests: list[TradeRequest] = []
-            pending_requests_to_remove: set[int] = set()
+        while time < self._end_time:
+            # Get Timestep data
+            current_asset_price = self._composer.get_timestep(time, mask=False)
 
-            # Try to execute existing orders
-            for pending_order in pending_orders:
-                # Fulfill existing orders if conditions are met
-                price = 1000  # price for asset pair of this trade
-                if not pending_order.can_execute(price):
-                    continue
+            pending_orders, portfolio, executed_trades = self.handle_pending_orders(
+                pending_orders, current_asset_price, portfolio
+            )
+            historical_trades.extend(executed_trades)
 
-                if trade := portfolio.can_execute_trade(pending_order, price):
-                    historical_trades.append(trade)
-                    portfolio.adjust(trade)
+            trade_requests = self.run_strategies(schedule, time, portfolio)
 
-                del pending_order
+            remaining_tr, portfolio, executed_trades = self.handle_pending_orders(
+                trade_requests, current_asset_price, portfolio
+            )
 
-            # Now remove fulfilled pending requests oding it by index
-            # instead of making another list lookup
-            pending_orders = [
-                elem
-                for index, elem in enumerate(pending_orders)
-                if index not in pending_requests_to_remove
-            ]
-
-            for strategy in self.strategies_to_run(time):
-                print(strategy.schedule)
-                # trade_requests.extend(self._strategies[_strategy]
-                # (time, portfolio, self._datastore.lookback(
-                # _strategy.lookpack,))
-                pass
-
-            for _ in trade_requests:
-                # Execute the strategies output and update the portfolio
-                # trade = Execute(request)
-                # if trade is not None:
-                #     historical_trades.append(trade)
-                pass
-
-            time += self._simulation_dt
+            # TODO: DO these objects need to be copied
+            pending_orders.extend(remaining_tr)
+            historical_trades.extend(executed_trades)
             historical_portfolios.append(portfolio)
             historical_pending_orders.append(pending_orders)
+            time += self._simulation_dt
 
-        # End of Simulation
-        # TODO: Prepare dataframes and build output object
-        # return BacktestResults
+        return historical_portfolios, historical_trades, historical_pending_orders

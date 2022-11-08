@@ -1,5 +1,6 @@
 """Test the TradeRequest class."""
 
+import pandas as pd
 import pytest
 
 from coin_test.backtest import (
@@ -22,6 +23,19 @@ def test_market_trade_request(asset_pair: AssetPair) -> None:
     assert x.notional == notional
 
     assert x.should_execute(999.99) is True
+
+
+def test_market_trade_request_build_trade(
+    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+) -> None:
+    """Build Trade correctly."""
+    side = Side.BUY
+    notional = 1000.0
+
+    MarketTradeRequest(asset_pair, side, notional)
+
+    # trade = x.build_trade(time)
+    # TODO: Validate trade attributes
 
 
 def test_limit_trade_request(asset_pair: AssetPair) -> None:
