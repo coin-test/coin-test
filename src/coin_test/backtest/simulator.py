@@ -1,5 +1,6 @@
 """Define the Simulator class."""
 
+from collections.abc import Iterable
 import datetime as dt
 
 from croniter import croniter
@@ -15,21 +16,6 @@ from ..util import AssetPair
 
 class Simulator:
     """Manage the simulation of a backtest."""
-
-    @staticmethod
-    def collect_asset_pairs(strategies: list[Strategy]) -> set[AssetPair]:
-        """Create asset pair list from strategies."""
-        asset_list = []
-        for strat in strategies:
-            asset_list.extend(strat.asset_pairs)
-        return set(asset_list)
-
-    @staticmethod
-    def validate(composer: Composer, strategies: list[Strategy]) -> bool:
-        """Validate a simulation can be run."""
-        strat_assets = Simulator.collect_asset_pairs(strategies)
-        data_assets = set(composer.datasets.keys())
-        return len(strat_assets - data_assets) == 0
 
     def __init__(
         self,
@@ -53,47 +39,27 @@ class Simulator:
         self._end_time = composer.end_time
         self._simulation_dt = composer.freq
 
-        if not self.validate(composer, strategies):
+        if not self._validate(composer, strategies):
             ValueError("Strategy uses AssetPair that composer does not")
 
-    def _strategies_to_run(
-        self, schedule: list[tuple[Strategy, croniter]], time: dt.datetime
-    ) -> list[Strategy]:
-        """Determine which strategies are triggered at a current timestep."""
-        strategies_to_run = []
-        for strat, cron in schedule:
-            if time <= cron.get_current(dt.datetime) < time + self._simulation_dt:
-                cron.get_next(dt.datetime)
-                strategies_to_run.append(strat)
-        return strategies_to_run
+    @staticmethod
+    def _collect_asset_pairs(strategies: list[Strategy]) -> set[AssetPair]:
+        """Create asset pair list from strategies."""
+        asset_list = []
+        for strat in strategies:
+            asset_list.extend(strat.asset_pairs)
+        return set(asset_list)
 
-    def run_strategies(
-        self,
-        schedule: list[tuple[Strategy, croniter]],
-        time: pd.Timestamp,
-        portfolio: Portfolio,
-    ) -> list[TradeRequest]:
-        """Create TradeRequests for a given timestamp.
-
-        Args:
-            schedule: List of strategies indicating their next run time
-            time: Current timestamp used to determine which strategies should run
-            portfolio: Current Portfolio at given timestamp
-
-        Returns:
-            _type_: _description_
-        """
-        trade_requests = []
-        for strat in self._strategies_to_run(schedule, time):
-            lookback_data = self._composer.get_range(
-                time - strat.lookback, time, strat.asset_pairs
-            )
-            trade_requests.extend(strat(time, portfolio, lookback_data))
-        return trade_requests
+    @staticmethod
+    def _validate(composer: Composer, strategies: list[Strategy]) -> bool:
+        """Validate a simulation can be run."""
+        strat_assets = Simulator._collect_asset_pairs(strategies)
+        data_assets = set(composer.datasets.keys())
+        return len(strat_assets - data_assets) == 0
 
     @staticmethod
     def _split_pending_orders(
-        pending_orders: list[TradeRequest],
+        pending_orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
     ) -> tuple[list[TradeRequest], list[TradeRequest]]:
         """Split pending orders into executable and remaining orders.
@@ -120,7 +86,7 @@ class Simulator:
     @staticmethod
     def _execute_orders(
         portfolio: Portfolio,
-        orders: list[TradeRequest],
+        orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
     ) -> tuple[Portfolio, list[Trade]]:
         """Execute orders by adjusting portfolio.
@@ -169,6 +135,41 @@ class Simulator:
             portfolio, executable_orders, current_asset_price
         )
         return pending_orders, portfolio, executed_trades
+
+    def _strategies_to_run(
+        self, schedule: list[tuple[Strategy, croniter]], time: dt.datetime
+    ) -> list[Strategy]:
+        """Determine which strategies are triggered at a current timestep."""
+        strategies_to_run = []
+        for strat, cron in schedule:
+            if time <= cron.get_current(dt.datetime) < time + self._simulation_dt:
+                cron.get_next(dt.datetime)
+                strategies_to_run.append(strat)
+        return strategies_to_run
+
+    def run_strategies(
+        self,
+        schedule: list[tuple[Strategy, croniter]],
+        time: pd.Timestamp,
+        portfolio: Portfolio,
+    ) -> list[TradeRequest]:
+        """Create TradeRequests for a given timestamp.
+
+        Args:
+            schedule: List of strategies indicating their next run time
+            time: Current timestamp used to determine which strategies should run
+            portfolio: Current Portfolio at given timestamp
+
+        Returns:
+            _type_: _description_
+        """
+        trade_requests = []
+        for strat in self._strategies_to_run(schedule, time):
+            lookback_data = self._composer.get_range(
+                time - strat.lookback, time, strat.asset_pairs
+            )
+            trade_requests.extend(strat(time, portfolio, lookback_data))
+        return trade_requests
 
     def run(self) -> tuple[list[Portfolio], list[Trade], list[list[TradeRequest]]]:
         """Run a simulation."""

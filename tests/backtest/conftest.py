@@ -25,6 +25,18 @@ def asset_pair() -> AssetPair:
 
 
 @pytest.fixture
+def asset_pair_eth_usdt() -> AssetPair:
+    """Example symbol for a given trade."""
+    return AssetPair(Ticker("ETH"), Ticker("USDT"))
+
+
+@pytest.fixture
+def asset_pair_btc_eth() -> AssetPair:
+    """Example symbol for a given trade."""
+    return AssetPair(Ticker("BTC"), Ticker("ETH"))
+
+
+@pytest.fixture
 def timestamp() -> datetime.datetime:
     """Example timestamp for a given trade."""
     return datetime.datetime.fromtimestamp(int("riddle", 36))
