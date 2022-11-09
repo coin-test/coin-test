@@ -136,15 +136,29 @@ class Simulator:
         )
         return pending_orders, portfolio, executed_trades
 
+    @staticmethod
     def _strategies_to_run(
-        self, schedule: list[tuple[Strategy, croniter]], time: dt.datetime
+        schedule: list[tuple[Strategy, croniter]],
+        time: dt.datetime,
+        simulation_dt: pd.DateOffset,
     ) -> list[Strategy]:
-        """Determine which strategies are triggered at a current timestep."""
+        """Determine which strategies are triggered at a current timestep.
+
+        Args:
+            schedule: The list of strategies to run and their croniters
+            time: The current timestamp
+            simulation_dt: The time interval of the simulation
+
+        Returns:
+            list[Strategy]: The strategies to run this timestep
+        """
         strategies_to_run = []
         for strat, cron in schedule:
-            if time <= cron.get_current(dt.datetime) < time + self._simulation_dt:
-                cron.get_next(dt.datetime)
+            if cron.get_current(dt.datetime) < time + simulation_dt:
                 strategies_to_run.append(strat)
+                while cron.get_current(dt.datetime) < time + simulation_dt:
+                    cron.get_next(dt.datetime)
+
         return strategies_to_run
 
     def run_strategies(
@@ -164,7 +178,7 @@ class Simulator:
             _type_: _description_
         """
         trade_requests = []
-        for strat in self._strategies_to_run(schedule, time):
+        for strat in self._strategies_to_run(schedule, time, self._simulation_dt):
             lookback_data = self._composer.get_range(
                 time - strat.lookback, time, strat.asset_pairs
             )
@@ -176,6 +190,10 @@ class Simulator:
         schedule = [
             (s, croniter(s.schedule, self._start_time)) for s in self._strategies
         ]
+
+        # hack fix to remove start time from croniter data
+        for _, cron in schedule:
+            cron.get_next()
 
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []

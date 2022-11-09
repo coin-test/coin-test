@@ -1,10 +1,13 @@
 """Conftest file for testing."""
 
-import datetime
+import datetime as dt
+from unittest.mock import Mock
 
+from croniter import croniter
 import pandas as pd
 import pytest
 
+from coin_test.backtest import Strategy
 from coin_test.util import AssetPair, Money, Ticker
 
 
@@ -37,9 +40,9 @@ def asset_pair_btc_eth() -> AssetPair:
 
 
 @pytest.fixture
-def timestamp() -> datetime.datetime:
+def timestamp() -> dt.datetime:
     """Example timestamp for a given trade."""
-    return datetime.datetime.fromtimestamp(int("riddle", 36))
+    return dt.datetime.fromtimestamp(int("riddle", 36))
 
 
 @pytest.fixture
@@ -48,3 +51,18 @@ def timestamp_asset_price(asset_pair: AssetPair) -> dict[AssetPair, pd.DataFrame
     column_names = ["High", "Low", "Open", "Close"]
     data = [[5.0, 1.0, 2.0, 3.0]]
     return {asset_pair: pd.DataFrame(data=data, columns=column_names)}
+
+
+@pytest.fixture
+def schedule(timestamp: dt.datetime) -> list[tuple[Strategy, croniter]]:
+    """Example schedule for running strategies."""
+    strat_1 = Mock()
+    cron_1 = croniter("* * * * *", start_time=timestamp)  # every minute
+    cron_1.get_next()
+    strat_2 = Mock()
+    cron_2 = croniter("0 * * * *", start_time=timestamp)  # hourly
+    cron_2.get_next()
+    strat_3 = Mock()
+    cron_3 = croniter("0 0 * * *", start_time=timestamp)  # daily
+    cron_3.get_next()
+    return [(strat_1, cron_1), (strat_2, cron_2), (strat_3, cron_3)]

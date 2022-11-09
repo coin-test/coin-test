@@ -1,11 +1,13 @@
 """Test the Simulator class."""
 from copy import copy
+import datetime as dt
 from unittest.mock import Mock, PropertyMock
 
+from croniter import croniter
 import pandas as pd
 from pytest_mock import MockerFixture
 
-from coin_test.backtest import Simulator
+from coin_test.backtest import Simulator, Strategy
 from coin_test.util import AssetPair, Side
 
 
@@ -191,3 +193,27 @@ def test_execute_orders_failures(
 
     assert new_portfolio == portfolio
     assert completed_trades == []
+
+
+def test_simulation_runs_correct_strategies(
+    schedule: list[tuple[Strategy, croniter]], timestamp: dt.datetime
+) -> None:
+    """Simulation runs correct strategies at correct times."""
+    simulation_dt = pd.tseries.offsets.DateOffset(hours=1)
+    strategies_to_run = Simulator._strategies_to_run(schedule, timestamp, simulation_dt)
+
+    assert schedule[0][0] in strategies_to_run  # minute < hour
+    assert schedule[1][0] in strategies_to_run  # hour = hour
+    assert schedule[2][0] not in strategies_to_run  # day > hour
+    assert len(strategies_to_run) == 2  # 2/3
+
+    # now try again with a day offset, all strategies should run
+    new_simulation_dt = pd.tseries.offsets.DateOffset(days=1)
+    new_strategies_to_run = Simulator._strategies_to_run(
+        schedule, timestamp + simulation_dt, new_simulation_dt
+    )
+
+    assert schedule[0][0] in new_strategies_to_run  # minute < day
+    assert schedule[1][0] in new_strategies_to_run  # hour < day
+    assert schedule[2][0] in new_strategies_to_run  # day = day
+    assert len(new_strategies_to_run) == 3  # 3/3
