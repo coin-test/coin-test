@@ -43,4 +43,3 @@ class Strategy(ABC):
         lookback_data: dict[AssetPair, DataFrame],
     ) -> list[TradeRequest]:
         """Execute a strategy."""
-        pass
