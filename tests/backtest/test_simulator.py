@@ -195,6 +195,35 @@ def test_execute_orders_failures(
     assert completed_trades == []
 
 
+def test_handle_pending_orders(
+    asset_pair: AssetPair,
+    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
+    mocker: MockerFixture,
+) -> None:
+    """Propogate Orders as expected."""
+    portfolio = Mock()
+    mock_trade = _make_mock_trade_request(
+        asset_pair, Side.BUY, qty=1, should_execute=True, price=2
+    )
+    mock_trade2 = _make_mock_trade_request(
+        asset_pair, Side.BUY, qty=1, should_execute=True, price=1
+    )
+    orders = [mock_trade, mock_trade2]
+
+    mocker.patch("coin_test.backtest.Simulator._split_pending_orders")
+    Simulator._split_pending_orders.return_value = ([mock_trade], [mock_trade2])
+    mocker.patch("coin_test.backtest.Simulator._execute_orders")
+    Simulator._execute_orders.return_value = (portfolio, [mock_trade.build_trade])
+
+    pending_orders, new_portfolio, exec_trades = Simulator._handle_pending_orders(
+        orders, timestamp_asset_price, portfolio
+    )
+
+    assert pending_orders == [mock_trade2]
+    assert new_portfolio == portfolio
+    assert exec_trades == [mock_trade.build_trade]
+
+
 def test_simulation_runs_correct_strategies(
     schedule: list[tuple[Strategy, croniter]], timestamp: dt.datetime
 ) -> None:

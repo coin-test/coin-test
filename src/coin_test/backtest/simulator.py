@@ -113,8 +113,8 @@ class Simulator:
         return portfolio, completed_trades
 
     @staticmethod
-    def handle_pending_orders(
-        pending_orders: list[TradeRequest],
+    def _handle_pending_orders(
+        pending_orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
         portfolio: Portfolio,
     ) -> tuple[list[TradeRequest], Portfolio, list[Trade]]:
@@ -208,14 +208,14 @@ class Simulator:
             # Get Timestep data
             current_asset_price = self._composer.get_timestep(time, mask=False)
 
-            pending_orders, portfolio, executed_trades = self.handle_pending_orders(
+            pending_orders, portfolio, executed_trades = self._handle_pending_orders(
                 pending_orders, current_asset_price, portfolio
             )
             historical_trades.extend(executed_trades)
 
             trade_requests = self.run_strategies(schedule, time, portfolio)
 
-            remaining_tr, portfolio, executed_trades = self.handle_pending_orders(
+            remaining_tr, portfolio, executed_trades = self._handle_pending_orders(
                 trade_requests, current_asset_price, portfolio
             )
 
