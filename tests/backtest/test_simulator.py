@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pytest_mock import MockerFixture
 
-from coin_test.backtest import Simulator
+from coin_test.backtest import Simulator, Strategy
 from coin_test.util import AssetPair, Side
 
 
@@ -270,6 +270,30 @@ def test_run_strategies(
     strategy2.assert_called_with(time, portfolio, mock_composer.get_range.return_value)
 
     assert trade_requests == [mock_trade, mock_trade2]
+
+
+def test_simulation_runs_correct_strategies(
+    schedule: list[tuple[Strategy, croniter]], timestamp: dt.datetime
+) -> None:
+    """Simulation runs correct strategies at correct times."""
+    simulation_dt = pd.tseries.offsets.DateOffset(hours=1)
+    strategies_to_run = Simulator._strategies_to_run(schedule, timestamp, simulation_dt)
+
+    assert schedule[0][0] in strategies_to_run  # minute < hour
+    assert schedule[1][0] in strategies_to_run  # hour = hour
+    assert schedule[2][0] not in strategies_to_run  # day > hour
+    assert len(strategies_to_run) == 2  # 2/3
+
+    # now try again with a day offset, all strategies should run
+    new_simulation_dt = pd.tseries.offsets.DateOffset(days=1)
+    new_strategies_to_run = Simulator._strategies_to_run(
+        schedule, timestamp + simulation_dt, new_simulation_dt
+    )
+
+    assert schedule[0][0] in new_strategies_to_run  # minute < day
+    assert schedule[1][0] in new_strategies_to_run  # hour < day
+    assert schedule[2][0] in new_strategies_to_run  # day = day
+    assert len(new_strategies_to_run) == 3  # 3/3
 
 
 def test_run(
