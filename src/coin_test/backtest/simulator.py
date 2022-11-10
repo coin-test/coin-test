@@ -1,6 +1,7 @@
 """Define the Simulator class."""
 
 from collections.abc import Iterable
+from copy import copy
 import datetime as dt
 
 from croniter import croniter
@@ -21,7 +22,7 @@ class Simulator:
         self,
         composer: Composer,
         starting_portfolio: Portfolio,
-        strategies: list[Strategy],
+        strategies: Iterable[Strategy],
     ) -> None:
         """Initialize a Simulator object.
 
@@ -30,6 +31,9 @@ class Simulator:
             starting_portfolio: The starting portfolio for the backtest,
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
+
+        Raises:
+            ValueError: If stategy AssetPairs do not align with Composer
         """
         self._portfolio = starting_portfolio
         self._composer = composer
@@ -40,10 +44,10 @@ class Simulator:
         self._simulation_dt = composer.freq
 
         if not self._validate(composer, strategies):
-            ValueError("Strategy uses AssetPair that composer does not")
+            raise ValueError("Strategy uses AssetPair that composer does not")
 
     @staticmethod
-    def _collect_asset_pairs(strategies: list[Strategy]) -> set[AssetPair]:
+    def _collect_asset_pairs(strategies: Iterable[Strategy]) -> set[AssetPair]:
         """Create asset pair list from strategies."""
         asset_list = []
         for strat in strategies:
@@ -51,7 +55,7 @@ class Simulator:
         return set(asset_list)
 
     @staticmethod
-    def _validate(composer: Composer, strategies: list[Strategy]) -> bool:
+    def _validate(composer: Composer, strategies: Iterable[Strategy]) -> bool:
         """Validate a simulation can be run."""
         strat_assets = Simulator._collect_asset_pairs(strategies)
         data_assets = set(composer.datasets.keys())
@@ -137,7 +141,7 @@ class Simulator:
         return pending_orders, portfolio, executed_trades
 
     def _strategies_to_run(
-        self, schedule: list[tuple[Strategy, croniter]], time: dt.datetime
+        self, schedule: Iterable[tuple[Strategy, croniter]], time: dt.datetime
     ) -> list[Strategy]:
         """Determine which strategies are triggered at a current timestep."""
         strategies_to_run = []
@@ -149,7 +153,7 @@ class Simulator:
 
     def run_strategies(
         self,
-        schedule: list[tuple[Strategy, croniter]],
+        schedule: Iterable[tuple[Strategy, croniter]],
         time: pd.Timestamp,
         portfolio: Portfolio,
     ) -> list[TradeRequest]:
@@ -161,7 +165,7 @@ class Simulator:
             portfolio: Current Portfolio at given timestamp
 
         Returns:
-            _type_: _description_
+            list of TradeRequests to handle
         """
         trade_requests = []
         for strat in self._strategies_to_run(schedule, time):
@@ -179,7 +183,7 @@ class Simulator:
 
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
-        historical_pending_orders: list[list[TradeRequest]] = [[]]
+        historical_pending_orders: list[list[TradeRequest]] = []
 
         # State
         time = self._start_time
@@ -205,7 +209,6 @@ class Simulator:
             pending_orders.extend(remaining_tr)
             historical_trades.extend(executed_trades)
             historical_portfolios.append(portfolio)
-            historical_pending_orders.append(pending_orders)
+            historical_pending_orders.append(copy(pending_orders))
             time += self._simulation_dt
-
         return historical_portfolios, historical_trades, historical_pending_orders
