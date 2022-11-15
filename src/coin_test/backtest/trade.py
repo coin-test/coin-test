@@ -14,8 +14,8 @@ class Trade:
         Args:
             asset_pair: The asset pair being traded
             side: The direction of the trade
-            price: The price per share of the asset
             amount: The number of shares of the asset
+            price: The price per share of the asset
         """
         self.asset_pair = asset_pair
         self.side = side

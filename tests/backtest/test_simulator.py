@@ -329,7 +329,13 @@ def test_run(
     strategy1.return_value = [mock_trade]
     type(strategy1).asset_pairs = PropertyMock(return_value=[asset_pair])
     type(strategy1).lookback = PropertyMock(return_value=dt.timedelta(days=1))
-    type(strategy1).schedule = PropertyMock(return_value="@yearly")
+    type(strategy1).schedule = PropertyMock(return_value="* * * * *")
+
+    strategy2 = Mock()
+    strategy2.return_value = [mock_trade]
+    type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
+    type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy2).schedule = PropertyMock(return_value=f"* * {time.day+1} * *")
 
     mocker.patch("coin_test.backtest.Simulator._handle_pending_orders")
     Simulator._handle_pending_orders.return_value = (
@@ -345,7 +351,7 @@ def test_run(
     Simulator._validate.return_value = True
 
     # TODO: Thi should be refactored to be a mocked object
-    sim = Simulator(mock_composer, portfolio, [strategy1])
+    sim = Simulator(mock_composer, portfolio, [strategy1, strategy2])
 
     hist_port, hist_trades, hist_pending = sim.run()
 

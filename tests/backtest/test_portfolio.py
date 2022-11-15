@@ -64,24 +64,20 @@ def test_for_wrong_asset(assets: dict) -> None:
         p.available_assets(Ticker("DOGE"))
 
 
-# def _mock_dataset(
-#     df: pd.DataFrame | None, metadata: MetaData | None
-# ) -> tuple[Mock, PropertyMock, PropertyMock]:
-#     dataset = Mock()
-#     df_mock = PropertyMock(return_value=df)
-#     metadata_mock = PropertyMock(return_value=metadata)
-#     type(dataset).df = df_mock
-#     type(dataset).metadata = metadata_mock
-#     return dataset, df_mock, metadata_mock
+def _make_mock_trade(
+    asset_pair: AssetPair, side: Side, qty: float, price: float
+) -> Mock:
+    mock_trade = Mock()
+    type(mock_trade).asset_pair = PropertyMock(return_value=asset_pair)
+    type(mock_trade).side = PropertyMock(return_value=side)
+    type(mock_trade).amount = PropertyMock(return_value=qty)
+    type(mock_trade).price = PropertyMock(return_value=price)
+    return mock_trade
 
 
 def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = Mock()
-    type(trade).asset_pair = PropertyMock(return_value=asset_pair)
-    type(trade).side = PropertyMock(return_value=Side.BUY)
-    type(trade).amount = PropertyMock(return_value=10)
-    type(trade).price = PropertyMock(return_value=10.1)
+    trade = _make_mock_trade(asset_pair, Side.BUY, 10, 10.1)
 
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
@@ -107,12 +103,7 @@ def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = Mock()
-    type(trade).asset_pair = PropertyMock(return_value=asset_pair)
-    type(trade).side = PropertyMock(return_value=Side.BUY)
-    type(trade).amount = PropertyMock(return_value=100)
-    type(trade).price = PropertyMock(return_value=10.1)
-
+    trade = _make_mock_trade(asset_pair, Side.BUY, 100, 10.1)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),
@@ -126,12 +117,7 @@ def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = Mock()
-    type(trade).asset_pair = PropertyMock(return_value=asset_pair)
-    type(trade).side = PropertyMock(return_value=Side.SELL)
-    type(trade).amount = PropertyMock(return_value=1.50)
-    type(trade).price = PropertyMock(return_value=10)
-
+    trade = _make_mock_trade(asset_pair, Side.SELL, 1.5, 10)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),
@@ -155,12 +141,7 @@ def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_failure_sell(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = Mock()
-    type(trade).asset_pair = PropertyMock(return_value=asset_pair)
-    type(trade).side = PropertyMock(return_value=Side.SELL)
-    type(trade).amount = PropertyMock(return_value=1.52)
-    type(trade).price = PropertyMock(return_value=10)
-
+    trade = _make_mock_trade(asset_pair, Side.SELL, 1.52, 10)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),

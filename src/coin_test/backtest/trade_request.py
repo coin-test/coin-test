@@ -40,6 +40,7 @@ class TradeRequest(ABC):
         elif notional is None and qty is None:
             raise ValueError("Must specify either notional or qty")
 
+    # TODO: Refactor to use timestamp data instead of price
     @abstractmethod
     def should_execute(self, price: float) -> bool:
         """Determine if a trade can execute given the current price.
@@ -86,7 +87,7 @@ class MarketTradeRequest(TradeRequest):
 
         amount = self.qty
         if amount is None:
-            amount = self.notional // price  # TODO: yeah...
+            amount = self.notional / price  # TODO: Be explicit about fracitonal
 
         return Trade(self.asset_pair, self.side, amount, price)
 
