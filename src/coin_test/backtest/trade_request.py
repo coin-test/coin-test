@@ -55,7 +55,7 @@ class TradeRequest(ABC):
         """
 
     @abstractmethod
-    def build_trade(self, current_asset_price: float) -> Trade:
+    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
         """Build Trade that represents a TradeRequest.
 
         Args:
