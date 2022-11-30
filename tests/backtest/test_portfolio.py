@@ -65,19 +65,22 @@ def test_for_wrong_asset(assets: dict) -> None:
 
 
 def _make_mock_trade(
-    asset_pair: AssetPair, side: Side, qty: float, price: float
+    asset_pair: AssetPair, side: Side, qty: float, price: float, transaction_fee: float
 ) -> Mock:
     mock_trade = Mock()
     type(mock_trade).asset_pair = PropertyMock(return_value=asset_pair)
     type(mock_trade).side = PropertyMock(return_value=side)
     type(mock_trade).amount = PropertyMock(return_value=qty)
     type(mock_trade).price = PropertyMock(return_value=price)
+    type(mock_trade).transaction_fee = PropertyMock(return_value=transaction_fee)
     return mock_trade
 
 
 def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = _make_mock_trade(asset_pair, Side.BUY, 10, 10.1)
+    transaction_fee = 0.50
+
+    trade = _make_mock_trade(asset_pair, Side.BUY, 10, 10.1, transaction_fee)
 
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
@@ -90,7 +93,7 @@ def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
     adj_portfolio = portfolio.adjust(trade)
 
     exepcted_base_currency = portfolio.assets[asset_pair.currency]
-    exepcted_base_currency.qty -= trade.amount * trade.price
+    exepcted_base_currency.qty -= trade.amount * trade.price + transaction_fee
     exepcted_trade_currency = portfolio.assets[asset_pair.asset]
     exepcted_trade_currency.qty += trade.amount
 
@@ -103,7 +106,8 @@ def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = _make_mock_trade(asset_pair, Side.BUY, 100, 10.1)
+    transaction_fee = 0.5
+    trade = _make_mock_trade(asset_pair, Side.BUY, 100, 10.1, transaction_fee)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),
@@ -117,7 +121,8 @@ def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = _make_mock_trade(asset_pair, Side.SELL, 1.5, 10)
+    transaction_fee = 0.50
+    trade = _make_mock_trade(asset_pair, Side.SELL, 1.5, 10, transaction_fee)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),
@@ -128,7 +133,7 @@ def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
     adj_portfolio = portfolio.adjust(trade)
 
     exepcted_base_currency = portfolio.assets[asset_pair.currency]
-    exepcted_base_currency.qty += trade.amount * trade.price
+    exepcted_base_currency.qty += trade.amount * trade.price - transaction_fee
     exepcted_trade_currency = portfolio.assets[asset_pair.asset]
     exepcted_trade_currency.qty -= trade.amount
 
@@ -141,7 +146,8 @@ def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
 
 def test_adjustment_failure_sell(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
-    trade = _make_mock_trade(asset_pair, Side.SELL, 1.52, 10)
+    transaction_fee = 0.5
+    trade = _make_mock_trade(asset_pair, Side.SELL, 1.52, 10, transaction_fee)
     portfolio_assets = {
         Ticker("BTC"): Money(Ticker("BTC"), 1.51),
         Ticker("ETH"): Money(Ticker("ETH"), 2),

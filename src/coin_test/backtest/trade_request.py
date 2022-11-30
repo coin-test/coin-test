@@ -66,7 +66,7 @@ class TradeRequest(ABC):
         """
 
     @staticmethod
-    def apply_slippage(
+    def _calculate_slippage(
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
@@ -101,7 +101,7 @@ class TradeRequest(ABC):
         return transaction_price
 
     @staticmethod
-    def generate_transaction_fee(amount: float, adjusted_price: float) -> float:
+    def _generate_transaction_fee(amount: float, adjusted_price: float) -> float:
         """Generate a transaction fee for a given trade request.
 
         Args:
@@ -132,13 +132,15 @@ class MarketTradeRequest(TradeRequest):
         Returns:
             Trade that the TradeRequest represents
         """
-        price = self.apply_slippage(self.asset_pair, self.side, current_asset_price)
+        price = TradeRequest._calculate_slippage(
+            self.asset_pair, self.side, current_asset_price
+        )
 
         amount = self.qty
         if amount is None:
             amount = cast(float, self.notional) / price
 
-        transaction_fee = self.generate_transaction_fee(amount, price)
+        transaction_fee = TradeRequest._generate_transaction_fee(amount, price)
 
         return Trade(self.asset_pair, self.side, amount, price, transaction_fee)
 

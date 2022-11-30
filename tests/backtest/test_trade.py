@@ -11,10 +11,18 @@ def test_trade(
     price = 100.0
     side = Side.BUY
     amount = 9.7
+    transaction_fee = 0.25
 
-    x = Trade(asset_pair=asset_pair, side=side, price=price, amount=amount)
+    x = Trade(
+        asset_pair=asset_pair,
+        side=side,
+        price=price,
+        amount=amount,
+        transaction_fee=transaction_fee,
+    )
 
     assert x.asset_pair == asset_pair
     assert x.side == side
     assert x.price == price
     assert x.amount == amount
+    assert x.transaction_fee == transaction_fee
