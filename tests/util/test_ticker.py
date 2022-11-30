@@ -55,3 +55,10 @@ def test_ticker_invalid_comparison() -> None:
     with pytest.raises(NotImplementedError):
         assert ticker != ticker2_symbol
         assert ticker2_symbol != ticker
+
+
+def test_ticker_repr() -> None:
+    """Builds string representation."""
+    symbol = "BTC"
+    ticker = Ticker(symbol)
+    assert repr(ticker) == f'Ticker("{symbol.lower()}")'
