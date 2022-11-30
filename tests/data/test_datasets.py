@@ -104,6 +104,15 @@ def test_add_period_index(
         assert p == pd.Period(d, freq=freq)  # type: ignore
 
 
+def test_add_period_index_validation(hour_data_df: pd.DataFrame) -> None:
+    """Build valid dataframe with period index."""
+    dates = [datetime(2000, 1, 1), datetime(2001, 1, 1), datetime(2002, 1, 1)]
+    hour_data_df = hour_data_df[: len(dates)].copy()
+    hour_data_df["Open Time"] = pd.Series(dates)
+    df = CustomDataset._add_period_index(hour_data_df, "Y")
+    assert CustomDataset._validate_df(df)
+
+
 def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initialize correctly."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
