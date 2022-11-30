@@ -315,10 +315,10 @@ def test_run(
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
-    time = dt.datetime.now()
+    time = pd.Timestamp.now()
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
-        return_value=time + dt.timedelta(days=2)
+        return_value=time + pd.DateOffset(days=2)
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
     mock_composer.get_timestep.return_value = timestamp_asset_price
@@ -353,8 +353,13 @@ def test_run(
     # TODO: Thi should be refactored to be a mocked object
     sim = Simulator(mock_composer, portfolio, [strategy1, strategy2])
 
-    hist_port, hist_trades, hist_pending = sim.run()
+    hist_times, hist_port, hist_trades, hist_pending = sim.run()
 
+    assert hist_times == [
+        mock_composer.start_time - mock_composer.freq,
+        mock_composer.start_time,
+        mock_composer.start_time + mock_composer.freq,
+    ]
     assert hist_port == [portfolio, portfolio_handled, portfolio_handled]
     assert hist_trades == [
         mock_executed_trade.build_trade(),
