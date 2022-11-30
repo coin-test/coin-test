@@ -62,6 +62,8 @@ class Simulator:
         """Determine which strategies are triggered at a current timestep."""
         strategies_to_run = []
         for strat, cron in schedule:
+            while cron.get_current(dt.datetime) < time:
+                cron.get_next(dt.datetime)
             if time <= cron.get_current(dt.datetime) < time + self._simulation_dt:
                 cron.get_next(dt.datetime)
                 strategies_to_run.append(strat)
@@ -179,6 +181,7 @@ class Simulator:
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = [[]]
+        times = [self._start_time]
 
         # State
         time = self._start_time
@@ -188,6 +191,9 @@ class Simulator:
         while time < self._end_time:
             # Get Timestep data
             current_asset_price = self._composer.get_timestep(time, mask=False)
+            # if len(list(current_asset_price.values())[0]) == 0:
+            #     time += self._simulation_dt
+            #     continue
 
             pending_orders, portfolio, executed_trades = self.handle_pending_orders(
                 pending_orders, current_asset_price, portfolio
@@ -205,6 +211,7 @@ class Simulator:
             historical_trades.extend(executed_trades)
             historical_portfolios.append(portfolio)
             historical_pending_orders.append(pending_orders)
+            times.append(pd.Timestamp(time))
             time += self._simulation_dt
 
-        return historical_portfolios, historical_trades, historical_pending_orders
+        return times, historical_portfolios, historical_trades, historical_pending_orders

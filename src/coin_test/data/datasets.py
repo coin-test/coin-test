@@ -159,7 +159,7 @@ class CustomDataset(PriceDataset):
         elif series.dtype == int:
             # If int, assume time since epoch
             index = pd.PeriodIndex(
-                data=[datetime.fromtimestamp(d) for d in series],
+                data=pd.to_datetime(series, unit="s"),
                 freq=freq,  # type: ignore
             )
         else:
@@ -169,7 +169,9 @@ class CustomDataset(PriceDataset):
                 pandas PeriodIndex.
                 """
             )
+        df = df.drop(columns=[cls.OPEN_TIME_NAME])
         return df.set_index(index, verify_integrity=True)
+        # return df.set_index(index)
 
     @property
     def metadata(self) -> MetaData:
