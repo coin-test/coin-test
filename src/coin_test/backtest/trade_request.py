@@ -1,6 +1,8 @@
 """Define the TradeRequest abstract class and subclasses."""
 
 from abc import ABC, abstractmethod
+from statistics import mean
+from typing import cast
 
 import pandas as pd
 
@@ -21,7 +23,7 @@ class TradeRequest(ABC):
         """Initialize a TradeRequest.
 
         Args:
-            asset_pair: The TradingPair for the asset being traded
+            asset_pair: The AssetPair for the asset being traded
             side: The direction of the trade
             notional: The amount of money to trade, default None
             qty: The amount of shares to trade, can't be used with notional,
@@ -53,7 +55,7 @@ class TradeRequest(ABC):
         """
 
     @abstractmethod
-    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+    def build_trade(self, current_asset_price: float) -> Trade:
         """Build Trade that represents a TradeRequest.
 
         Args:
@@ -62,6 +64,56 @@ class TradeRequest(ABC):
         Returns:
             Trade that the TradeRequest represents
         """
+
+    @staticmethod
+    def apply_slippage(
+        asset_pair: AssetPair,
+        side: Side,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+    ) -> float:
+        """Add slippage to transaction price.
+
+        Args:
+            asset_pair: The asset pair for the trade
+            side: The side for the trade
+            current_asset_price: Current price data from composer
+
+        Returns:
+            float: The slippage-adjusted rate for the transaction.
+        """
+        curr_price = current_asset_price[asset_pair]
+        average_price = mean(
+            (
+                curr_price["Open"].iloc[0],
+                curr_price["High"].iloc[0],
+                curr_price["Low"].iloc[0],
+                curr_price["Close"].iloc[0],
+            )
+        )
+
+        BASIS_POINT_ADJ = 10
+
+        if side == Side.BUY:
+            transaction_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
+        else:
+            transaction_price = average_price * (1 - BASIS_POINT_ADJ / 10000)
+
+        return transaction_price
+
+    @staticmethod
+    def generate_transaction_fee(amount: float, adjusted_price: float) -> float:
+        """Generate a transaction fee for a given trade request.
+
+        Args:
+            amount: The quantity of the currency being traded
+            adjusted_price: Price of the trade
+
+        Returns:
+            float: The transaction fee in the base currency.
+        """
+        TRANSACTION_FEE_BP = 50
+
+        return amount * adjusted_price * (TRANSACTION_FEE_BP / 10000)
 
 
 class MarketTradeRequest(TradeRequest):
@@ -80,16 +132,15 @@ class MarketTradeRequest(TradeRequest):
         Returns:
             Trade that the TradeRequest represents
         """
-        if self.side == Side.BUY:
-            price = current_asset_price[self.asset_pair]["High"].iloc[0]
-        else:
-            price = current_asset_price[self.asset_pair]["Low"].iloc[0]
+        price = self.apply_slippage(self.asset_pair, self.side, current_asset_price)
 
         amount = self.qty
         if amount is None:
-            amount = self.notional / price  # TODO: Be explicit about fracitonal
+            amount = cast(float, self.notional) / price
 
-        return Trade(self.asset_pair, self.side, amount, price)
+        transaction_fee = self.generate_transaction_fee(amount, price)
+
+        return Trade(self.asset_pair, self.side, amount, price, transaction_fee)
 
 
 class LimitTradeRequest(MarketTradeRequest):
