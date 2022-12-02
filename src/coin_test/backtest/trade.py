@@ -28,3 +28,17 @@ class Trade:
         self.amount = amount
         self.price = price
         self.transaction_fee = transaction_fee
+
+    def __repr__(self) -> str:
+        """Build string representation."""
+        currency_amt = self.amount * self.price
+        if self.side == Side.BUY:
+            return (
+                f"{currency_amt} {self.asset_pair.currency} -> "
+                f"{self.amount} {self.asset_pair.asset}"
+            )
+        else:
+            return (
+                f"{self.amount} {self.asset_pair.asset} -> "
+                f"{currency_amt} {self.asset_pair.currency}"
+            )

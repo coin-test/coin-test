@@ -76,7 +76,7 @@ def _make_mock_trade(
     return mock_trade
 
 
-def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
+def test_adjustment_success_buy(asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     transaction_fee = 0.50
 
@@ -170,3 +170,10 @@ def test_fail_on_transaction_fees_sell(assets: dict, asset_pair: AssetPair) -> N
     adj_portfolio = portfolio.adjust(trade)
 
     assert adj_portfolio is None
+
+
+def test_portfolio_repr(assets: dict) -> None:
+    """Builds string representation."""
+    base_currency = Ticker("USDT")
+    portfolio = Portfolio(base_currency, assets)
+    assert repr(portfolio) == f"{base_currency} - {assets}"
