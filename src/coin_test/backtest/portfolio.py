@@ -63,15 +63,23 @@ class Portfolio:
         asset = trade.asset_pair.asset
         if trade.side == Side.BUY:
             # Check for overspending
-            if adjusted_assets[currency] < Money(currency, trade.amount * trade.price):
+            if adjusted_assets[currency] < Money(
+                currency, trade.amount * trade.price + trade.transaction_fee
+            ):
                 return None
 
-            adjusted_assets[currency] -= Money(currency, trade.amount * trade.price)
+            adjusted_assets[currency] -= Money(
+                currency, trade.amount * trade.price + trade.transaction_fee
+            )
             adjusted_assets[asset] += Money(asset, trade.amount)
         else:
-            if adjusted_assets[asset] < Money(asset, trade.amount):
+            if adjusted_assets[asset] < Money(asset, trade.amount) or adjusted_assets[
+                currency
+            ] < Money(currency, trade.transaction_fee - trade.amount * trade.price):
                 return None
-            adjusted_assets[currency] += Money(currency, trade.amount * trade.price)
+            adjusted_assets[currency] += Money(
+                currency, trade.amount * trade.price - trade.transaction_fee
+            )
             adjusted_assets[asset] -= Money(asset, trade.amount)
 
         return Portfolio(self.base_currency, adjusted_assets)

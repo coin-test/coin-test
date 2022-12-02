@@ -1,13 +1,17 @@
 """Test the TradeRequest class."""
 
+from statistics import mean
+
 import pandas as pd
 import pytest
+from pytest_mock import MockerFixture
 
 from coin_test.backtest import (
     LimitTradeRequest,
     MarketTradeRequest,
     StopLimitTradeRequest,
 )
+from coin_test.backtest.trade_request import TradeRequest
 from coin_test.util import AssetPair, Side
 
 
@@ -25,8 +29,69 @@ def test_market_trade_request(asset_pair: AssetPair) -> None:
     assert x.should_execute(999.99) is True
 
 
-def test_market_trade_request_build_trade_buy_notional(
-    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+def test_correct_slippage_buy(
+    asset_pair: AssetPair,
+    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
+) -> None:
+    """Price increases correctly on buy."""
+    curr_price = timestamp_asset_price[asset_pair]
+    average_price = mean(
+        (
+            curr_price["Open"].iloc[0],
+            curr_price["High"].iloc[0],
+            curr_price["Low"].iloc[0],
+            curr_price["Close"].iloc[0],
+        )
+    )
+
+    BASIS_POINT_ADJ = 10
+
+    expected_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
+
+    assert expected_price == MarketTradeRequest._calculate_slippage(
+        asset_pair, Side.BUY, timestamp_asset_price
+    )
+
+
+def test_correct_slippage_sell(
+    asset_pair: AssetPair,
+    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
+) -> None:
+    """Price decreases correctly on sell."""
+    curr_price = timestamp_asset_price[asset_pair]
+    average_price = mean(
+        (
+            curr_price["Open"].iloc[0],
+            curr_price["High"].iloc[0],
+            curr_price["Low"].iloc[0],
+            curr_price["Close"].iloc[0],
+        )
+    )
+
+    BASIS_POINT_ADJ = 10
+
+    expected_price = average_price * (1 - BASIS_POINT_ADJ / 10000)
+
+    assert expected_price == TradeRequest._calculate_slippage(
+        asset_pair, Side.SELL, timestamp_asset_price
+    )
+
+
+def test_correct_transaction_fees() -> None:
+    """Properly calculate transaction fees for a Trade."""
+    amount = 1000
+    adjusted_price = 1.07
+
+    TRANSACTION_FEE_BP = 50
+    assert amount * adjusted_price * (
+        TRANSACTION_FEE_BP / 10000
+    ) == TradeRequest._generate_transaction_fee(amount, adjusted_price)
+
+
+def test_market_trade_request_build_trade_notional(
+    asset_pair: AssetPair,
+    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
+    mocker: MockerFixture,
 ) -> None:
     """Build Buy Trade with notional correctly."""
     side = Side.BUY
@@ -34,71 +99,48 @@ def test_market_trade_request_build_trade_buy_notional(
 
     trade_request = MarketTradeRequest(asset_pair, side, notional)
 
-    trade = trade_request.build_trade(timestamp_asset_price)
+    trade_price = 46
 
-    trade_price = timestamp_asset_price[asset_pair]["High"].iloc[0]
+    mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
+    TradeRequest._calculate_slippage.return_value = trade_price
+
+    mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
+    TradeRequest._generate_transaction_fee.return_value = 0
+
+    trade = trade_request.build_trade(timestamp_asset_price)
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair
     assert trade.price == trade_price
-    assert trade.amount == notional // trade_price
+    assert trade.amount == notional / trade_price
+    assert trade.transaction_fee == 0
 
 
-def test_market_trade_request_build_trade_buy_amount(
-    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
+def test_market_trade_request_build_trade_buy(
+    asset_pair: AssetPair,
+    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
+    mocker: MockerFixture,
 ) -> None:
-    """Build Buy Trade with notional correctly."""
-    side = Side.BUY
-    amount = 1000.0
-
-    trade_request = MarketTradeRequest(asset_pair, side, qty=amount)
-
-    trade = trade_request.build_trade(timestamp_asset_price)
-
-    trade_price = timestamp_asset_price[asset_pair]["High"].iloc[0]
-
-    assert trade.side == side
-    assert trade.asset_pair == asset_pair
-    assert trade.price == trade_price
-    assert trade.amount == amount
-
-
-def test_market_trade_request_build_trade_sell_notional(
-    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
-) -> None:
-    """Build Sell Trade with Notional correctly."""
+    """Build Sell Trade with quantity correctly."""
     side = Side.SELL
-    notional = 1000.0
+    qty = 1000.0
 
-    trade_request = MarketTradeRequest(asset_pair, side, notional)
+    trade_request = MarketTradeRequest(asset_pair, side, qty=qty)
+
+    trade_price = 46
+
+    mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
+    TradeRequest._calculate_slippage.return_value = trade_price
+
+    mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
+    TradeRequest._generate_transaction_fee.return_value = 0
 
     trade = trade_request.build_trade(timestamp_asset_price)
-
-    trade_price = timestamp_asset_price[asset_pair]["Low"].iloc[0]
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair
     assert trade.price == trade_price
-    assert trade.amount == notional // trade_price
-
-
-def test_market_trade_request_build_trade_sell_amount(
-    asset_pair: AssetPair, timestamp_asset_price: dict[AssetPair, pd.DataFrame]
-) -> None:
-    """Build Sell Trade with Notional correctly."""
-    side = Side.SELL
-    amount = 1000.0
-
-    trade_request = MarketTradeRequest(asset_pair, side, qty=amount)
-
-    trade = trade_request.build_trade(timestamp_asset_price)
-
-    trade_price = timestamp_asset_price[asset_pair]["Low"].iloc[0]
-
-    assert trade.side == side
-    assert trade.asset_pair == asset_pair
-    assert trade.price == trade_price
-    assert trade.amount == amount
+    assert trade.amount == qty
 
 
 def test_limit_trade_request(asset_pair: AssetPair) -> None:
