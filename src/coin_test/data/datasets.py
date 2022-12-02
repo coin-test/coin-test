@@ -2,7 +2,6 @@
 
 from abc import ABCMeta, abstractmethod
 from collections import Counter
-from datetime import datetime
 from typing import Any
 
 import pandas as pd
@@ -159,7 +158,7 @@ class CustomDataset(PriceDataset):
         elif series.dtype == int:
             # If int, assume time since epoch
             index = pd.PeriodIndex(
-                data=[datetime.fromtimestamp(d) for d in series],
+                data=pd.to_datetime(series, unit="s"),
                 freq=freq,  # type: ignore
             )
         else:
@@ -169,6 +168,7 @@ class CustomDataset(PriceDataset):
                 pandas PeriodIndex.
                 """
             )
+        df = df.drop(columns=[cls.OPEN_TIME_NAME])
         return df.set_index(index, verify_integrity=True)
 
     @property
