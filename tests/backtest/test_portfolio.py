@@ -157,3 +157,21 @@ def test_adjustment_failure_sell(assets: dict, asset_pair: AssetPair) -> None:
     adj_portfolio = portfolio.adjust(trade)
 
     assert adj_portfolio is None
+
+
+def test_fail_on_transaction_fees(assets: dict, asset_pair: AssetPair) -> None:
+    """Fail on an all-in buy trade because of transaction fees."""
+    transaction_fee = 0.5
+    # buy 1 BTC that costs all of our money
+    trade = _make_mock_trade(
+        asset_pair, Side.BUY, 1, assets[asset_pair.currency].qty, transaction_fee
+    )
+    # portfolio_assets = {
+    #     Ticker("BTC"): Money(Ticker("BTC"), 1.51),
+    #     Ticker("ETH"): Money(Ticker("ETH"), 2),
+    #     Ticker("USDT"): Money(Ticker("USDT"), 1000),
+    # }
+    portfolio = Portfolio(asset_pair.currency, assets)
+    adj_portfolio = portfolio.adjust(trade)
+
+    assert adj_portfolio is None

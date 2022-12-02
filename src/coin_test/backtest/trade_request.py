@@ -82,14 +82,7 @@ class TradeRequest(ABC):
             float: The slippage-adjusted rate for the transaction.
         """
         curr_price = current_asset_price[asset_pair]
-        average_price = mean(
-            (
-                curr_price["Open"].iloc[0],
-                curr_price["High"].iloc[0],
-                curr_price["Low"].iloc[0],
-                curr_price["Close"].iloc[0],
-            )
-        )
+        average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
 
         BASIS_POINT_ADJ = 10
 
