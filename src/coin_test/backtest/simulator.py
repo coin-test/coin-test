@@ -189,7 +189,11 @@ class Simulator:
             trade_requests.extend(strat(time, portfolio, lookback_data))
         return trade_requests
 
-    def run(self) -> tuple[list[Portfolio], list[Trade], list[list[TradeRequest]]]:
+    def run(
+        self,
+    ) -> tuple[
+        list[pd.Timestamp], list[Portfolio], list[Trade], list[list[TradeRequest]]
+    ]:
         """Run a simulation."""
         schedule = [
             (s, croniter(s.schedule, self._start_time)) for s in self._strategies
@@ -204,6 +208,7 @@ class Simulator:
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = []
+        historical_times: list[pd.Timestamp] = [self._start_time - self._simulation_dt]
 
         # State
         time = self._start_time
@@ -230,5 +235,11 @@ class Simulator:
             historical_trades.extend(executed_trades)
             historical_portfolios.append(portfolio)
             historical_pending_orders.append(copy(pending_orders))
+            historical_times.append(time)
             time += self._simulation_dt
-        return historical_portfolios, historical_trades, historical_pending_orders
+        return (
+            historical_times,
+            historical_portfolios,
+            historical_trades,
+            historical_pending_orders,
+        )
