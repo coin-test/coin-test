@@ -107,7 +107,7 @@ def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
 def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     transaction_fee = 0.5
-    trade = _make_mock_trade(asset_pair, Side.BUY, 100, 10.1, transaction_fee)
+    trade = _make_mock_trade(asset_pair, Side.BUY, 1000, 10.1, transaction_fee)
 
     portfolio = Portfolio(asset_pair.currency, assets)
     adj_portfolio = portfolio.adjust(trade)
