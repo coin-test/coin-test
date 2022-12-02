@@ -33,6 +33,10 @@ class Ticker:
         """Hash a ticker based on the symbol name."""
         return hash(self.symbol)
 
+    def __repr__(self) -> str:
+        """Build string representation."""
+        return f'Ticker("{self.symbol}")'
+
 
 class AssetPair(NamedTuple):
     """Pair of tickers that can be traded."""

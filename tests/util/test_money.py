@@ -76,3 +76,11 @@ def test_invalid_comparison() -> None:
 
     with pytest.raises(ValueError):
         assert x > y
+
+
+def test_money_repr() -> None:
+    """Builds string representation."""
+    ticker = Ticker("BTC")
+    qty = 12.5
+    money = Money(ticker, qty)
+    assert repr(money) == f'Money("{ticker}", {qty})'

@@ -75,7 +75,7 @@ def _make_mock_trade(
     return mock_trade
 
 
-def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
+def test_adjustment_success_buy(asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     trade = _make_mock_trade(asset_pair, Side.BUY, 10, 10.1)
 
@@ -101,7 +101,7 @@ def test_adjustment_success_buy(assets: dict, asset_pair: AssetPair) -> None:
     assert adj_portfolio.assets[asset_pair.asset] == exepcted_trade_currency
 
 
-def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
+def test_adjustment_failure_buy(asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     trade = _make_mock_trade(asset_pair, Side.BUY, 100, 10.1)
     portfolio_assets = {
@@ -115,7 +115,7 @@ def test_adjustment_failure_buy(assets: dict, asset_pair: AssetPair) -> None:
     assert adj_portfolio is None
 
 
-def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
+def test_adjustment_success_sell(asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     trade = _make_mock_trade(asset_pair, Side.SELL, 1.5, 10)
     portfolio_assets = {
@@ -139,7 +139,7 @@ def test_adjustment_success_sell(assets: dict, asset_pair: AssetPair) -> None:
     assert adj_portfolio.assets[asset_pair.asset] == exepcted_trade_currency
 
 
-def test_adjustment_failure_sell(assets: dict, asset_pair: AssetPair) -> None:
+def test_adjustment_failure_sell(asset_pair: AssetPair) -> None:
     """Adjust a portfolio."""
     trade = _make_mock_trade(asset_pair, Side.SELL, 1.52, 10)
     portfolio_assets = {
@@ -151,3 +151,10 @@ def test_adjustment_failure_sell(assets: dict, asset_pair: AssetPair) -> None:
     adj_portfolio = portfolio.adjust(trade)
 
     assert adj_portfolio is None
+
+
+def test_portfolio_repr(assets: dict) -> None:
+    """Builds string representation."""
+    base_currency = Ticker("USDT")
+    portfolio = Portfolio(base_currency, assets)
+    assert repr(portfolio) == f"{base_currency} - {assets}"

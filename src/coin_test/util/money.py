@@ -55,3 +55,7 @@ class Money:
         self._check_compatibility(other)
 
         return Money(self.ticker, self.qty - other.qty)
+
+    def __repr__(self) -> str:
+        """Build string representation."""
+        return f'Money("{self.ticker}", {self.qty})'

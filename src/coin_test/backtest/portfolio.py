@@ -75,3 +75,7 @@ class Portfolio:
             adjusted_assets[asset] -= Money(asset, trade.amount)
 
         return Portfolio(self.base_currency, adjusted_assets)
+
+    def __repr__(self) -> str:
+        """Build string representation."""
+        return f"{self.base_currency} - {self.assets}"
