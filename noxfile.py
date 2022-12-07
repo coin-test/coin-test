@@ -1,15 +1,19 @@
 """Nox sessions."""
 
+from typing import Any
 
 import nox  # pyright: ignore
 from nox_poetry import Session, session  # pyright: ignore
 
-
-nox.options.sessions = "lint", "pyright", "typeguard", "tests"
+nox.options.sessions = "lint", "pyright", "typeguard", "tests", "docs"
 
 package = "coin_test"
 python_versions = ["3.10"]
 locations = "src", "tests", "noxfile.py"
+
+
+def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
+    """Install packages constrained by Poetry's lock file."""
 
 
 @session(python=python_versions)
@@ -65,3 +69,13 @@ def coverage(session: Session) -> None:
     """Generate the coverage data."""
     session.install("coverage[toml]", "codecov")
     session.run("coverage", "xml", "--fail-under=0")
+
+
+@nox.session(python=python_versions)
+def docs(session: Session) -> None:
+    """Build the documentation."""
+    # install_with_constraints(session, "sphinx")
+    session.install("sphinx-autodoc-typehints")
+    session.run("poetry", "install", "--no-dev", external=True)
+    install_with_constraints(session, "sphinx", "sphinx-autodoc-typehints")
+    session.run("sphinx-build", "docs", "docs/_build")
