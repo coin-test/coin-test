@@ -167,5 +167,5 @@ class Composer:
                 based on `keys` parameter.
         """
         end_time = timestamp
-        start_time = timestamp - self.freq * lookback
+        start_time = pd.Timestamp(timestamp - self.freq * lookback)
         return self.get_range(start_time, end_time, keys=keys, mask=mask)

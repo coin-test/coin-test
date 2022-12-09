@@ -18,7 +18,7 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
                 name="Pro Strat",
                 asset_pairs=[asset_pair],
                 schedule="* * * * *",
-                lookback=dt.timedelta(days=5),
+                lookback=pd.Timedelta(days=5),
             )
 
         def __call__(
@@ -67,7 +67,7 @@ def test_strategy_invalid(asset_pair: AssetPair) -> None:
                 name="Pro Strat",
                 asset_pairs=[asset_pair],
                 schedule="* * * * *",
-                lookback=dt.timedelta(days=5),
+                lookback=pd.Timedelta(days=5),
             )
 
     with pytest.raises(TypeError):
