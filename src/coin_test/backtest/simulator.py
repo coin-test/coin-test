@@ -218,15 +218,6 @@ class Simulator:
     ]:
         """Run a simulation."""
         schedule = self._build_croniter_schedule(self._start_time, self._strategies)
-        # schedule = [
-        #     (s, croniter(s.schedule, self._start_time)) for s in self._strategies
-        # ]
-
-        # TODO: Schedule building and cleaning should be a static method
-        # hack fix to remove start time from croniter data
-        # for _, cron in schedule:
-        #     # if not cron.match(strat.schedule, self._start_time):
-        #     cron.get_next()
 
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
