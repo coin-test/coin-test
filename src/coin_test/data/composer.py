@@ -61,10 +61,11 @@ class Composer:
         if len(datasets) == 0:
             raise ValueError("At least one dataset must be defined.")
 
-        if not all(
-            [Composer._is_within_range(ds, start_time, end_time) for ds in datasets]
-        ):
-            raise ValueError("Not all datasets cover requested time range")
+        for ds in datasets:
+            if not Composer._is_within_range(ds, start_time, end_time):
+                raise ValueError(f"Dataset {ds} does not cover time range.")
+            if not Composer._validate_missing_data(ds):
+                raise ValueError(f"Dataset {ds} does not have data for every period.")
 
         shared_currency = Composer._get_shared_currency(datasets)
         if shared_currency is None:
@@ -82,6 +83,15 @@ class Composer:
     ) -> bool:
         """Check whether dataset has data for start and end time."""
         return not dataset.df[:start_time].empty and not dataset.df[end_time:].empty
+
+    @staticmethod
+    def _validate_missing_data(dataset: PriceDataset) -> bool:
+        index = dataset.df.index
+        full_index = pd.period_range(
+            index[0], index[-1], freq=dataset.metadata.freq  # type: ignore
+        )
+        missing_index = full_index.difference(dataset.df.index)
+        return len(missing_index) == 0
 
     @staticmethod
     def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:

@@ -145,12 +145,14 @@ def test_validate_params(simple_df: pd.DataFrame, mocker: MockerFixture) -> None
     dataset, _, _ = _mock_dataset(simple_df, metadata)
 
     mocker.patch("coin_test.data.Composer._is_within_range")
+    mocker.patch("coin_test.data.Composer._validate_missing_data")
     mocker.patch("coin_test.data.Composer._get_shared_currency")
     Composer._get_shared_currency.return_value = metadata.pair.currency
 
     ticker = Composer._validate_params([dataset], start_time, end_time)
 
     Composer._is_within_range.assert_called_once_with(dataset, start_time, end_time)
+    Composer._validate_missing_data.assert_called_once_with(dataset)
     Composer._get_shared_currency.assert_called_once_with([dataset])
     assert ticker == metadata.pair.currency
 
@@ -219,8 +221,10 @@ def test_composer_not_shared_currency(mocker: MockerFixture) -> None:
     end_time = pd.Timestamp("2021")
 
     mocker.patch("coin_test.data.Composer._is_within_range")
+    mocker.patch("coin_test.data.Composer._validate_missing_data")
     mocker.patch("coin_test.data.Composer._get_shared_currency")
     Composer._is_within_range.return_value = True
+    Composer._validate_missing_data.return_value = True
     Composer._get_shared_currency.return_value = None
 
     with pytest.raises(ValueError) as e:
@@ -246,7 +250,7 @@ def test_composer_missing_data(
 
     with pytest.raises(ValueError) as e:
         Composer._validate_params([dataset], start_time, end_time)
-    assert "missing data" in str(e)
+    assert "does not have data for every period." in str(e)
 
 
 def test_composer_get_range(
