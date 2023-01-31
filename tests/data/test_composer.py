@@ -228,6 +228,27 @@ def test_composer_not_shared_currency(mocker: MockerFixture) -> None:
         assert "Not all datasets share a single currency." in str(e)
 
 
+def test_composer_missing_data(
+    period_index_df: pd.DataFrame, mocker: MockerFixture
+) -> None:
+    """Error on dataset missing data."""
+    start_time = pd.Timestamp("2019")
+    end_time = pd.Timestamp("2022")
+    period_index_df.drop(index=period_index_df.index[3])
+
+    metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
+    dataset, _, _ = _mock_dataset(period_index_df, metadata)
+
+    mocker.patch("coin_test.data.Composer._is_within_range")
+    mocker.patch("coin_test.data.Composer._get_shared_currency")
+    Composer._is_within_range.return_value = True
+    Composer._get_shared_currency.return_value = metadata.pair.currency
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([dataset], start_time, end_time)
+    assert "missing data" in str(e)
+
+
 def test_composer_get_range(
     period_index_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
