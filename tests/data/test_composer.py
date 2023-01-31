@@ -92,6 +92,22 @@ def test_is_within_range_end_off(mocked_dataset: Mock) -> None:
     assert Composer._is_within_range(mocked_dataset, start_time, end_time) is False
 
 
+def test_missing_data_true(period_index_df: pd.DataFrame) -> None:
+    """Return true on full dataset."""
+    metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "Y")
+    dataset, _, _ = _mock_dataset(period_index_df, metadata)
+    assert Composer._validate_missing_data(dataset)
+
+
+def test_missing_data_missing(period_index_df: pd.DataFrame) -> None:
+    """Return false on missing data."""
+    period_index_df.drop(index=period_index_df.index[3], inplace=True)
+    metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "Y")
+    print(period_index_df)
+    dataset, _, _ = _mock_dataset(period_index_df, metadata)
+    assert not Composer._validate_missing_data(dataset)
+
+
 def test_get_shared_currency() -> None:
     """Return shared currency."""
     datasets = []
@@ -157,6 +173,71 @@ def test_validate_params(simple_df: pd.DataFrame, mocker: MockerFixture) -> None
     assert ticker == metadata.pair.currency
 
 
+def test_validate_params_invalid_range() -> None:
+    """Error on invalid time range."""
+    start_time = pd.Timestamp("2021")
+    end_time = pd.Timestamp("2020")
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([Mock()], start_time, end_time)
+        assert "earlier than end time" in str(e)
+
+
+def test_validate_params_no_datasets() -> None:
+    """Error on no datasets passed."""
+    start_time = pd.Timestamp("2020")
+    end_time = pd.Timestamp("2021")
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([], start_time, end_time)
+        assert "At least one dataset must be defined." in str(e)
+
+
+def test_validate_params_not_within_range(mocker: MockerFixture) -> None:
+    """Error on dataset not within range."""
+    start_time = pd.Timestamp("2020")
+    end_time = pd.Timestamp("2021")
+
+    mocker.patch("coin_test.data.Composer._is_within_range")
+    Composer._is_within_range.return_value = False
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([Mock()], start_time, end_time)
+        assert "Not all datasets cover requested time range" in str(e)
+
+
+def test_validate_params_not_shared_currency(mocker: MockerFixture) -> None:
+    """Error on dataset not sharing currency."""
+    start_time = pd.Timestamp("2020")
+    end_time = pd.Timestamp("2021")
+
+    mocker.patch("coin_test.data.Composer._is_within_range")
+    mocker.patch("coin_test.data.Composer._validate_missing_data")
+    mocker.patch("coin_test.data.Composer._get_shared_currency")
+    Composer._is_within_range.return_value = True
+    Composer._validate_missing_data.return_value = True
+    Composer._get_shared_currency.return_value = None
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([Mock()], start_time, end_time)
+        assert "Not all datasets share a single currency." in str(e)
+
+
+def test_validate_params_missing_data(mocker: MockerFixture) -> None:
+    """Error on dataset missing data."""
+    start_time = pd.Timestamp("2019")
+    end_time = pd.Timestamp("2022")
+
+    mocker.patch("coin_test.data.Composer._is_within_range")
+    mocker.patch("coin_test.data.Composer._validate_missing_data")
+    Composer._is_within_range.return_value = True
+    Composer._validate_missing_data.return_value = False
+
+    with pytest.raises(ValueError) as e:
+        Composer._validate_params([Mock()], start_time, end_time)
+    assert "does not have data for every period." in str(e)
+
+
 def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initialize correctly."""
     start_time = pd.Timestamp("2020")
@@ -180,77 +261,6 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     assert composer.start_time == start_time
     assert composer.end_time == end_time
     assert composer.currency == metadata.pair.currency
-
-
-def test_composer_invalid_range() -> None:
-    """Error on invalid time range."""
-    start_time = pd.Timestamp("2021")
-    end_time = pd.Timestamp("2020")
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "earlier than end time" in str(e)
-
-
-def test_composer_no_datasets() -> None:
-    """Error on no datasets passed."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([], start_time, end_time)
-        assert "At least one dataset must be defined." in str(e)
-
-
-def test_composer_not_within_range(mocker: MockerFixture) -> None:
-    """Error on dataset not within range."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
-
-    mocker.patch("coin_test.data.Composer._is_within_range")
-    Composer._is_within_range.return_value = False
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "Not all datasets cover requested time range" in str(e)
-
-
-def test_composer_not_shared_currency(mocker: MockerFixture) -> None:
-    """Error on dataset not sharing currency."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
-
-    mocker.patch("coin_test.data.Composer._is_within_range")
-    mocker.patch("coin_test.data.Composer._validate_missing_data")
-    mocker.patch("coin_test.data.Composer._get_shared_currency")
-    Composer._is_within_range.return_value = True
-    Composer._validate_missing_data.return_value = True
-    Composer._get_shared_currency.return_value = None
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "Not all datasets share a single currency." in str(e)
-
-
-def test_composer_missing_data(
-    period_index_df: pd.DataFrame, mocker: MockerFixture
-) -> None:
-    """Error on dataset missing data."""
-    start_time = pd.Timestamp("2019")
-    end_time = pd.Timestamp("2022")
-    period_index_df.drop(index=period_index_df.index[3])
-
-    metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
-    dataset, _, _ = _mock_dataset(period_index_df, metadata)
-
-    mocker.patch("coin_test.data.Composer._is_within_range")
-    mocker.patch("coin_test.data.Composer._get_shared_currency")
-    Composer._is_within_range.return_value = True
-    Composer._get_shared_currency.return_value = metadata.pair.currency
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([dataset], start_time, end_time)
-    assert "does not have data for every period." in str(e)
 
 
 def test_composer_get_range(
