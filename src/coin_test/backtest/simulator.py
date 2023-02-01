@@ -10,7 +10,7 @@ import pandas as pd
 from .portfolio import Portfolio
 from .strategy import Strategy
 from .trade import Trade
-from .trade_request import TradeRequest
+from .trade_request import SlippageCalculator, TradeRequest
 from ..data import Composer
 from ..util import AssetPair
 
@@ -23,6 +23,7 @@ class Simulator:
         composer: Composer,
         starting_portfolio: Portfolio,
         strategies: Iterable[Strategy],
+        slippage_calculator: SlippageCalculator,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -31,6 +32,7 @@ class Simulator:
             starting_portfolio: The starting portfolio for the backtest,
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
+            slippage_calculator: Slippage Calculator implementation
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
@@ -38,6 +40,7 @@ class Simulator:
         self._portfolio = starting_portfolio
         self._composer = composer
         self._strategies = strategies
+        self._slippage_calculator = slippage_calculator
 
         self._start_time = composer.start_time
         self._end_time = composer.end_time
@@ -92,6 +95,7 @@ class Simulator:
         portfolio: Portfolio,
         orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
     ) -> tuple[Portfolio, list[Trade]]:
         """Execute orders by adjusting portfolio.
 
@@ -99,13 +103,14 @@ class Simulator:
             portfolio: Current Portfolio at given timestamp
             orders: TradeRequests to execute
             current_asset_price: Current timestamp's price by AssetPair
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             (updated portfolio, completed Trade objects)
         """
         completed_trades = []
         for order in orders:
-            trade = order.build_trade(current_asset_price)
+            trade = order.build_trade(current_asset_price, slippage_calculator)
             adjusted_portfolio = portfolio.adjust(trade)
 
             # Check if adjusting the portfolio failed
@@ -121,6 +126,7 @@ class Simulator:
         pending_orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
         portfolio: Portfolio,
+        slippage_calculator: SlippageCalculator,
     ) -> tuple[list[TradeRequest], Portfolio, list[Trade]]:
         """Process pending orders by adjusting the Portfolio appropriately.
 
@@ -128,6 +134,7 @@ class Simulator:
             pending_orders: Uncompleted TradeRequests
             current_asset_price: Current timestamp's price by AssetPair
             portfolio: Current Portfolio at given timestamp
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             (remaining pending orders, updated portfolio, executed trades)
@@ -136,7 +143,7 @@ class Simulator:
             pending_orders, current_asset_price
         )
         portfolio, executed_trades = Simulator._execute_orders(
-            portfolio, executable_orders, current_asset_price
+            portfolio, executable_orders, current_asset_price, slippage_calculator
         )
         return pending_orders, portfolio, executed_trades
 
@@ -236,14 +243,20 @@ class Simulator:
             current_asset_price = self._composer.get_timestep(time, mask=False)
 
             pending_orders, portfolio, executed_trades = self._handle_pending_orders(
-                pending_orders, current_asset_price, portfolio
+                pending_orders,
+                current_asset_price,
+                portfolio,
+                self._slippage_calculator,
             )
             historical_trades.extend(executed_trades)
 
             trade_requests = self.run_strategies(schedule, time, portfolio)
 
             remaining_tr, portfolio, executed_trades = self._handle_pending_orders(
-                trade_requests, current_asset_price, portfolio
+                trade_requests,
+                current_asset_price,
+                portfolio,
+                self._slippage_calculator,
             )
 
             # TODO: DO these objects need to be copied

@@ -8,7 +8,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.backtest import (
-    ConstantSlippage,
     LimitTradeRequest,
     MarketTradeRequest,
     StopLimitTradeRequest,
@@ -22,7 +21,7 @@ def test_market_trade_request(asset_pair: AssetPair) -> None:
     side = Side.BUY
     notional = 1000.0
 
-    x = MarketTradeRequest(asset_pair, side, ConstantSlippage, notional)
+    x = MarketTradeRequest(asset_pair, side, notional)
 
     assert x.asset_pair == asset_pair
     assert x.side == side
@@ -73,36 +72,6 @@ def test_slippage_calculator_applied(
     )
 
 
-def test_constant_slippage_buy(
-    asset_pair: AssetPair,
-    timestamp_asset_price: dict[AssetPair, pd.DataFrame],
-) -> None:
-    """Price increases correctly on buy."""
-    curr_price = timestamp_asset_price[asset_pair]
-    average_price = mean(
-        (
-            curr_price["Open"].iloc[0],
-            curr_price["High"].iloc[0],
-            curr_price["Low"].iloc[0],
-            curr_price["Close"].iloc[0],
-        )
-    )
-
-    BASIS_POINT_ADJ = 10
-
-    expected_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
-
-    assert expected_price == MarketTradeRequest._calculate_slippage(
-        asset_pair, Side.BUY, timestamp_asset_price, ConstantSlippage
-    )
-
-    expected_price_sell = average_price * (1 - BASIS_POINT_ADJ / 10000)
-
-    assert expected_price_sell == MarketTradeRequest._calculate_slippage(
-        asset_pair, Side.SELL, timestamp_asset_price, ConstantSlippage
-    )
-
-
 def test_correct_transaction_fees() -> None:
     """Properly calculate transaction fees for a Trade."""
     amount = 1000
@@ -123,17 +92,18 @@ def test_market_trade_request_build_trade_notional(
     side = Side.BUY
     notional = 1000.0
 
-    trade_request = MarketTradeRequest(asset_pair, side, ConstantSlippage, notional)
+    trade_request = MarketTradeRequest(asset_pair, side, notional)
 
     trade_price = 46
 
+    slippage_calculator = Mock()
     mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
     TradeRequest._calculate_slippage.return_value = trade_price
 
     mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
     TradeRequest._generate_transaction_fee.return_value = 0
 
-    trade = trade_request.build_trade(timestamp_asset_price)
+    trade = trade_request.build_trade(timestamp_asset_price, slippage_calculator)
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair
@@ -151,17 +121,18 @@ def test_market_trade_request_build_trade_buy(
     side = Side.SELL
     qty = 1000.0
 
-    trade_request = MarketTradeRequest(asset_pair, side, ConstantSlippage, qty=qty)
+    trade_request = MarketTradeRequest(asset_pair, side, qty=qty)
 
     trade_price = 46
 
+    slippage_calculator = Mock()
     mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
     TradeRequest._calculate_slippage.return_value = trade_price
 
     mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
     TradeRequest._generate_transaction_fee.return_value = 0
 
-    trade = trade_request.build_trade(timestamp_asset_price)
+    trade = trade_request.build_trade(timestamp_asset_price, slippage_calculator)
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair
@@ -179,8 +150,8 @@ def test_limit_trade_request(asset_pair: AssetPair) -> None:
     above_limit_price = 1101
     below_limit_price = 1099
 
-    x = LimitTradeRequest(asset_pair, side_1, ConstantSlippage, limit_price, notional)
-    y = LimitTradeRequest(asset_pair, side_2, ConstantSlippage, limit_price, notional)
+    x = LimitTradeRequest(asset_pair, side_1, limit_price, notional)
+    y = LimitTradeRequest(asset_pair, side_2, limit_price, notional)
 
     assert x.should_execute(above_limit_price) is False
     assert x.should_execute(below_limit_price) is True
@@ -199,12 +170,8 @@ def test_stop_limit_trade_request(asset_pair: AssetPair) -> None:
     above_limit_price = 1101
     below_limit_price = 1099
 
-    x = StopLimitTradeRequest(
-        asset_pair, side_1, ConstantSlippage, limit_price, notional
-    )
-    y = StopLimitTradeRequest(
-        asset_pair, side_2, ConstantSlippage, limit_price, notional
-    )
+    x = StopLimitTradeRequest(asset_pair, side_1, limit_price, notional)
+    y = StopLimitTradeRequest(asset_pair, side_2, limit_price, notional)
 
     assert x.should_execute(above_limit_price) is True
     assert x.should_execute(below_limit_price) is False
@@ -223,10 +190,9 @@ def test_bad_trade_request(asset_pair: AssetPair) -> None:
         MarketTradeRequest(
             asset_pair,
             side,
-            ConstantSlippage,
             notional,
             qty,
         )
 
     with pytest.raises(ValueError):
-        MarketTradeRequest(asset_pair, side, ConstantSlippage)
+        MarketTradeRequest(asset_pair, side)

@@ -1,14 +1,13 @@
 """Backtesting module of the coin-test library."""
 
+from .market import ConstantSlippage, SlippageCalculator
 from .portfolio import Portfolio
 from .simulator import Simulator
 from .strategy import Strategy
 from .trade import Trade
 from .trade_request import (
-    ConstantSlippage,
     LimitTradeRequest,
     MarketTradeRequest,
-    SlippageCalculator,
     StopLimitTradeRequest,
     TradeRequest,
 )
