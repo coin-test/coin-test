@@ -100,7 +100,7 @@ def test_add_period_index(
     df = CustomDataset._add_period_index(hour_data_df, freq)
     assert isinstance(df.index, pd.PeriodIndex)
     assert len(df.index) == len(_dates)
-    for p, d in zip(df.index, _dates):
+    for p, d in zip(df.index, _dates, strict=True):
         assert p == pd.Period(d, freq=freq)  # type: ignore
 
 
