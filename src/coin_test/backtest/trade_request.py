@@ -6,6 +6,7 @@ from typing import cast
 
 import pandas as pd
 
+from .market import SlippageCalculator
 from .trade import Trade
 from ..util import AssetPair, Side
 
@@ -55,11 +56,16 @@ class TradeRequest(ABC):
         """
 
     @abstractmethod
-    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+    def build_trade(
+        self,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
+    ) -> Trade:
         """Build Trade that represents a TradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             Trade that the TradeRequest represents
@@ -70,6 +76,7 @@ class TradeRequest(ABC):
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
     ) -> float:
         """Add slippage to transaction price.
 
@@ -77,6 +84,7 @@ class TradeRequest(ABC):
             asset_pair: The asset pair for the trade
             side: The side for the trade
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             float: The slippage-adjusted rate for the transaction.
@@ -84,13 +92,8 @@ class TradeRequest(ABC):
         curr_price = current_asset_price[asset_pair]
         average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
 
-        BASIS_POINT_ADJ = 10
-
-        if side == Side.BUY:
-            transaction_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
-        else:
-            transaction_price = average_price * (1 - BASIS_POINT_ADJ / 10000)
-
+        slippage = slippage_calculator.calculate(asset_pair, side, current_asset_price)
+        transaction_price = average_price + slippage
         return transaction_price
 
     @staticmethod
@@ -116,17 +119,22 @@ class MarketTradeRequest(TradeRequest):
         """A MarketTrade object should always execute."""
         return True
 
-    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+    def build_trade(
+        self,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
+    ) -> Trade:
         """Build Trade that represents a TradeRequest for a MarketTradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             Trade that the TradeRequest represents
         """
         price = TradeRequest._calculate_slippage(
-            self.asset_pair, self.side, current_asset_price
+            self.asset_pair, self.side, current_asset_price, slippage_calculator
         )
 
         amount = self.qty

@@ -4,7 +4,12 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from coin_test.backtest import MarketTradeRequest, Portfolio, Strategy, TradeRequest
+from coin_test.backtest import (
+    MarketTradeRequest,
+    Portfolio,
+    Strategy,
+    TradeRequest,
+)
 from coin_test.util import AssetPair, Money, Side, Ticker
 
 
