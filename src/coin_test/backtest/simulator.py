@@ -184,7 +184,7 @@ class Simulator:
         trade_requests = []
         for strat in self._strategies_to_run(schedule, time, self._simulation_dt):
             lookback_data = self._composer.get_range(
-                time - strat.lookback, time, strat.asset_pairs
+                pd.Timestamp(time - strat.lookback), time, strat.asset_pairs
             )
             trade_requests.extend(strat(time, portfolio, lookback_data))
         return trade_requests
@@ -222,7 +222,9 @@ class Simulator:
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = []
-        historical_times: list[pd.Timestamp] = [self._start_time - self._simulation_dt]
+        historical_times: list[pd.Timestamp] = [
+            pd.Timestamp(self._start_time - self._simulation_dt)
+        ]
 
         # State
         time = self._start_time

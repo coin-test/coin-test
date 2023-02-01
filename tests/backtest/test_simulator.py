@@ -253,12 +253,12 @@ def test_run_strategies(
     strategy1 = Mock()
     strategy1.return_value = [mock_trade]
     type(strategy1).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy1).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy1).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
 
     strategy2 = Mock()
     strategy2.return_value = [mock_trade2]
     type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=2))
+    type(strategy2).lookback = PropertyMock(return_value=pd.Timedelta(days=2))
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
@@ -341,13 +341,13 @@ def test_run(
     strategy1 = Mock()
     strategy1.return_value = [mock_trade]
     type(strategy1).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy1).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy1).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
     type(strategy1).schedule = PropertyMock(return_value="* * * * *")
 
     strategy2 = Mock()
     strategy2.return_value = [mock_trade]
     type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy2).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
     type(strategy2).schedule = PropertyMock(
         return_value=f"* * {(time + pd.DateOffset(days=1)).day} * *"
     )
@@ -398,7 +398,7 @@ def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> No
     time = dt.datetime.now()
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
-        return_value=time + dt.timedelta(days=2)
+        return_value=time + pd.Timedelta(days=2)
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
 
@@ -427,7 +427,7 @@ def test_construct_invalid_simulator(
     time = dt.datetime.now()
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
-        return_value=time + dt.timedelta(days=2)
+        return_value=time + pd.Timedelta(days=2)
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
 
