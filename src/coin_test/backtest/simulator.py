@@ -189,21 +189,35 @@ class Simulator:
             trade_requests.extend(strat(time, portfolio, lookback_data))
         return trade_requests
 
+    @staticmethod
+    def _build_croniter_schedule(
+        start_time: pd.Timestamp, strategies: Iterable[Strategy]
+    ) -> list[tuple[Strategy, croniter]]:
+        """Build list of strategies and create valid Croniter objects.
+
+        Args:
+            start_time: Initial time for croniter to start
+            strategies: List of strategies to run
+
+        Returns:
+            list[tuple[Strategy, Croniter]: List of tuples of
+                stratgeies and Croniter
+        """
+        s = [(s, croniter(s.schedule, start_time)) for s in strategies]
+        for strat, cron in s:
+            if not cron.match(
+                strat.schedule, start_time
+            ):  # Increment the start time unless it is match
+                cron.get_next()
+        return s
+
     def run(
         self,
     ) -> tuple[
         list[pd.Timestamp], list[Portfolio], list[Trade], list[list[TradeRequest]]
     ]:
         """Run a simulation."""
-        schedule = [
-            (s, croniter(s.schedule, self._start_time)) for s in self._strategies
-        ]
-
-        # TODO: Schedule building and cleaning should be a static method
-        # hack fix to remove start time from croniter data
-        for _, cron in schedule:
-            # if not cron.match(strat.schedule, self._start_time):
-            cron.get_next()
+        schedule = self._build_croniter_schedule(self._start_time, self._strategies)
 
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []

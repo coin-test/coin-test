@@ -196,6 +196,19 @@ def test_execute_orders_failures(
     assert completed_trades == []
 
 
+def test_build_croniter_schedule() -> None:
+    """Schedule adjusted appropriately."""
+    strat1 = Mock()
+    strat1.schedule = "* * * * *"
+    strat2 = Mock()
+    strat2.schedule = "* */5 * * *"  # Every 5th minute
+    start_time = pd.Timestamp(dt.datetime(2022, 12, 28, 22, 51))
+    schedule = Simulator._build_croniter_schedule(start_time, [strat1, strat2])
+
+    assert schedule[0][1].get_current(dt.datetime) == start_time
+    assert schedule[1][1].get_current(dt.datetime) != start_time
+
+
 def test_handle_pending_orders(
     asset_pair: AssetPair,
     timestamp_asset_price: dict[AssetPair, pd.DataFrame],
@@ -339,6 +352,9 @@ def test_run(
         return_value=f"* * {(time + pd.DateOffset(days=1)).day} * *"
     )
 
+    mocker.patch("coin_test.backtest.Simulator._build_croniter_schedule")
+    Simulator._build_croniter_schedule.return_value = None
+
     mocker.patch("coin_test.backtest.Simulator._handle_pending_orders")
     Simulator._handle_pending_orders.return_value = (
         [mock_trade],
@@ -352,7 +368,7 @@ def test_run(
     mocker.patch("coin_test.backtest.Simulator._validate")
     Simulator._validate.return_value = True
 
-    # TODO: Thi should be refactored to be a mocked object
+    # TODO: This should be refactored to be a mocked object
     sim = Simulator(mock_composer, portfolio, [strategy1, strategy2])
 
     hist_times, hist_port, hist_trades, hist_pending = sim.run()
