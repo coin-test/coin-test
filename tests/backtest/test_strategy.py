@@ -4,7 +4,13 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from coin_test.backtest import MarketTradeRequest, Portfolio, Strategy, TradeRequest
+from coin_test.backtest import (
+    ConstantSlippage,
+    MarketTradeRequest,
+    Portfolio,
+    Strategy,
+    TradeRequest,
+)
 from coin_test.util import AssetPair, Money, Side, Ticker
 
 
@@ -32,6 +38,7 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
                 x = MarketTradeRequest(
                     asset_pair,
                     Side.BUY,
+                    ConstantSlippage,
                     notional=portfolio.available_assets(Ticker("USDT")).qty,
                 )
             else:
@@ -39,6 +46,7 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
                 x = MarketTradeRequest(
                     asset_pair,
                     Side.SELL,
+                    ConstantSlippage,
                     qty=portfolio.available_assets(Ticker("BTC")).qty,
                 )
             return [x]

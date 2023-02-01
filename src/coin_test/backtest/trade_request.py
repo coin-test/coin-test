@@ -2,12 +2,64 @@
 
 from abc import ABC, abstractmethod
 from statistics import mean
-from typing import cast
+from typing import cast, Type
 
 import pandas as pd
 
 from .trade import Trade
 from ..util import AssetPair, Side
+
+
+class SlippageCalculator(ABC):
+    """Calculate the slippage of an asset."""
+
+    @staticmethod
+    @abstractmethod
+    def calculate(
+        asset_pair: AssetPair,
+        side: Side,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+    ) -> float:
+        """Calculate slippage for current a current asset.
+
+        Args:
+            asset_pair: The asset pair for the trade
+            side: The side for the trade
+            current_asset_price: Current price data from composer
+
+        Returns:
+            float: The slippage for the transaction.
+        """
+
+
+class ConstantSlippage(SlippageCalculator):
+    """A Constant slippage Calculator."""
+
+    @staticmethod
+    def calculate(
+        asset_pair: AssetPair,
+        side: Side,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+    ) -> float:
+        """Calculate slippage for current asset.
+
+        Args:
+            asset_pair: The asset pair for the trade
+            side: The side for the trade
+            current_asset_price: Current price data from composer
+
+        Returns:
+            float: The slippage for the transaction.
+        """
+        curr_price = current_asset_price[asset_pair]
+        average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
+
+        BASIS_POINT_ADJ = 10
+
+        if side == Side.BUY:
+            return average_price * (BASIS_POINT_ADJ / 10000)
+        else:
+            return average_price * (-BASIS_POINT_ADJ / 10000)
 
 
 class TradeRequest(ABC):
@@ -17,6 +69,7 @@ class TradeRequest(ABC):
         self,
         asset_pair: AssetPair,
         side: Side,
+        slippage_calculator: Type[SlippageCalculator],
         notional: float | None = None,
         qty: float | None = None,
     ) -> None:
@@ -25,6 +78,7 @@ class TradeRequest(ABC):
         Args:
             asset_pair: The AssetPair for the asset being traded
             side: The direction of the trade
+            slippage_calculator: Slippage Calculator implementation
             notional: The amount of money to trade, default None
             qty: The amount of shares to trade, can't be used with notional,
                 default None
@@ -36,6 +90,7 @@ class TradeRequest(ABC):
         self.side = side
         self.notional = notional
         self.qty = qty
+        self.slippage_calculator = slippage_calculator
 
         if notional is not None and qty is not None:
             raise ValueError("Notional and qty cannot be specified together.")
@@ -70,6 +125,7 @@ class TradeRequest(ABC):
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: Type[SlippageCalculator],
     ) -> float:
         """Add slippage to transaction price.
 
@@ -77,6 +133,7 @@ class TradeRequest(ABC):
             asset_pair: The asset pair for the trade
             side: The side for the trade
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             float: The slippage-adjusted rate for the transaction.
@@ -84,13 +141,8 @@ class TradeRequest(ABC):
         curr_price = current_asset_price[asset_pair]
         average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
 
-        BASIS_POINT_ADJ = 10
-
-        if side == Side.BUY:
-            transaction_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
-        else:
-            transaction_price = average_price * (1 - BASIS_POINT_ADJ / 10000)
-
+        slippage = slippage_calculator.calculate(asset_pair, side, current_asset_price)
+        transaction_price = average_price + slippage
         return transaction_price
 
     @staticmethod
@@ -126,7 +178,7 @@ class MarketTradeRequest(TradeRequest):
             Trade that the TradeRequest represents
         """
         price = TradeRequest._calculate_slippage(
-            self.asset_pair, self.side, current_asset_price
+            self.asset_pair, self.side, current_asset_price, self.slippage_calculator
         )
 
         amount = self.qty
@@ -149,6 +201,7 @@ class LimitTradeRequest(MarketTradeRequest):
         self,
         asset_pair: AssetPair,
         side: Side,
+        slippage_calculator: Type[SlippageCalculator],
         limit_price: float,
         notional: float | None = None,
         qty: float | None = None,
@@ -158,12 +211,13 @@ class LimitTradeRequest(MarketTradeRequest):
         Args:
             asset_pair: The TradingPair for the asset being traded
             side: The direction of the trade
+            slippage_calculator: Slippage Calculator implementation
             limit_price: The limit price for triggering the trade
             notional: The amount of money to trade, default None
             qty: The amount of shares to trade, can't be used with notional,
                 default None
         """
-        super().__init__(asset_pair, side, notional, qty)
+        super().__init__(asset_pair, side, slippage_calculator, notional, qty)
         self.limit_price = limit_price
 
     def should_execute(self, price: float) -> bool:
@@ -186,6 +240,7 @@ class StopLimitTradeRequest(MarketTradeRequest):
         self,
         asset_pair: AssetPair,
         side: Side,
+        slippage_calculator: Type[SlippageCalculator],
         stop_limit_price: float,
         notional: float | None = None,
         qty: float | None = None,
@@ -195,12 +250,13 @@ class StopLimitTradeRequest(MarketTradeRequest):
         Args:
             asset_pair: The TradingPair for the asset being traded
             side: The direction of the trade
+            slippage_calculator: Slippage Calculator implementation
             stop_limit_price: The limit price for triggering the trade
             notional: The amount of money to trade, default None
             qty: The amount of shares to trade, can't be used with notional,
                 default None
         """
-        super().__init__(asset_pair, side, notional, qty)
+        super().__init__(asset_pair, side, slippage_calculator, notional, qty)
         self.stop_limit_price = stop_limit_price
 
     def should_execute(self, price: float) -> bool:

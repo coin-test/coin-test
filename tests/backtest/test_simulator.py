@@ -335,7 +335,9 @@ def test_run(
     strategy2.return_value = [mock_trade]
     type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
     type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=1))
-    type(strategy2).schedule = PropertyMock(return_value=f"* * {time.day+1} * *")
+    type(strategy2).schedule = PropertyMock(
+        return_value=f"* * {(time + pd.DateOffset(days=1)).day} * *"
+    )
 
     mocker.patch("coin_test.backtest.Simulator._handle_pending_orders")
     Simulator._handle_pending_orders.return_value = (

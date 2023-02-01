@@ -5,16 +5,20 @@ from .simulator import Simulator
 from .strategy import Strategy
 from .trade import Trade
 from .trade_request import (
+    ConstantSlippage,
     LimitTradeRequest,
     MarketTradeRequest,
+    SlippageCalculator,
     StopLimitTradeRequest,
     TradeRequest,
 )
 
 __all__ = [
+    "ConstantSlippage",
     "LimitTradeRequest",
     "MarketTradeRequest",
     "Portfolio",
+    "SlippageCalculator",
     "Simulator",
     "StopLimitTradeRequest",
     "Strategy",
