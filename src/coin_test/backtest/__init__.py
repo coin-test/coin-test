@@ -1,6 +1,6 @@
 """Backtesting module of the coin-test library."""
 
-from .market import ConstantSlippage, SlippageCalculator
+from .market import ConstantSlippage, GaussianSlippage, SlippageCalculator
 from .portfolio import Portfolio
 from .simulator import Simulator
 from .strategy import Strategy
@@ -14,6 +14,7 @@ from .trade_request import (
 
 __all__ = [
     "ConstantSlippage",
+    "GaussianSlippage",
     "LimitTradeRequest",
     "MarketTradeRequest",
     "Portfolio",
