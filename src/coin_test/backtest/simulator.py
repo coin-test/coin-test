@@ -7,10 +7,11 @@ import datetime as dt
 from croniter import croniter
 import pandas as pd
 
+from .market import SlippageCalculator, TransactionFeeCalculator
 from .portfolio import Portfolio
 from .strategy import Strategy
 from .trade import Trade
-from .trade_request import SlippageCalculator, TradeRequest
+from .trade_request import TradeRequest
 from ..data import Composer
 from ..util import AssetPair
 
@@ -24,6 +25,7 @@ class Simulator:
         starting_portfolio: Portfolio,
         strategies: Iterable[Strategy],
         slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -33,6 +35,7 @@ class Simulator:
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
             slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
@@ -41,6 +44,7 @@ class Simulator:
         self._composer = composer
         self._strategies = strategies
         self._slippage_calculator = slippage_calculator
+        self._transaction_fee_calculator = transaction_fee_calculator
 
         self._start_time = composer.start_time
         self._end_time = composer.end_time
@@ -96,6 +100,7 @@ class Simulator:
         orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
         slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> tuple[Portfolio, list[Trade]]:
         """Execute orders by adjusting portfolio.
 
@@ -104,13 +109,16 @@ class Simulator:
             orders: TradeRequests to execute
             current_asset_price: Current timestamp's price by AssetPair
             slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Returns:
             (updated portfolio, completed Trade objects)
         """
         completed_trades = []
         for order in orders:
-            trade = order.build_trade(current_asset_price, slippage_calculator)
+            trade = order.build_trade(
+                current_asset_price, slippage_calculator, transaction_fee_calculator
+            )
             adjusted_portfolio = portfolio.adjust(trade)
 
             # Check if adjusting the portfolio failed
@@ -127,6 +135,7 @@ class Simulator:
         current_asset_price: dict[AssetPair, pd.DataFrame],
         portfolio: Portfolio,
         slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> tuple[list[TradeRequest], Portfolio, list[Trade]]:
         """Process pending orders by adjusting the Portfolio appropriately.
 
@@ -135,6 +144,7 @@ class Simulator:
             current_asset_price: Current timestamp's price by AssetPair
             portfolio: Current Portfolio at given timestamp
             slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Returns:
             (remaining pending orders, updated portfolio, executed trades)
@@ -143,7 +153,11 @@ class Simulator:
             pending_orders, current_asset_price
         )
         portfolio, executed_trades = Simulator._execute_orders(
-            portfolio, executable_orders, current_asset_price, slippage_calculator
+            portfolio,
+            executable_orders,
+            current_asset_price,
+            slippage_calculator,
+            transaction_fee_calculator,
         )
         return pending_orders, portfolio, executed_trades
 
@@ -247,6 +261,7 @@ class Simulator:
                 current_asset_price,
                 portfolio,
                 self._slippage_calculator,
+                self._transaction_fee_calculator,
             )
             historical_trades.extend(executed_trades)
 
@@ -257,6 +272,7 @@ class Simulator:
                 current_asset_price,
                 portfolio,
                 self._slippage_calculator,
+                self._transaction_fee_calculator,
             )
 
             # TODO: DO these objects need to be copied

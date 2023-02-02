@@ -5,7 +5,11 @@ from statistics import mean
 import numpy as np
 import pandas as pd
 
-from coin_test.backtest import ConstantSlippage, GaussianSlippage
+from coin_test.backtest import (
+    ConstantSlippage,
+    ConstantTransactionFeeCalculator,
+    GaussianSlippage,
+)
 from coin_test.util import AssetPair, Side
 
 
@@ -92,3 +96,15 @@ def test_gaussian_slippage_sell(
     assert expected_slippage_buy == gaussian_slippage.calculate(
         asset_pair, Side.SELL, timestamp_asset_price
     )
+
+
+def test_correct_transaction_fees(asset_pair: AssetPair) -> None:
+    """Properly calculate transaction fees for a Trade."""
+    amount = 1000.0
+    adjusted_price = 1.1
+
+    TRANSACTION_FEE_BP = 50
+    tx_fee_calculator = ConstantTransactionFeeCalculator(TRANSACTION_FEE_BP)
+    fees = tx_fee_calculator(asset_pair, amount, adjusted_price)
+    expected_fees = amount * adjusted_price * float((TRANSACTION_FEE_BP / 10000))
+    assert expected_fees == fees

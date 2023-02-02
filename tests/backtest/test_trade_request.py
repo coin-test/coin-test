@@ -72,17 +72,6 @@ def test_slippage_calculator_applied(
     )
 
 
-def test_correct_transaction_fees() -> None:
-    """Properly calculate transaction fees for a Trade."""
-    amount = 1000
-    adjusted_price = 1.07
-
-    TRANSACTION_FEE_BP = 50
-    assert amount * adjusted_price * (
-        TRANSACTION_FEE_BP / 10000
-    ) == TradeRequest._generate_transaction_fee(amount, adjusted_price)
-
-
 def test_market_trade_request_build_trade_notional(
     asset_pair: AssetPair,
     timestamp_asset_price: dict[AssetPair, pd.DataFrame],
@@ -100,10 +89,12 @@ def test_market_trade_request_build_trade_notional(
     mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
     TradeRequest._calculate_slippage.return_value = trade_price
 
-    mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
-    TradeRequest._generate_transaction_fee.return_value = 0
+    tx_fees = Mock()
+    tx_fees.return_value = 0
 
-    trade = trade_request.build_trade(timestamp_asset_price, slippage_calculator)
+    trade = trade_request.build_trade(
+        timestamp_asset_price, slippage_calculator, tx_fees
+    )
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair
@@ -129,10 +120,12 @@ def test_market_trade_request_build_trade_buy(
     mocker.patch("coin_test.backtest.TradeRequest._calculate_slippage")
     TradeRequest._calculate_slippage.return_value = trade_price
 
-    mocker.patch("coin_test.backtest.TradeRequest._generate_transaction_fee")
-    TradeRequest._generate_transaction_fee.return_value = 0
+    tx_fees = Mock()
+    tx_fees.return_value = 0
 
-    trade = trade_request.build_trade(timestamp_asset_price, slippage_calculator)
+    trade = trade_request.build_trade(
+        timestamp_asset_price, slippage_calculator, tx_fees
+    )
 
     assert trade.side == side
     assert trade.asset_pair == asset_pair

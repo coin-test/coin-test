@@ -6,7 +6,7 @@ from typing import cast
 
 import pandas as pd
 
-from .market import SlippageCalculator
+from .market import SlippageCalculator, TransactionFeeCalculator
 from .trade import Trade
 from ..util import AssetPair, Side
 
@@ -60,12 +60,14 @@ class TradeRequest(ABC):
         self,
         current_asset_price: dict[AssetPair, pd.DataFrame],
         slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> Trade:
         """Build Trade that represents a TradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
             slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: TransactionFeeCalculator implementation
 
         Returns:
             Trade that the TradeRequest represents
@@ -96,21 +98,6 @@ class TradeRequest(ABC):
         transaction_price = average_price + slippage
         return transaction_price
 
-    @staticmethod
-    def _generate_transaction_fee(amount: float, adjusted_price: float) -> float:
-        """Generate a transaction fee for a given trade request.
-
-        Args:
-            amount: The quantity of the currency being traded
-            adjusted_price: Price of the trade
-
-        Returns:
-            float: The transaction fee in the base currency.
-        """
-        TRANSACTION_FEE_BP = 50
-
-        return amount * adjusted_price * (TRANSACTION_FEE_BP / 10000)
-
 
 class MarketTradeRequest(TradeRequest):
     """A TradeRequest implementation for market (GTC) orders."""
@@ -123,12 +110,14 @@ class MarketTradeRequest(TradeRequest):
         self,
         current_asset_price: dict[AssetPair, pd.DataFrame],
         slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> Trade:
         """Build Trade that represents a TradeRequest for a MarketTradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
             slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: TransactionFeeCalculator implementation
 
         Returns:
             Trade that the TradeRequest represents
@@ -141,7 +130,7 @@ class MarketTradeRequest(TradeRequest):
         if amount is None:
             amount = cast(float, self.notional) / price
 
-        transaction_fee = TradeRequest._generate_transaction_fee(amount, price)
+        transaction_fee = transaction_fee_calculator(self.asset_pair, amount, price)
 
         return Trade(self.asset_pair, self.side, amount, price, transaction_fee)
 
