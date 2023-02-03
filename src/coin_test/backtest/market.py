@@ -12,9 +12,9 @@ from ..util import AssetPair, Side
 class SlippageCalculator(ABC):
     """Calculate the slippage of an asset."""
 
-    @staticmethod
     @abstractmethod
-    def calculate(
+    def __call__(
+        self,
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
@@ -42,7 +42,7 @@ class ConstantSlippage(SlippageCalculator):
         """
         self.basis_points = basis_points
 
-    def calculate(
+    def __call__(
         self,
         asset_pair: AssetPair,
         side: Side,
@@ -84,7 +84,7 @@ class GaussianSlippage(SlippageCalculator):
         self.mean_bp = mean_bp
         self.std_dev_bp = std_dev_bp
 
-    def calculate(
+    def __call__(
         self,
         asset_pair: AssetPair,
         side: Side,
@@ -108,3 +108,52 @@ class GaussianSlippage(SlippageCalculator):
             return average_price * (basis_points / 10000)
         else:
             return average_price * (basis_points / 10000)
+
+
+class TransactionFeeCalculator(ABC):
+    """Calculate the transactions fees for a trade."""
+
+    @abstractmethod
+    def __call__(
+        self, asset_pair: AssetPair, amount: float, adjusted_price: float
+    ) -> float:
+        """Calculate transaction fees for a given trade request.
+
+        Args:
+            asset_pair: The asset pair for the trade
+            amount: The quantity of the currency being traded
+            adjusted_price: Price of the trade
+
+        Returns:
+            float: The transaction fee in the base currency.
+        """
+
+
+class ConstantTransactionFeeCalculator(TransactionFeeCalculator):
+    """Calculate Constant the transactions fees for a trade."""
+
+    def __init__(self, basis_points: float) -> None:
+        """Initialize a Constant TransactionFeeCalculator.
+
+        Args:
+            basis_points: Basis Points used to calculate proportional fees
+        """
+        self.basis_points = basis_points
+
+    def __call__(
+        self,
+        asset_pair: AssetPair,
+        amount: float,
+        adjusted_price: float,
+    ) -> float:
+        """Calculate transaction fees for a given trade request.
+
+        Args:
+            asset_pair: The asset pair for the trade
+            amount: The quantity of the currency being traded
+            adjusted_price: Price of the trade
+
+        Returns:
+            float: The transaction fee in the base currency.
+        """
+        return float(amount * adjusted_price * self.basis_points / 10000)
