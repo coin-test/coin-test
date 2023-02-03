@@ -74,13 +74,13 @@ class TradeRequest(ABC):
         """
 
     @staticmethod
-    def _calculate_slippage(
+    def _determine_price(
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
         slippage_calculator: SlippageCalculator,
     ) -> float:
-        """Add slippage to transaction price.
+        """Determine the true market price of an asset.
 
         Args:
             asset_pair: The asset pair for the trade
@@ -92,10 +92,13 @@ class TradeRequest(ABC):
             float: The slippage-adjusted rate for the transaction.
         """
         curr_price = current_asset_price[asset_pair]
-        average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
+        price_before_slippage = mean(
+            curr_price[["Open", "High", "Low", "Close"]].iloc[0]
+        )
 
-        slippage = slippage_calculator.calculate(asset_pair, side, current_asset_price)
-        transaction_price = average_price + slippage
+        transaction_price = price_before_slippage + slippage_calculator(
+            asset_pair, side, current_asset_price
+        )
         return transaction_price
 
 
@@ -122,7 +125,7 @@ class MarketTradeRequest(TradeRequest):
         Returns:
             Trade that the TradeRequest represents
         """
-        price = TradeRequest._calculate_slippage(
+        price = TradeRequest._determine_price(
             self.asset_pair, self.side, current_asset_price, slippage_calculator
         )
 

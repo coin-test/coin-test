@@ -13,7 +13,7 @@ class SlippageCalculator(ABC):
     """Calculate the slippage of an asset."""
 
     @abstractmethod
-    def calculate(
+    def __call__(
         self,
         asset_pair: AssetPair,
         side: Side,
@@ -42,7 +42,7 @@ class ConstantSlippage(SlippageCalculator):
         """
         self.basis_points = basis_points
 
-    def calculate(
+    def __call__(
         self,
         asset_pair: AssetPair,
         side: Side,
@@ -84,7 +84,7 @@ class GaussianSlippage(SlippageCalculator):
         self.mean_bp = mean_bp
         self.std_dev_bp = std_dev_bp
 
-    def calculate(
+    def __call__(
         self,
         asset_pair: AssetPair,
         side: Side,

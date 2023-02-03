@@ -32,13 +32,13 @@ def test_constant_slippage(
     constant_slippage = ConstantSlippage(BASIS_POINT_ADJ)
     expected_slippage_buy = average_price * BASIS_POINT_ADJ / 10000
 
-    assert expected_slippage_buy == constant_slippage.calculate(
+    assert expected_slippage_buy == constant_slippage(
         asset_pair, Side.BUY, timestamp_asset_price
     )
 
     expected_slippage_sell = average_price * -BASIS_POINT_ADJ / 10000
 
-    assert expected_slippage_sell == constant_slippage.calculate(
+    assert expected_slippage_sell == constant_slippage(
         asset_pair, Side.SELL, timestamp_asset_price
     )
 
@@ -65,7 +65,7 @@ def test_gaussian_slippage_buy(
 
     expected_slippage_buy = average_price * rng.normal(bp_mean, bp_std) / 10000
 
-    assert expected_slippage_buy == gaussian_slippage.calculate(
+    assert expected_slippage_buy == gaussian_slippage(
         asset_pair, Side.BUY, timestamp_asset_price
     )
 
@@ -93,7 +93,7 @@ def test_gaussian_slippage_sell(
 
     expected_slippage_buy = average_price * rng.normal(bp_mean, bp_std) / 10000
 
-    assert expected_slippage_buy == gaussian_slippage.calculate(
+    assert expected_slippage_buy == gaussian_slippage(
         asset_pair, Side.SELL, timestamp_asset_price
     )
 
