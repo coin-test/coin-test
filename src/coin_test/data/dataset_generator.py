@@ -2,61 +2,87 @@
 
 from abc import ABC, abstractmethod
 
+import numpy as np
 import pandas as pd
 
-try:
-    from icecream import ic
-except ImportError:
-    ic = lambda x: x
-
-from .datasets import CustomDataset, PriceDataset
+from .datasets import CustomDataset
 
 
 class DatasetGenerator(ABC):
     """Create synthetic datasets."""
 
     @abstractmethod
-    def generate(
-        self,
-        seed: int | None = None,
-        n: int = 1,
-        **kwargs,
-    ) -> list[PriceDataset]:
-        """Create synthetic datasets from the given dataset."""
+    def generate(self, seed: int | None = None, n: int = 1) -> list[CustomDataset]:
+        """Create synthetic datasets from the given dataset.
+
+        Args:
+            seed: A random seed for the generated datasets (optional)
+            n: The number of datasets to generate
+
+        Returns:
+            list[PriceDataset]: The synthetic datasets
+        """
 
 
 class ResultsDatasetGenerator(DatasetGenerator):
     """Create synthetic datasets by shuffling the percentage gains each day."""
 
-    def __init__(self, dataset: CustomDataset):
+    def __init__(self, dataset: CustomDataset) -> None:
+        """Initialize a ResultsDatasetGenerator object."""
         self.dataset = dataset
 
-    def generate(self, seed: int | None = None, n: int = 1, **kwargs) -> list[PriceDataset]:
-        """Create synthetic datasets from the given dataset."""
-        if seed:
-            pass
+    def generate(self, seed: int | None = None, n: int = 1) -> list[CustomDataset]:
+        """Create synthetic datasets from the given dataset.
+
+        Args:
+            seed: A random seed for the generated datasets (optional)
+            n: The number of datasets to generate
+
+        Returns:
+            list[PriceDataset]: The synthetic datasets
+        """
+        rng = np.random.default_rng(seed)
 
         df = self.dataset.df
-        starting_prices = df.sample(n=n, random_state=seed, replace=True)["Open"]
-        df_norm = ResultsDatasetGenerator.normalize_row_data(df)
+        starting_prices = df.sample(n=n, random_state=rng, replace=True)["Open"]
+        df_norm = self.normalize_row_data(df)
 
         new_datasets = []
         for i in range(n):
             new_datasets.append(
                 CustomDataset(
-                    ResultsDatasetGenerator.select_data(df_norm, starting_prices[i]), # type: ignore
-                    freq = self.dataset.freq,
-                    pair = self.dataset.pair
+                    self.select_data(
+                        df_norm, starting_prices[i], rng.df.index  # type: ignore
+                    ),
+                    self.dataset._metadata.freq,
+                    self.dataset._metadata.pair,
                 )
             )
 
         return new_datasets
 
     @staticmethod
-    def select_data(df_norm: pd.DataFrame, starting_price: float) -> pd.DataFrame:
-        """"""
+    def select_data(
+        df_norm: pd.DataFrame,
+        starting_price: float,
+        rng: np.random.Generator,
+        index: pd.PeriodIndex,
+    ) -> pd.DataFrame:
+        """Take a normalized Dataframe and create a synthetic dataset from it.
+
+        Args:
+            df_norm: Normalized Dataframe of original data
+            starting_price: The first open price for the data
+            rng: A numpy random number generator
+            index: The datetime index of the data
+
+        Returns:
+            pd.DataFrame: The synthetic dataset
+        """
         # Select data
-        sampled_data = df_norm.sample(frac=1, replace=True).reset_index(drop=True)
+        sampled_data = df_norm.sample(
+            frac=1, replace=True, random_state=rng
+        ).reset_index(drop=True)
         sampled_data.loc[0, "Open"] = starting_price
 
         # Stack Open and Close data in one column
@@ -71,15 +97,11 @@ class ResultsDatasetGenerator(DatasetGenerator):
             by=["index", "O/C"], ascending=[True, False], inplace=True
         )
 
-        # Calculate Unnormalized Open and Close data
+        # Calculate Open and Close data
         oc_stacked["Price"] = oc_stacked["Perc_Change"].cumprod()
-
-        ic(oc_stacked)
 
         # Unstack Open and Close data
         oc_unstacked = oc_stacked.pivot(index="index", columns="O/C", values="Price")
-
-        ic(oc_unstacked)
 
         # Put unstacked data in sample data
         sampled_data["Open"] = oc_unstacked["Open"]
@@ -87,7 +109,8 @@ class ResultsDatasetGenerator(DatasetGenerator):
         sampled_data["High"] = oc_unstacked["Open"] * sampled_data["High"]
         sampled_data["Low"] = oc_unstacked["Open"] * sampled_data["Low"]
 
-        ic(sampled_data)
+        # Add time index
+        sampled_data.set_index(index, inplace=True)
 
         return sampled_data
 
@@ -95,6 +118,7 @@ class ResultsDatasetGenerator(DatasetGenerator):
     def normalize_row_data(df: pd.DataFrame) -> pd.DataFrame:
         """Normalize the row data so that it can be sampled with returns."""
         df = df.copy()
+
         # Normalize high, low, and close from open prices
         df["High"] = df["High"] / df["Open"]
         df["Low"] = df["Low"] / df["Open"]
