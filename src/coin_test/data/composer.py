@@ -26,31 +26,51 @@ class Composer:
                 use in a simulation run.
             start_time: Expected start time to validate datasets against
             end_time: Expected end time to validate datasets against
+        """
+        shared_currency = self._validate_params(datasets, start_time, end_time)
+        self.start_time = start_time
+        self.end_time = end_time
+        self.currency = shared_currency
+        self.freq = self._get_min_freq(datasets)
+        self.datasets = {ds.metadata.pair: ds for ds in datasets}
+
+    @staticmethod
+    def _validate_params(
+        datasets: list[PriceDataset],
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp,
+    ) -> Ticker:
+        """Validates input parameters.
+
+        Args:
+            datasets: List of PriceDatasets containing all price information for
+                use in a simulation run.
+            start_time: Expected start time to validate datasets against
+            end_time: Expected end time to validate datasets against
+
+        Returns:
+            Ticker: Currency shared by all datasets
 
         Raises:
             ValueError: If start and end time are invalid, if datasets do not
                 align to start and end times or if datasets do not share a base
                 currency.
         """
-        self._validate_start_end(start_time, end_time)
-        self.start_time = start_time
-        self.end_time = end_time
+        Composer._validate_start_end(start_time, end_time)
 
         if len(datasets) == 0:
             raise ValueError("At least one dataset must be defined.")
 
-        if not all(
-            [self._is_within_range(ds, start_time, end_time) for ds in datasets]
-        ):
-            raise ValueError("Not all datasets cover requested time range")
+        for ds in datasets:
+            if not Composer._is_within_range(ds, start_time, end_time):
+                raise ValueError(f"Dataset {ds} does not cover time range.")
+            if not Composer._validate_missing_data(ds):
+                raise ValueError(f"Dataset {ds} does not have data for every period.")
 
-        shared_currency = self._get_shared_currency(datasets)
+        shared_currency = Composer._get_shared_currency(datasets)
         if shared_currency is None:
             raise ValueError("Not all datasets share a single currency.")
-        self.currency = shared_currency
-
-        self.freq = self._get_min_freq(datasets)
-        self.datasets = {ds.metadata.pair: ds for ds in datasets}
+        return shared_currency
 
     @staticmethod
     def _validate_start_end(start: pd.Timestamp, end: pd.Timestamp) -> None:
@@ -63,6 +83,15 @@ class Composer:
     ) -> bool:
         """Check whether dataset has data for start and end time."""
         return not dataset.df[:start_time].empty and not dataset.df[end_time:].empty
+
+    @staticmethod
+    def _validate_missing_data(dataset: PriceDataset) -> bool:
+        index = dataset.df.index
+        full_index = pd.period_range(
+            index[0], index[-1], freq=dataset.metadata.freq  # type: ignore
+        )
+        missing_index = full_index.difference(dataset.df.index)
+        return len(missing_index) == 0
 
     @staticmethod
     def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:
@@ -167,5 +196,5 @@ class Composer:
                 based on `keys` parameter.
         """
         end_time = timestamp
-        start_time = timestamp - self.freq * lookback
+        start_time = pd.Timestamp(timestamp - self.freq * lookback)
         return self.get_range(start_time, end_time, keys=keys, mask=mask)

@@ -6,6 +6,7 @@ from typing import cast
 
 import pandas as pd
 
+from .market import SlippageCalculator, TransactionFeeCalculator
 from .trade import Trade
 from ..util import AssetPair, Side
 
@@ -55,58 +56,50 @@ class TradeRequest(ABC):
         """
 
     @abstractmethod
-    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+    def build_trade(
+        self,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
+    ) -> Trade:
         """Build Trade that represents a TradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: TransactionFeeCalculator implementation
 
         Returns:
             Trade that the TradeRequest represents
         """
 
     @staticmethod
-    def _calculate_slippage(
+    def _determine_price(
         asset_pair: AssetPair,
         side: Side,
         current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
     ) -> float:
-        """Add slippage to transaction price.
+        """Determine the true market price of an asset.
 
         Args:
             asset_pair: The asset pair for the trade
             side: The side for the trade
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
 
         Returns:
             float: The slippage-adjusted rate for the transaction.
         """
         curr_price = current_asset_price[asset_pair]
-        average_price = mean(curr_price[["Open", "High", "Low", "Close"]].iloc[0])
+        price_before_slippage = mean(
+            curr_price[["Open", "High", "Low", "Close"]].iloc[0]
+        )
 
-        BASIS_POINT_ADJ = 10
-
-        if side == Side.BUY:
-            transaction_price = average_price * (1 + BASIS_POINT_ADJ / 10000)
-        else:
-            transaction_price = average_price * (1 - BASIS_POINT_ADJ / 10000)
-
+        transaction_price = price_before_slippage + slippage_calculator(
+            asset_pair, side, current_asset_price
+        )
         return transaction_price
-
-    @staticmethod
-    def _generate_transaction_fee(amount: float, adjusted_price: float) -> float:
-        """Generate a transaction fee for a given trade request.
-
-        Args:
-            amount: The quantity of the currency being traded
-            adjusted_price: Price of the trade
-
-        Returns:
-            float: The transaction fee in the base currency.
-        """
-        TRANSACTION_FEE_BP = 50
-
-        return amount * adjusted_price * (TRANSACTION_FEE_BP / 10000)
 
 
 class MarketTradeRequest(TradeRequest):
@@ -116,24 +109,31 @@ class MarketTradeRequest(TradeRequest):
         """A MarketTrade object should always execute."""
         return True
 
-    def build_trade(self, current_asset_price: dict[AssetPair, pd.DataFrame]) -> Trade:
+    def build_trade(
+        self,
+        current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
+    ) -> Trade:
         """Build Trade that represents a TradeRequest for a MarketTradeRequest.
 
         Args:
             current_asset_price: Current price data from composer
+            slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: TransactionFeeCalculator implementation
 
         Returns:
             Trade that the TradeRequest represents
         """
-        price = TradeRequest._calculate_slippage(
-            self.asset_pair, self.side, current_asset_price
+        price = TradeRequest._determine_price(
+            self.asset_pair, self.side, current_asset_price, slippage_calculator
         )
 
         amount = self.qty
         if amount is None:
             amount = cast(float, self.notional) / price
 
-        transaction_fee = TradeRequest._generate_transaction_fee(amount, price)
+        transaction_fee = transaction_fee_calculator(self.asset_pair, amount, price)
 
         return Trade(self.asset_pair, self.side, amount, price, transaction_fee)
 

@@ -160,6 +160,8 @@ def test_execute_orders_success(
     )
     orders = [mock_trade, mock_trade2]
 
+    slippage_calculator = Mock()
+    tx_fee_calculator = Mock()
     portfolio = Mock()
     type(portfolio).base_currency = PropertyMock(return_value=asset_pair.currency)
     portfolio_cp = copy(portfolio)
@@ -167,7 +169,7 @@ def test_execute_orders_success(
     portfolio.adjust.return_value = portfolio_cp
 
     new_portfolio, completed_trades = Simulator._execute_orders(
-        portfolio, orders, timestamp_asset_price
+        portfolio, orders, timestamp_asset_price, slippage_calculator, tx_fee_calculator
     )
 
     assert new_portfolio.base_currency == asset_pair.asset
@@ -184,12 +186,15 @@ def test_execute_orders_failures(
 
     orders = [mock_trade]
 
+    slippage_calculator = Mock()
+    tx_fee_calculator = Mock()
+
     portfolio = Mock()
     type(portfolio).base_currency = PropertyMock(return_value=asset_pair.currency)
     portfolio.adjust.return_value = None
 
     new_portfolio, completed_trades = Simulator._execute_orders(
-        portfolio, orders, timestamp_asset_price
+        portfolio, orders, timestamp_asset_price, slippage_calculator, tx_fee_calculator
     )
 
     assert new_portfolio == portfolio
@@ -215,6 +220,9 @@ def test_handle_pending_orders(
     mocker: MockerFixture,
 ) -> None:
     """Propogate Orders as expected."""
+    slippage_calculator = Mock()
+    transaction_fee_calculator = Mock()
+
     portfolio = Mock()
     mock_trade = _make_mock_trade_request(
         asset_pair, Side.BUY, qty=1, should_execute=True, price=2
@@ -230,7 +238,11 @@ def test_handle_pending_orders(
     Simulator._execute_orders.return_value = (portfolio, [mock_trade.build_trade])
 
     pending_orders, new_portfolio, exec_trades = Simulator._handle_pending_orders(
-        orders, timestamp_asset_price, portfolio
+        orders,
+        timestamp_asset_price,
+        portfolio,
+        slippage_calculator,
+        transaction_fee_calculator,
     )
 
     assert pending_orders == [mock_trade2]
@@ -253,12 +265,12 @@ def test_run_strategies(
     strategy1 = Mock()
     strategy1.return_value = [mock_trade]
     type(strategy1).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy1).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy1).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
 
     strategy2 = Mock()
     strategy2.return_value = [mock_trade2]
     type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=2))
+    type(strategy2).lookback = PropertyMock(return_value=pd.Timedelta(days=2))
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
@@ -273,7 +285,15 @@ def test_run_strategies(
     mocker.patch("coin_test.backtest.Simulator._validate")
     Simulator._validate.return_value = True
 
-    sim = Simulator(mock_composer, portfolio, [])
+    mock_slippage_calculator = Mock()
+    mock_transaction_calculator = Mock()
+    sim = Simulator(
+        mock_composer,
+        portfolio,
+        [],
+        mock_slippage_calculator,
+        mock_transaction_calculator,
+    )
 
     time = pd.Timestamp(dt.datetime.now())
     schedule = [(strategy1, croniter("@yearly")), (strategy2, croniter("@yearly"))]
@@ -341,14 +361,16 @@ def test_run(
     strategy1 = Mock()
     strategy1.return_value = [mock_trade]
     type(strategy1).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy1).lookback = PropertyMock(return_value=dt.timedelta(days=1))
+    type(strategy1).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
     type(strategy1).schedule = PropertyMock(return_value="* * * * *")
 
     strategy2 = Mock()
     strategy2.return_value = [mock_trade]
     type(strategy2).asset_pairs = PropertyMock(return_value=[asset_pair])
-    type(strategy2).lookback = PropertyMock(return_value=dt.timedelta(days=1))
-    type(strategy2).schedule = PropertyMock(return_value=f"* * {time.day+1} * *")
+    type(strategy2).lookback = PropertyMock(return_value=pd.Timedelta(days=1))
+    type(strategy2).schedule = PropertyMock(
+        return_value=f"* * {(time + pd.DateOffset(days=1)).day} * *"
+    )
 
     mocker.patch("coin_test.backtest.Simulator._build_croniter_schedule")
     Simulator._build_croniter_schedule.return_value = None
@@ -366,8 +388,16 @@ def test_run(
     mocker.patch("coin_test.backtest.Simulator._validate")
     Simulator._validate.return_value = True
 
+    mock_slippage_calculator = Mock()
+    mock_transaction_calculator = Mock()
     # TODO: This should be refactored to be a mocked object
-    sim = Simulator(mock_composer, portfolio, [strategy1, strategy2])
+    sim = Simulator(
+        mock_composer,
+        portfolio,
+        [strategy1, strategy2],
+        mock_slippage_calculator,
+        mock_transaction_calculator,
+    )
 
     hist_times, hist_port, hist_trades, hist_pending = sim.run()
 
@@ -391,12 +421,15 @@ def test_run(
 
 def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> None:
     """Simulator initilaizes correctly."""
+    slippage_calculator = Mock()
+    mock_transaction_calculator = Mock()
+
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
     time = dt.datetime.now()
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
-        return_value=time + dt.timedelta(days=2)
+        return_value=time + pd.Timedelta(days=2)
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
 
@@ -406,7 +439,13 @@ def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> No
     mocker.patch("coin_test.backtest.Simulator._validate")
     Simulator._validate.return_value = True
 
-    sim = Simulator(mock_composer, portfolio, [strategy1])
+    sim = Simulator(
+        mock_composer,
+        portfolio,
+        [strategy1],
+        slippage_calculator,
+        mock_transaction_calculator,
+    )
 
     assert sim._portfolio is portfolio
     assert sim._composer is mock_composer
@@ -414,6 +453,7 @@ def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> No
     assert sim._start_time == mock_composer.start_time
     assert sim._end_time == mock_composer.end_time
     assert sim._simulation_dt == mock_composer.freq
+    assert sim._slippage_calculator == slippage_calculator
 
 
 def test_construct_invalid_simulator(
@@ -421,11 +461,13 @@ def test_construct_invalid_simulator(
 ) -> None:
     """Invalid Simulator raises ValueError."""
     mock_composer = Mock()
+    mock_transaction_calculator = Mock()
+
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
     time = dt.datetime.now()
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
-        return_value=time + dt.timedelta(days=2)
+        return_value=time + pd.Timedelta(days=2)
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
 
@@ -436,4 +478,6 @@ def test_construct_invalid_simulator(
     Simulator._validate.return_value = False
 
     with pytest.raises(ValueError):
-        _ = Simulator(mock_composer, portfolio, [strategy1])
+        _ = Simulator(
+            mock_composer, portfolio, [strategy1], Mock(), mock_transaction_calculator
+        )

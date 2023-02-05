@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import datetime as dt
 import uuid
 
-from pandas import DataFrame
+import pandas as pd
 
 from .portfolio import Portfolio
 from .trade_request import TradeRequest
@@ -19,7 +19,7 @@ class Strategy(ABC):
         name: str,
         asset_pairs: list[AssetPair],
         schedule: str,
-        lookback: dt.timedelta,
+        lookback: pd.Timedelta,
     ) -> None:
         """Initialize a Strategy.
 
@@ -40,6 +40,6 @@ class Strategy(ABC):
         self,
         time: dt.datetime,
         portfolio: Portfolio,
-        lookback_data: dict[AssetPair, DataFrame],
+        lookback_data: dict[AssetPair, pd.DataFrame],
     ) -> list[TradeRequest]:
         """Execute a strategy."""

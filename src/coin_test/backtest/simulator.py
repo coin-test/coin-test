@@ -7,6 +7,7 @@ import datetime as dt
 from croniter import croniter
 import pandas as pd
 
+from .market import SlippageCalculator, TransactionFeeCalculator
 from .portfolio import Portfolio
 from .strategy import Strategy
 from .trade import Trade
@@ -23,6 +24,8 @@ class Simulator:
         composer: Composer,
         starting_portfolio: Portfolio,
         strategies: Iterable[Strategy],
+        slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -31,6 +34,8 @@ class Simulator:
             starting_portfolio: The starting portfolio for the backtest,
                 ideally only holding cash
             strategies: User Defined strategies to run in the simulation
+            slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
@@ -38,6 +43,8 @@ class Simulator:
         self._portfolio = starting_portfolio
         self._composer = composer
         self._strategies = strategies
+        self._slippage_calculator = slippage_calculator
+        self._transaction_fee_calculator = transaction_fee_calculator
 
         self._start_time = composer.start_time
         self._end_time = composer.end_time
@@ -92,6 +99,8 @@ class Simulator:
         portfolio: Portfolio,
         orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
+        slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> tuple[Portfolio, list[Trade]]:
         """Execute orders by adjusting portfolio.
 
@@ -99,13 +108,17 @@ class Simulator:
             portfolio: Current Portfolio at given timestamp
             orders: TradeRequests to execute
             current_asset_price: Current timestamp's price by AssetPair
+            slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Returns:
             (updated portfolio, completed Trade objects)
         """
         completed_trades = []
         for order in orders:
-            trade = order.build_trade(current_asset_price)
+            trade = order.build_trade(
+                current_asset_price, slippage_calculator, transaction_fee_calculator
+            )
             adjusted_portfolio = portfolio.adjust(trade)
 
             # Check if adjusting the portfolio failed
@@ -121,6 +134,8 @@ class Simulator:
         pending_orders: Iterable[TradeRequest],
         current_asset_price: dict[AssetPair, pd.DataFrame],
         portfolio: Portfolio,
+        slippage_calculator: SlippageCalculator,
+        transaction_fee_calculator: TransactionFeeCalculator,
     ) -> tuple[list[TradeRequest], Portfolio, list[Trade]]:
         """Process pending orders by adjusting the Portfolio appropriately.
 
@@ -128,6 +143,8 @@ class Simulator:
             pending_orders: Uncompleted TradeRequests
             current_asset_price: Current timestamp's price by AssetPair
             portfolio: Current Portfolio at given timestamp
+            slippage_calculator: Slippage Calculator implementation
+            transaction_fee_calculator: Transaction Fee Calculator implementation
 
         Returns:
             (remaining pending orders, updated portfolio, executed trades)
@@ -136,7 +153,11 @@ class Simulator:
             pending_orders, current_asset_price
         )
         portfolio, executed_trades = Simulator._execute_orders(
-            portfolio, executable_orders, current_asset_price
+            portfolio,
+            executable_orders,
+            current_asset_price,
+            slippage_calculator,
+            transaction_fee_calculator,
         )
         return pending_orders, portfolio, executed_trades
 
@@ -184,7 +205,7 @@ class Simulator:
         trade_requests = []
         for strat in self._strategies_to_run(schedule, time, self._simulation_dt):
             lookback_data = self._composer.get_range(
-                time - strat.lookback, time, strat.asset_pairs
+                pd.Timestamp(time - strat.lookback), time, strat.asset_pairs
             )
             trade_requests.extend(strat(time, portfolio, lookback_data))
         return trade_requests
@@ -222,7 +243,9 @@ class Simulator:
         historical_portfolios = [self._portfolio]
         historical_trades: list[Trade] = []
         historical_pending_orders: list[list[TradeRequest]] = []
-        historical_times: list[pd.Timestamp] = [self._start_time - self._simulation_dt]
+        historical_times: list[pd.Timestamp] = [
+            pd.Timestamp(self._start_time - self._simulation_dt)
+        ]
 
         # State
         time = self._start_time
@@ -234,14 +257,22 @@ class Simulator:
             current_asset_price = self._composer.get_timestep(time, mask=False)
 
             pending_orders, portfolio, executed_trades = self._handle_pending_orders(
-                pending_orders, current_asset_price, portfolio
+                pending_orders,
+                current_asset_price,
+                portfolio,
+                self._slippage_calculator,
+                self._transaction_fee_calculator,
             )
             historical_trades.extend(executed_trades)
 
             trade_requests = self.run_strategies(schedule, time, portfolio)
 
             remaining_tr, portfolio, executed_trades = self._handle_pending_orders(
-                trade_requests, current_asset_price, portfolio
+                trade_requests,
+                current_asset_price,
+                portfolio,
+                self._slippage_calculator,
+                self._transaction_fee_calculator,
             )
 
             # TODO: DO these objects need to be copied

@@ -4,7 +4,12 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from coin_test.backtest import MarketTradeRequest, Portfolio, Strategy, TradeRequest
+from coin_test.backtest import (
+    MarketTradeRequest,
+    Portfolio,
+    Strategy,
+    TradeRequest,
+)
 from coin_test.util import AssetPair, Money, Side, Ticker
 
 
@@ -18,7 +23,7 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
                 name="Pro Strat",
                 asset_pairs=[asset_pair],
                 schedule="* * * * *",
-                lookback=dt.timedelta(days=5),
+                lookback=pd.Timedelta(days=5),
             )
 
         def __call__(
@@ -48,7 +53,7 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
     assert test_strategy.name == "Pro Strat"
     assert test_strategy.asset_pairs[0] == asset_pair
     assert test_strategy.schedule == "* * * * *"
-    assert test_strategy.lookback == dt.timedelta(days=5)
+    assert test_strategy.lookback == pd.Timedelta(days=5)
 
     portfolio = Portfolio(asset_pair.currency, assets)
 
@@ -67,7 +72,7 @@ def test_strategy_invalid(asset_pair: AssetPair) -> None:
                 name="Pro Strat",
                 asset_pairs=[asset_pair],
                 schedule="* * * * *",
-                lookback=dt.timedelta(days=5),
+                lookback=pd.Timedelta(days=5),
             )
 
     with pytest.raises(TypeError):
