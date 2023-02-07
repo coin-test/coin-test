@@ -7,6 +7,12 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("../src"))
+autodoc_mock_imports = ["numpy", "pandas", "croniter"]
+
 project = "coin-test"
 copyright = "2022, Olin SCOPE"
 author = "Olin SCOPE"
