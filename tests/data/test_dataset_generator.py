@@ -1,19 +1,33 @@
 """Test the DatasetGenerator classes."""
 
+from unittest.mock import Mock
+
 import numpy as np
 import pandas as pd
 import pytest
+from pytest_mock import MockerFixture
 
 from coin_test.data import ReturnsDatasetGenerator
 from coin_test.data.datasets import CustomDataset
+from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
 
 
-def test_dataset_generator_initialized(hour_data_indexed_df: pd.DataFrame) -> None:
+def test_dataset_generator_initialized(
+    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+) -> None:
     """Initialize the ResultDatasetGenerator."""
+    mock_dataset = Mock()
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    price_dataset = CustomDataset(hour_data_indexed_df, "H", pair)
-    ReturnsDatasetGenerator(price_dataset)
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    gen = ReturnsDatasetGenerator(mock_dataset)
+
+    assert gen.dataset == mock_dataset
+    assert gen.metadata == metadata
+    assert isinstance(gen.start, pd.Period)
 
 
 def test_normalize_dataset(
@@ -60,24 +74,35 @@ def test_properly_index_data() -> None:
     assert index.freq == freq
 
 
-def test_dataset_generator_create_datasets(hour_data_indexed_df: pd.DataFrame) -> None:
+def test_dataset_generator_create_datasets(
+    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+) -> None:
     """Create synthetic datasets with ResultsDatasetGenerator."""
+    mock_dataset = Mock()
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    price_dataset = CustomDataset(hour_data_indexed_df, "H", pair)
-    gen = ReturnsDatasetGenerator(price_dataset)
+    freq = "H"
+    metadata = MetaData(pair, freq)
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    gen = ReturnsDatasetGenerator(mock_dataset)
     timedelta = pd.Timedelta(hours=3)
 
-    datasets = gen.generate(seed=int("bonks", 36), timedelta=timedelta, n=2)
+    mocker.patch("coin_test.data.CustomDataset.__new__")
 
-    assert len(datasets) == 2
+    gen.generate(seed=int("bonks", 36), timedelta=timedelta, n=2)
 
-    assert isinstance(datasets[0].df.index, pd.PeriodIndex)
-    assert len(datasets[0].df) == 4  # 3 hours between first and last timestamps
-    assert datasets[0].df.index.equals(datasets[1].df.index)
+    dataset_params = CustomDataset.__new__.call_args_list
 
-    for dataset in datasets:
-        assert dataset.synthetic is True
-        assert dataset._metadata == price_dataset._metadata
+    assert len(dataset_params) == 2
+
+    (_, s_df, s_freq, s_pair), s_opts = dataset_params[0]
+
+    assert isinstance(s_df.index, pd.PeriodIndex)
+    assert s_freq == freq
+    assert s_pair == pair
+    assert s_opts == {"synthetic": True}
+    assert len(s_df) == 4  # 3 hours between first and last timestamps
 
 
 @pytest.fixture
