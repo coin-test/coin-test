@@ -30,11 +30,16 @@ class ResultsDatasetGenerator(DatasetGenerator):
     def __init__(self, dataset: CustomDataset) -> None:
         """Initialize a ResultsDatasetGenerator object."""
         self.dataset = dataset
+        self.start: pd.Period = dataset.df.index[0]  # type: ignore
+        self.metadata = dataset.metadata
 
-    def generate(self, seed: int | None = None, n: int = 1) -> list[CustomDataset]:
+    def generate(
+        self, timedelta: pd.Timedelta, seed: int | None = None, n: int = 1
+    ) -> list[CustomDataset]:
         """Create synthetic datasets from the given dataset.
 
         Args:
+            timedelta: A time range for the new datasets
             seed: A random seed for the generated datasets (optional)
             n: The number of datasets to generate
 
@@ -47,41 +52,53 @@ class ResultsDatasetGenerator(DatasetGenerator):
         starting_prices = df.sample(n=n, random_state=rng, replace=True)["Open"]
         df_norm = self.normalize_row_data(df)
 
+        period_index = self.create_index(self.start, timedelta, self.metadata.freq)
+
         new_datasets = []
         for i in range(n):
+            synthetic_df = self.select_data(
+                df_norm, starting_prices[i], len(period_index), rng  # type: ignore
+            )
+            synthetic_df.index = period_index.copy()
             new_datasets.append(
                 CustomDataset(
-                    self.select_data(
-                        df_norm, starting_prices[i], rng.df.index  # type: ignore
-                    ),
-                    self.dataset._metadata.freq,
-                    self.dataset._metadata.pair,
+                    synthetic_df,
+                    self.metadata.freq,
+                    self.metadata.pair,
+                    synthetic=True,
                 )
             )
 
         return new_datasets
 
     @staticmethod
+    def create_index(
+        start: pd.Period, timedelta: pd.Timedelta, freq: str
+    ) -> pd.PeriodIndex:
+        """Create a PeriodIndex given a start time, timedelta, and frequency."""
+        return pd.period_range(start=start, end=start + timedelta, freq=freq)
+
+    @staticmethod
     def select_data(
         df_norm: pd.DataFrame,
         starting_price: float,
+        num_rows: int,
         rng: np.random.Generator,
-        index: pd.PeriodIndex,
     ) -> pd.DataFrame:
         """Take a normalized Dataframe and create a synthetic dataset from it.
 
         Args:
             df_norm: Normalized Dataframe of original data
             starting_price: The first open price for the data
+            num_rows: The number of rows in the dataset
             rng: A numpy random number generator
-            index: The datetime index of the data
 
         Returns:
             pd.DataFrame: The synthetic dataset
         """
         # Select data
         sampled_data = df_norm.sample(
-            frac=1, replace=True, random_state=rng
+            n=num_rows, replace=True, random_state=rng
         ).reset_index(drop=True)
         sampled_data.loc[0, "Open"] = starting_price
 
@@ -109,15 +126,12 @@ class ResultsDatasetGenerator(DatasetGenerator):
         sampled_data["High"] = oc_unstacked["Open"] * sampled_data["High"]
         sampled_data["Low"] = oc_unstacked["Open"] * sampled_data["Low"]
 
-        # Add time index
-        sampled_data.set_index(index, inplace=True)
-
         return sampled_data
 
     @staticmethod
     def normalize_row_data(df: pd.DataFrame) -> pd.DataFrame:
         """Normalize the row data so that it can be sampled with returns."""
-        df = df.copy()
+        df = df.reset_index(drop=True)
 
         # Normalize high, low, and close from open prices
         df["High"] = df["High"] / df["Open"]
