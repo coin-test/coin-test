@@ -57,7 +57,10 @@ def test_properly_index_data() -> None:
     assert isinstance(index, pd.PeriodIndex)
     assert len(index) == 25  # 24 hours between first and last point
     assert index[0] == start
-    assert index[1] - index[0] == pd.Timedelta(hours=1)
+
+    first_period: pd.Period = index[0]  # type: ignore
+    second_period: pd.Period = index[1]  # type: ignore
+    assert first_period - second_period == pd.Timedelta(hours=1)
 
 
 def test_dataset_generator_create_datasets(hour_data_indexed_df: pd.DataFrame) -> None:
