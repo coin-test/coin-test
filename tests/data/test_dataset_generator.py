@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from coin_test.data import ResultsDatasetGenerator
+from coin_test.data import ReturnsDatasetGenerator
 from coin_test.data.datasets import CustomDataset
 from coin_test.util import AssetPair, Ticker
 
@@ -13,14 +13,14 @@ def test_dataset_generator_initialized(hour_data_indexed_df: pd.DataFrame) -> No
     """Initialize the ResultDatasetGenerator."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     price_dataset = CustomDataset(hour_data_indexed_df, "H", pair)
-    ResultsDatasetGenerator(price_dataset)
+    ReturnsDatasetGenerator(price_dataset)
 
 
 def test_normalize_dataset(
     hour_data_indexed_df: pd.DataFrame, hour_data_norm_df: pd.DataFrame
 ) -> None:
     """Normalize data with ResultsDatasetGenerator."""
-    norm_df = ResultsDatasetGenerator.normalize_row_data(hour_data_indexed_df)
+    norm_df = ReturnsDatasetGenerator.normalize_row_data(hour_data_indexed_df)
 
     pd.testing.assert_frame_equal(norm_df, hour_data_norm_df)
 
@@ -36,7 +36,7 @@ def test_dataset_select_data(
     starting_price = 7.48
     num_rows = 4
 
-    selected_df = ResultsDatasetGenerator.select_data(
+    selected_df = ReturnsDatasetGenerator.select_data(
         hour_data_norm_df, starting_price, num_rows, rng
     )
 
@@ -52,7 +52,7 @@ def test_properly_index_data() -> None:
     start = pd.Period("2023-01-01 10:00", freq)
     timedelta = pd.Timedelta(days=1)
 
-    index = ResultsDatasetGenerator.create_index(start, timedelta, freq)
+    index = ReturnsDatasetGenerator.create_index(start, timedelta, freq)
 
     assert isinstance(index, pd.PeriodIndex)
     assert len(index) == 25  # 24 hours between first and last point
@@ -67,7 +67,7 @@ def test_dataset_generator_create_datasets(hour_data_indexed_df: pd.DataFrame) -
     """Create synthetic datasets with ResultsDatasetGenerator."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     price_dataset = CustomDataset(hour_data_indexed_df, "H", pair)
-    gen = ResultsDatasetGenerator(price_dataset)
+    gen = ReturnsDatasetGenerator(price_dataset)
     timedelta = pd.Timedelta(hours=3)
 
     datasets = gen.generate(seed=int("bonks", 36), timedelta=timedelta, n=2)

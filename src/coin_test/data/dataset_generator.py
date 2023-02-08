@@ -12,11 +12,14 @@ class DatasetGenerator(ABC):
     """Create synthetic datasets."""
 
     @abstractmethod
-    def generate(self, seed: int | None = None, n: int = 1) -> list[CustomDataset]:
+    def generate(
+        self, timedelta: pd.Timedelta, seed: int | None = None, n: int = 1
+    ) -> list[CustomDataset]:
         """Create synthetic datasets from the given dataset.
 
         Args:
-            seed: A random seed for the generated datasets (optional)
+            timedelta: A time range for the new datasets
+            seed: A random seed for the generated datasets
             n: The number of datasets to generate
 
         Returns:
@@ -24,7 +27,7 @@ class DatasetGenerator(ABC):
         """
 
 
-class ResultsDatasetGenerator(DatasetGenerator):
+class ReturnsDatasetGenerator(DatasetGenerator):
     """Create synthetic datasets by shuffling the percentage gains each day."""
 
     def __init__(self, dataset: CustomDataset) -> None:
@@ -36,11 +39,11 @@ class ResultsDatasetGenerator(DatasetGenerator):
     def generate(
         self, timedelta: pd.Timedelta, seed: int | None = None, n: int = 1
     ) -> list[CustomDataset]:
-        """Create synthetic datasets from the given dataset.
+        """Create returns-based synthetic datasets from the given dataset.
 
         Args:
             timedelta: A time range for the new datasets
-            seed: A random seed for the generated datasets (optional)
+            seed: A random seed for the generated datasets
             n: The number of datasets to generate
 
         Returns:
