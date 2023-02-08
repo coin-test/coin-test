@@ -13,9 +13,7 @@ from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
 
 
-def test_dataset_generator_initialized(
-    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
-) -> None:
+def test_dataset_generator_initialized(hour_data_indexed_df: pd.DataFrame) -> None:
     """Initialize the ResultDatasetGenerator."""
     mock_dataset = Mock()
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
