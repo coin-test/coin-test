@@ -116,7 +116,6 @@ class Dataset(metaclass=DatasetMetaclass):
             index = timestamp
         elif timestamp is None and length is not None and percent is None:
             split_timestamp = first_date + length
-            print(first_date)
 
             if first_date > split_timestamp or split_timestamp > last_date:
                 raise ValueError(

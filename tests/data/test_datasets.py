@@ -261,8 +261,8 @@ def test_calculate_split_index_invalid_args(
     freq = "H"
     dataset = CustomDataset(hour_data_indexed_df, freq, pair)
 
-    timestamp_low = pd.Timestamp("2022-09-27T11")
-    timestamp_high = pd.Timestamp("2022-9-29T11")
+    timestamp_low = dataset.df.index[0].start_time - pd.Timedelta(2, "h")
+    timestamp_high = dataset.df.index[-1].start_time + pd.Timedelta(2, "h")
     timedelta_high = pd.Timedelta(24, "h")
     timedelta_low = pd.Timedelta(-1, "h")
     percent_low = 0.0
@@ -290,11 +290,12 @@ def test_calculate_split_index_valid_args(
     freq = "H"
     dataset = CustomDataset(hour_data_indexed_df, freq, pair)
 
-    timestamp = pd.Timestamp("2022-09-28T11")
     timedelta = pd.Timedelta(5, "h")
+    start_time = dataset.df.index[0].start_time
+    timestamp = start_time + pd.Timedelta(2, "h")
     percent_med = 0.5
 
-    timedelta_index = pd.Timestamp("2022-09-27T20") + timedelta
+    timedelta_index = start_time + timedelta
     percent_index = int(hour_data_indexed_df.shape[0] * percent_med)
 
     timestamp_index_calc = Dataset._calculate_split_index(dataset, timestamp=timestamp)
