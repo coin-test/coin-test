@@ -8,7 +8,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.data import ReturnsDatasetGenerator
-from coin_test.data.datasets import CustomDataset
 from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
 
@@ -86,15 +85,17 @@ def test_dataset_generator_create_datasets(
     gen = ReturnsDatasetGenerator(mock_dataset)
     timedelta = pd.Timedelta(hours=3)
 
-    mocker.patch("coin_test.data.CustomDataset.__new__")
+    mocker.patch("coin_test.data.ReturnsDatasetGenerator.DATASET_TYPE")
 
     gen.generate(seed=int("bonks", 36), timedelta=timedelta, n=2)
 
-    dataset_params = CustomDataset.__new__.call_args_list
+    dataset_params = ReturnsDatasetGenerator.DATASET_TYPE.call_args_list  # type: ignore
 
     assert len(dataset_params) == 2
 
-    (_, s_df, s_freq, s_pair), s_opts = dataset_params[0]
+    print(dataset_params)
+
+    (s_df, s_freq, s_pair), s_opts = dataset_params[0]
 
     assert isinstance(s_df.index, pd.PeriodIndex)
     assert s_freq == freq

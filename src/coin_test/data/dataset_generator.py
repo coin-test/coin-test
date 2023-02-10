@@ -30,7 +30,9 @@ class DatasetGenerator(ABC):
 class ReturnsDatasetGenerator(DatasetGenerator):
     """Create synthetic datasets by shuffling the percentage gains each day."""
 
-    def __init__(self, dataset: CustomDataset) -> None:
+    DATASET_TYPE = CustomDataset
+
+    def __init__(self, dataset: "ReturnsDatasetGenerator.DATASET_TYPE") -> None:
         """Initialize a ResultsDatasetGenerator object."""
         self.dataset = dataset
         self.start: pd.Period = dataset.df.index[0]  # type: ignore
@@ -38,7 +40,7 @@ class ReturnsDatasetGenerator(DatasetGenerator):
 
     def generate(
         self, timedelta: pd.Timedelta, seed: int | None = None, n: int = 1
-    ) -> list[CustomDataset]:
+    ) -> list["ReturnsDatasetGenerator.DATASET_TYPE"]:
         """Create returns-based synthetic datasets from the given dataset.
 
         Args:
@@ -64,7 +66,7 @@ class ReturnsDatasetGenerator(DatasetGenerator):
             )
             synthetic_df.index = period_index.copy()
             new_datasets.append(
-                CustomDataset(
+                self.DATASET_TYPE(
                     synthetic_df,
                     self.metadata.freq,
                     self.metadata.pair,
