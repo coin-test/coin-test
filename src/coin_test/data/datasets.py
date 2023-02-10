@@ -116,6 +116,7 @@ class Dataset(metaclass=DatasetMetaclass):
             index = timestamp
         elif timestamp is None and length is not None and percent is None:
             split_timestamp = first_date + length
+            print(first_date)
 
             if first_date > split_timestamp or split_timestamp > last_date:
                 raise ValueError(
@@ -254,7 +255,7 @@ class CustomDataset(PriceDataset):
         elif series.dtype == int:
             # If int, assume time since epoch
             index = pd.PeriodIndex(
-                data=pd.to_datetime(series, unit="s"),
+                data=pd.to_datetime(series, unit="s", utc=True),
                 freq=freq,  # type: ignore
             )
         else:
