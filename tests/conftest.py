@@ -22,7 +22,7 @@ def simple_df() -> pd.DataFrame:
 
 @pytest.fixture
 def hour_data() -> str:
-    """Hourly data CSV filepath."""
+    """Hourly data CSV filepath Start: 2022-09-28 00:00 End: 2022-09-28 23:00."""
     return "tests/assets/eth_usdc_1h_9_28.csv"
 
 
