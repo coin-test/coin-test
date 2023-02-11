@@ -93,8 +93,6 @@ def test_dataset_generator_create_datasets(
 
     assert len(dataset_params) == 2
 
-    print(dataset_params)
-
     (s_df, s_freq, s_pair), s_opts = dataset_params[0]
 
     assert isinstance(s_df.index, pd.PeriodIndex)

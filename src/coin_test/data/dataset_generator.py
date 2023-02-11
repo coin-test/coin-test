@@ -39,7 +39,10 @@ class ReturnsDatasetGenerator(DatasetGenerator):
         self.metadata = dataset.metadata
 
     def generate(
-        self, timedelta: pd.Timedelta, seed: int | None = None, n: int = 1
+        self,
+        timedelta: pd.Timedelta | pd.DateOffset,
+        seed: int | None = None,
+        n: int = 1,
     ) -> list["ReturnsDatasetGenerator.DATASET_TYPE"]:
         """Create returns-based synthetic datasets from the given dataset.
 
@@ -78,7 +81,7 @@ class ReturnsDatasetGenerator(DatasetGenerator):
 
     @staticmethod
     def create_index(
-        start: pd.Period, timedelta: pd.Timedelta, freq: str
+        start: pd.Period, timedelta: pd.Timedelta | pd.DateOffset, freq: str
     ) -> pd.PeriodIndex:
         """Create a PeriodIndex given a start time, timedelta, and frequency."""
         return pd.period_range(start=start, end=start + timedelta, freq=freq)
