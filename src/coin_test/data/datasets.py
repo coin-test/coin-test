@@ -84,7 +84,7 @@ class Dataset(metaclass=DatasetMetaclass):
     def _calculate_split_index(
         dataset: "Dataset",
         timestamp: pd.Timestamp | None = None,
-        length: pd.Timedelta | None = None,
+        length: pd.Timedelta | pd.DateOffset | None = None,
         percent: float | None = None,
     ) -> pd.Timestamp | int:
         """Validate splitting parameters and calulate the index to split on.
