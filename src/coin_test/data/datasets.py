@@ -21,7 +21,7 @@ class DatasetMetaclass(type):
 
     def __call__(cls, *args, **kwargs):  # noqa: ANN002,ANN003,ANN204
         """Initialize class then check attributes."""
-        instance = super().__call__(*args, *kwargs)
+        instance = super().__call__(*args, **kwargs)
         if not hasattr(instance, "df"):
             raise ValueError("`df` not defined in Dataset!")
         return instance
@@ -202,7 +202,9 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
 class CustomDataset(PriceDataset):
     """Load a DataFrame in the expected format of price data."""
 
-    def __init__(self, df: pd.DataFrame, freq: str, pair: AssetPair) -> None:
+    def __init__(
+        self, df: pd.DataFrame, freq: str, pair: AssetPair, synthetic: bool = False
+    ) -> None:
         """Initialize a PriceDataLoader.
 
         Validate DataFrame format correctness and infer timestep interval.
@@ -211,9 +213,11 @@ class CustomDataset(PriceDataset):
             df: DataFrame to load
             freq: Pandas period string representing price data interval
             pair: AssetPair represented in datal
+            synthetic: Boolean indicating if this data is synthetic
         """
         self.df = self._add_period_index(df, freq)
         self._metadata = MetaData(pair, freq)
+        self.synthetic = synthetic
 
     @classmethod
     def _add_period_index(cls, df: pd.DataFrame, freq: str) -> pd.DataFrame:
