@@ -1,5 +1,6 @@
 """Backtesting module of the coin-test library."""
 
+from .backtest_results import BacktestResults
 from .market import (
     ConstantSlippage,
     ConstantTransactionFeeCalculator,
@@ -19,6 +20,7 @@ from .trade_request import (
 )
 
 __all__ = [
+    "BacktestResults",
     "ConstantSlippage",
     "ConstantTransactionFeeCalculator",
     "GaussianSlippage",
