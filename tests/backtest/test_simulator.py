@@ -355,6 +355,20 @@ def test_run(
     )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=1))
     mock_composer.get_timestep.return_value = timestamp_asset_price
+    mock_mdata = Mock()
+
+    mock_df = Mock()
+    mock_dset = Mock()
+    mock_dset.metadata = mock_mdata
+    mock_dset.df = mock_df
+
+    mock_mdata2 = Mock()
+    mock_df2 = Mock()
+    mock_dset2 = Mock()
+    mock_dset2.metadata = mock_mdata2
+    mock_dset2.df = mock_df2
+    mock_composer.datasets = {mock_mdata: mock_dset, mock_mdata2: mock_dset2}
+
     portfolio = Mock()
     portfolio_handled = Mock()
 
@@ -399,24 +413,42 @@ def test_run(
         mock_transaction_calculator,
     )
 
-    hist_times, hist_port, hist_trades, hist_pending = sim.run()
-
-    assert hist_times == [
+    backtest_results = sim.run()
+    ex_hist_times = [
         mock_composer.start_time - mock_composer.freq,
         mock_composer.start_time,
         mock_composer.start_time + mock_composer.freq,
     ]
-    assert hist_port == [portfolio, portfolio_handled, portfolio_handled]
-    assert hist_trades == [
-        mock_executed_trade.build_trade(),
-        mock_executed_trade.build_trade(),
-        mock_executed_trade.build_trade(),
-        mock_executed_trade.build_trade(),
+    ex_hist_port = [portfolio, portfolio_handled, portfolio_handled]
+    ex_hist_trades = [
+        [],
+        [
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+        ],
+        [
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+            mock_executed_trade.build_trade(),
+        ],
     ]
-    assert hist_pending == [
+    ex_pending = [
+        [],
         [mock_trade, mock_trade],
         [mock_trade, mock_trade, mock_trade, mock_trade],
     ]
+    df = pd.DataFrame(
+        list(zip(ex_hist_times, ex_hist_port, ex_hist_trades, ex_pending, strict=True)),
+        columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
+    )
+    df.set_index("Timestamp")
+
+    # TODO: BacktestResults should be mocked and just called with correct items
+    pd.testing.assert_frame_equal(backtest_results._sim_data, df)
+    assert portfolio == backtest_results._starting_portfolio
 
 
 def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> None:
