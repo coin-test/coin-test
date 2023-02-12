@@ -80,6 +80,89 @@ class Dataset(metaclass=DatasetMetaclass):
         self.df = df
         return self  # Return self for caller's convenience
 
+    @staticmethod
+    def _calculate_split_index(
+        dataset: "Dataset",
+        timestamp: pd.Timestamp | None = None,
+        length: pd.Timedelta | pd.DateOffset | None = None,
+        percent: float | None = None,
+    ) -> pd.Timestamp | int:
+        """Validate splitting parameters and calulate the index to split on.
+
+        Args:
+            dataset (Dataset): Dataset used to validate the parameters
+            timestamp (pd.Timestamp | None, optional): Timestamp to split on.
+            length (pd.Timedelta | None, optional): Timedelta from
+                beginning to split on.
+            percent (float | None, optional): Percentage of the dataset
+                between [0.0, 1.0] to split.
+
+        Returns:
+            pd.Timestamp | int: Timestamp or the index to split on
+
+        Raises:
+            ValueError: Must specify one and only one of timestamp, length, or percent
+        """
+        first_date = dataset.df.index[0].start_time  # type: ignore
+        last_date = dataset.df.index[-1].start_time  # type: ignore
+        if timestamp is None and length is None and percent is None:
+            raise ValueError("Must specify how to split dataset")
+        elif timestamp is not None and length is None and percent is None:
+            if first_date > timestamp or timestamp > last_date:
+                raise ValueError(
+                    f"Timestamp given({timestamp}) must be within dataset \
+                        bounds ({first_date}:{last_date})"
+                )
+            index = timestamp
+        elif timestamp is None and length is not None and percent is None:
+            split_timestamp = first_date + length
+
+            if first_date > split_timestamp or split_timestamp > last_date:
+                raise ValueError(
+                    f"Start time + Timeperiod({split_timestamp}) must be \
+                        within dataset bounds ({first_date}:{last_date})"
+                )
+            index = split_timestamp
+        elif timestamp is None and length is None and percent is not None:
+            if 0.0 >= percent or percent >= 1:
+                raise ValueError(
+                    f"Percentage({percent}) must be greater than 0 and less than 1"
+                )
+            index = int(dataset.df.shape[0] * percent)
+        else:
+            raise ValueError("Cannot specify multiple methods of splitting a dataset")
+
+        return index
+
+    def split(
+        self,
+        timestamp: pd.Timestamp | None = None,
+        length: pd.Timedelta | None = None,
+        percent: float | None = None,
+    ) -> tuple["Dataset", "Dataset"]:
+        """Split Dataset into Pre and Post split Datasets.
+
+        Args:
+            timestamp: [Optional] Timestamp to split Dataset on
+            length: [Optional] pd.Timedelta to specify length of the pre-split dataset
+            percent: [Optional] float percentage of the data to split on
+
+        Returns:
+            tuple: Pre and post split datasets of the same type as the original dataset
+        """
+        index = Dataset._calculate_split_index(self, timestamp, length, percent)
+        pre_df = self.df[:index]
+        post_df = self.df[index:].tail(-1)
+
+        pre_dataset = Dataset._dataset_from_split(pre_df, self)
+        post_dataset = Dataset._dataset_from_split(post_df, self)
+        return pre_dataset, post_dataset
+
+    @staticmethod
+    @abstractmethod
+    def _dataset_from_split(df: pd.DataFrame, dataset: "Dataset") -> "Dataset":
+        """Create Dataset from Dataframe and a corresponding Dataset."""
+
 
 class PriceDatasetMetaclass(DatasetMetaclass, ABCMeta):  # noqa: B024
     """Combine DatasetMetaclass and Abstract Base Class metaclass."""
@@ -101,6 +184,19 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
     @abstractmethod
     def metadata(self) -> MetaData:
         """The dataframe metadata."""
+
+    @staticmethod
+    def _dataset_from_split(df: pd.DataFrame, dataset: "PriceDataset") -> Dataset:
+        """Create Dataset from Dataframe and a corresponding PriceDataset.
+
+        Args:
+            df: pd.DataFrame To create a new dataset around
+            dataset: Dataset to use for metadata
+
+        Returns:
+            Dataset: Datasets of the same type as the original dataset with the new df
+        """
+        return CustomDataset(df, dataset.metadata.freq, dataset.metadata.pair)
 
 
 class CustomDataset(PriceDataset):
@@ -162,7 +258,7 @@ class CustomDataset(PriceDataset):
         elif series.dtype == int:
             # If int, assume time since epoch
             index = pd.PeriodIndex(
-                data=pd.to_datetime(series, unit="s"),
+                data=pd.to_datetime(series, unit="s", utc=True),
                 freq=freq,  # type: ignore
             )
         else:

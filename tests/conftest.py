@@ -1,7 +1,5 @@
 """Pytest config."""
 
-from datetime import datetime
-
 import pandas as pd
 import pytest
 
@@ -22,7 +20,7 @@ def simple_df() -> pd.DataFrame:
 
 @pytest.fixture
 def hour_data() -> str:
-    """Hourly data CSV filepath."""
+    """Hourly data CSV filepath Start: 2022-09-28 00:00 End: 2022-09-28 23:00."""
     return "tests/assets/eth_usdc_1h_9_28.csv"
 
 
@@ -54,7 +52,7 @@ def hour_data_indexed_df(hour_data: str) -> pd.DataFrame:
     }
     df = pd.read_csv(hour_data, dtype=dtypes)  # type: ignore
     index = pd.PeriodIndex(
-        data=[datetime.fromtimestamp(d) for d in df["Open Time"]],
+        data=pd.to_datetime(df["Open Time"], unit="s", utc=True),
         freq="H",  # type: ignore
     )
     df.set_index(index, inplace=True)
