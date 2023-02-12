@@ -94,15 +94,15 @@ class Composer:
             dataset.df.index[0].start_time for dataset in datasets  # type: ignore
         ]
         end_times = [
-            dataset.df.index[-1].end_time for dataset in datasets  # type: ignore
+            dataset.df.index[-1].start_time for dataset in datasets  # type: ignore
         ]
 
         start_time = max(start_times)
         end_time = min(end_times)
-        if start_time + length > end_time:
+        if start_time > end_time - length:
             return None
 
-        return start_time, start_time + length
+        return end_time - length, end_time
 
     @staticmethod
     def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:

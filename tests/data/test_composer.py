@@ -99,8 +99,8 @@ def test_get_start_end_single(period_index_df: pd.DataFrame) -> None:
 
     assert start_end is not None
     start_time, end_time = start_end
-    assert start_time == pd.Timestamp("2000")
-    assert end_time == pd.Timestamp("2001")
+    assert start_time == pd.Timestamp("2022")
+    assert end_time == pd.Timestamp("2023")
 
 
 def test_get_start_end_single_exact(period_index_df: pd.DataFrame) -> None:
@@ -128,22 +128,22 @@ def test_get_start_end_multiple(period_index_df: pd.DataFrame) -> None:
     length = pd.DateOffset(years=1)
     dataset, _, _ = _mock_dataset(period_index_df, None)
 
-    shorter_df = period_index_df.drop(index=period_index_df.index[:3])
+    shorter_df = period_index_df.head(-3)
     shorter_dataset, _, _ = _mock_dataset(shorter_df, None)
 
     start_end = Composer._get_start_end([dataset, shorter_dataset], length)
 
     assert start_end is not None
     start_time, end_time = start_end
-    assert start_time == pd.Timestamp("2003")
-    assert end_time == pd.Timestamp("2004")
+    assert start_time == pd.Timestamp("2019")
+    assert end_time == pd.Timestamp("2020")
 
 
 def test_get_start_end_multiple_too_long(period_index_df: pd.DataFrame) -> None:
     """Return start and end time."""
     length = pd.DateOffset(years=21)
     dataset, _, _ = _mock_dataset(period_index_df, None)
-    shorter_df = period_index_df.drop(index=period_index_df.index[:3])
+    shorter_df = period_index_df.head(-3)
     shorter_dataset, _, _ = _mock_dataset(shorter_df, None)
     start_end = Composer._get_start_end([dataset, shorter_dataset], length)
     assert start_end is None
