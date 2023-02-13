@@ -1,8 +1,7 @@
 """Define the orchestration function."""
 
 import multiprocessing
-from multiprocessing import Pipe
-from multiprocessing.connection import Connection
+from multiprocessing import Queue
 import os
 import pickle
 from typing import Iterator
@@ -32,15 +31,15 @@ def _sim_param_generator(
 
 
 def _run_agent(
-    receiver: Connection,
-    sender: Connection,
+    receiver: Queue,
+    sender: Queue,
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
     output_folder: str | None = None,
 ) -> None:
-    while (msg := receiver.recv()) is not None:
+    while (msg := receiver.get()) is not None:
         i, datasets, strategies = msg
         composer = Composer(datasets, backtest_length)
         sim = Simulator(
@@ -51,7 +50,7 @@ def _run_agent(
             fn = f"{i}_backtest_results.pkl"
             with open(fn, "wb") as f:
                 pickle.dump(results, f)
-        sender.send(results)
+        sender.put(results)
 
 
 def run(
@@ -83,16 +82,16 @@ def run(
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)
 
-    main_to_worker_receiver, main_to_worker_sender = Pipe()
-    worker_to_main_receiver, worker_to_main_sender = Pipe()
+    main_to_worker = Queue()
+    worker_to_main = Queue()
 
     ctx = multiprocessing.get_context("spawn")
     processes = [
         ctx.Process(
             target=_run_agent,
             args=(
-                main_to_worker_receiver,
-                worker_to_main_sender,
+                main_to_worker,
+                worker_to_main,
                 slippage_calculator,
                 tx_calculator,
                 starting_portfolio,
@@ -107,13 +106,13 @@ def run(
 
     n_backtests = 0
     for params in _sim_param_generator(all_datasets, all_strategies):
-        main_to_worker_sender.send(params)
+        main_to_worker.put(params)
         n_backtests += 1
     for _ in processes:
-        main_to_worker_sender.send(None)
+        main_to_worker.put(None)
 
     for process in processes:
         process.join()
-    [worker_to_main_receiver.recv() for _ in range(n_backtests)]
+    [worker_to_main.get() for _ in range(n_backtests)]
     # results = [worker_to_main_sender.recv() for _ in range(n_backtests)]
     # ... Call analysis on results here ...
