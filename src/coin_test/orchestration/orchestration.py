@@ -101,18 +101,21 @@ def run(
         )
         for _ in range(n_parallel)
     ]
+
+    results = []
+    sim_params = _sim_param_generator(all_datasets, all_strategies)
     for process in processes:
         process.start()
-
-    n_backtests = 0
-    for params in _sim_param_generator(all_datasets, all_strategies):
+        main_to_worker.put(next(sim_params))
+    for params in sim_params:
+        ret = worker_to_main.get()
+        results.append(ret)
         main_to_worker.put(params)
-        n_backtests += 1
+
     for _ in processes:
         main_to_worker.put(None)
 
     for process in processes:
         process.join()
-    [worker_to_main.get() for _ in range(n_backtests)]
-    # results = [worker_to_main_sender.recv() for _ in range(n_backtests)]
+
     # ... Call analysis on results here ...
