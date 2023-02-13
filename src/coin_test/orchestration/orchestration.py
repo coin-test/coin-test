@@ -39,18 +39,25 @@ def _run_agent(
     backtest_length: pd.Timedelta | pd.DateOffset,
     output_folder: str | None = None,
 ) -> None:
-    while (msg := receiver.get()) is not None:
-        i, datasets, strategies = msg
-        composer = Composer(datasets, backtest_length)
-        sim = Simulator(
-            composer, starting_portfolio, strategies, slippage_calculator, tx_calculator
-        )
-        results = sim.run()
-        if output_folder is not None:
-            fn = f"{i}_backtest_results.pkl"
-            with open(fn, "wb") as f:
-                pickle.dump(results, f)
-        sender.put(results)
+    try:
+        while (msg := receiver.get()) is not None:
+            i, datasets, strategies = msg
+            composer = Composer(datasets, backtest_length)
+            sim = Simulator(
+                composer,
+                starting_portfolio,
+                strategies,
+                slippage_calculator,
+                tx_calculator,
+            )
+            results = sim.run()
+            if output_folder is not None:
+                fn = f"{i}_backtest_results.pkl"
+                with open(fn, "wb") as f:
+                    pickle.dump(results, f)
+            sender.put(results)
+    except Exception as e:
+        sender.put(e)
 
 
 def run(
@@ -78,6 +85,9 @@ def run(
         n_parallel: Number of parallel simulations to run.
         output_folder: Folder to save backtest results to. If None, results are
             not saved to disk.
+
+    Raises:
+        child_ret: Error if any child process errors.
     """
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)
@@ -108,8 +118,10 @@ def run(
         process.start()
         main_to_worker.put(next(sim_params))
     for params in sim_params:
-        ret = worker_to_main.get()
-        results.append(ret)
+        child_ret = worker_to_main.get()
+        if isinstance(child_ret, Exception):
+            raise child_ret
+        results.append(child_ret)
         main_to_worker.put(params)
 
     for _ in processes:
