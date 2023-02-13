@@ -9,6 +9,7 @@ from typing import Iterator
 import pandas as pd
 
 from ..backtest import (
+    BacktestResults,
     Portfolio,
     Simulator,
     SlippageCalculator,
@@ -30,6 +31,32 @@ def _sim_param_generator(
             i += 1
 
 
+def _run_backtest(
+    i: int,
+    datasets: list[PriceDataset],
+    strategies: list[Strategy],
+    slippage_calculator: SlippageCalculator,
+    tx_calculator: TransactionFeeCalculator,
+    starting_portfolio: Portfolio,
+    backtest_length: pd.Timedelta | pd.DateOffset,
+    output_folder: str | None = None,
+) -> BacktestResults:
+    composer = Composer(datasets, backtest_length)
+    sim = Simulator(
+        composer,
+        starting_portfolio,
+        strategies,
+        slippage_calculator,
+        tx_calculator,
+    )
+    results = sim.run()
+    if output_folder is not None:
+        fn = f"{i}_backtest_results.pkl"
+        with open(fn, "wb") as f:
+            pickle.dump(results, f)
+    return results
+
+
 def _run_agent(
     receiver: Queue,
     sender: Queue,
@@ -42,25 +69,22 @@ def _run_agent(
     try:
         while (msg := receiver.get()) is not None:
             i, datasets, strategies = msg
-            composer = Composer(datasets, backtest_length)
-            sim = Simulator(
-                composer,
-                starting_portfolio,
+            results = _run_backtest(
+                i,
+                datasets,
                 strategies,
                 slippage_calculator,
                 tx_calculator,
+                starting_portfolio,
+                backtest_length,
+                output_folder,
             )
-            results = sim.run()
-            if output_folder is not None:
-                fn = f"{i}_backtest_results.pkl"
-                with open(fn, "wb") as f:
-                    pickle.dump(results, f)
             sender.put(results)
     except Exception as e:
         sender.put(e)
 
 
-def run(
+def _run_multiprocessed(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
     slippage_calculator: SlippageCalculator,
@@ -69,29 +93,7 @@ def run(
     backtest_length: pd.Timedelta | pd.DateOffset,
     n_parallel: int,
     output_folder: str | None = None,
-) -> None:
-    """Run a full set of backtests.
-
-    Run all combinations of passed datasets and strategies in a multiprocessed
-    manner, then produce an analysis report.
-
-    Args:
-        all_datasets: List of sets of datasets to be used in backtests.
-        all_strategies: List of sets of strategies to be used in backtests.
-        slippage_calculator: Slippage calculator to use in simulations.
-        tx_calculator: Transaction calculator to use in simulations.
-        starting_portfolio: Starting portfolio to use in simulations.
-        backtest_length: Length of each backtest.
-        n_parallel: Number of parallel simulations to run.
-        output_folder: Folder to save backtest results to. If None, results are
-            not saved to disk.
-
-    Raises:
-        child_ret: Error if any child process errors.
-    """
-    if output_folder is not None:
-        os.makedirs(output_folder, exist_ok=True)
-
+) -> list[BacktestResults]:
     main_to_worker = Queue()
     worker_to_main = Queue()
 
@@ -130,4 +132,88 @@ def run(
     for process in processes:
         process.join()
 
+    return results
+
+
+def _gen_result(
+    all_datasets: list[list[PriceDataset]],
+    all_strategies: list[list[Strategy]],
+    slippage_calculator: SlippageCalculator,
+    tx_calculator: TransactionFeeCalculator,
+    starting_portfolio: Portfolio,
+    backtest_length: pd.Timedelta | pd.DateOffset,
+    n_parallel: int,
+    output_folder: str | None = None,
+) -> list[BacktestResults]:
+    if output_folder is not None:
+        os.makedirs(output_folder, exist_ok=True)
+
+    if n_parallel <= 1:
+        result = _run_backtest(
+            0,
+            all_datasets[0],
+            all_strategies[0],
+            slippage_calculator,
+            tx_calculator,
+            starting_portfolio,
+            backtest_length,
+            output_folder,
+        )
+        results = [result]
+    else:
+        results = _run_multiprocessed(
+            all_datasets,
+            all_strategies,
+            slippage_calculator,
+            tx_calculator,
+            starting_portfolio,
+            backtest_length,
+            n_parallel,
+            output_folder,
+        )
+    return results
+
+
+def run(
+    all_datasets: list[list[PriceDataset]],
+    all_strategies: list[list[Strategy]],
+    slippage_calculator: SlippageCalculator,
+    tx_calculator: TransactionFeeCalculator,
+    starting_portfolio: Portfolio,
+    backtest_length: pd.Timedelta | pd.DateOffset,
+    n_parallel: int = 1,
+    output_folder: str | None = None,
+) -> list[BacktestResults]:
+    """Run a full set of backtests.
+
+    Run all combinations of passed datasets and strategies in a multiprocessed
+    manner, then produce an analysis report.
+
+    Args:
+        all_datasets: List of sets of datasets to be used in backtests.
+        all_strategies: List of sets of strategies to be used in backtests.
+        slippage_calculator: Slippage calculator to use in simulations.
+        tx_calculator: Transaction calculator to use in simulations.
+        starting_portfolio: Starting portfolio to use in simulations.
+        backtest_length: Length of each backtest.
+        n_parallel: Number of parallel simulations to run.
+        output_folder: Folder to save backtest results to. If None, results are
+            not saved to disk.
+
+    Returns:
+        List: All results of backtests
+    """
+    results = _gen_result(
+        all_datasets,
+        all_strategies,
+        slippage_calculator,
+        tx_calculator,
+        starting_portfolio,
+        backtest_length,
+        n_parallel,
+        output_folder,
+    )
+
     # ... Call analysis on results here ...
+
+    return results
