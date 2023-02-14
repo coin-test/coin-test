@@ -263,7 +263,7 @@ def test_calculate_split_index_invalid_args(
 
     index = dataset.df.index
     timestamp_low = index[0].start_time - pd.Timedelta(2, "h")  # type: ignore
-    timestamp_high = index[-1].start_time + pd.Timedelta(2, "h")
+    timestamp_high = index[-1].start_time + pd.Timedelta(2, "h")  # type: ignore
     timedelta_high = pd.Timedelta(24, "h")
     timedelta_low = pd.Timedelta(-1, "h")
     percent_low = 0.0
