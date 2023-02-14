@@ -9,6 +9,7 @@ from .strategy import Strategy
 from .trade import Trade
 from .trade_request import TradeRequest
 from ..data import Composer
+from ..util import AssetPair
 
 
 class BacktestResults:
@@ -51,3 +52,34 @@ class BacktestResults:
         )
 
         self._sim_data.set_index("Timestamp")
+
+        self._sim_data["Price"] = self.create_date_price_df(self._sim_data, composer)
+
+    @staticmethod
+    def create_date_price_df(sim_data: pd.DataFrame, composer: Composer) -> pd.Series:
+        """Create a TimeSeries dataframe for portfolio value over time."""
+
+        def value_func(x: pd.Series) -> float:
+            return BacktestResults.value_from_portfolio(
+                x["Timestamp"], x["Portfolio"], composer  # type: ignore
+            )
+
+        sim_price_data = sim_data.apply(value_func)
+        return sim_price_data
+
+    @staticmethod
+    def value_from_portfolio(t: pd.Timestamp, p: Portfolio, c: Composer) -> float:
+        """Get the monetary value of a portfolio."""
+        base_currency = p.base_currency
+        total = p.assets[base_currency].qty
+        all_assets = c.get_timestep(t)
+
+        for ticker, money in p.assets.items():
+            if ticker == base_currency:
+                continue
+
+            asset_pair = AssetPair(base_currency, ticker)
+            conversion = all_assets[asset_pair]["Open"].iloc[0]
+            total += conversion * money.qty
+
+        return total
