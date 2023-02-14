@@ -31,7 +31,7 @@ def test_validate_df_missing_col(hour_data_indexed_df: pd.DataFrame) -> None:
 def test_validate_df_duplicate_col(hour_data_indexed_df: pd.DataFrame) -> None:
     """Reject a df with a duplicate column."""
     hour_data_indexed_df.insert(
-        0.0, "Open", hour_data_indexed_df["Open"], allow_duplicates=True
+        0, "Open", hour_data_indexed_df["Open"], allow_duplicates=True
     )
     assert not PriceDataset._validate_df(hour_data_indexed_df)
 
@@ -261,8 +261,9 @@ def test_calculate_split_index_invalid_args(
     freq = "H"
     dataset = CustomDataset(hour_data_indexed_df, freq, pair)
 
-    timestamp_low = dataset.df.index[0].start_time - pd.Timedelta(2, "h")
-    timestamp_high = dataset.df.index[-1].start_time + pd.Timedelta(2, "h")
+    index = dataset.df.index
+    timestamp_low = index[0].start_time - pd.Timedelta(2, "h")  # type: ignore
+    timestamp_high = index[-1].start_time + pd.Timedelta(2, "h")  # type: ignore
     timedelta_high = pd.Timedelta(24, "h")
     timedelta_low = pd.Timedelta(-1, "h")
     percent_low = 0.0
@@ -291,7 +292,7 @@ def test_calculate_split_index_valid_args(
     dataset = CustomDataset(hour_data_indexed_df, freq, pair)
 
     timedelta = pd.Timedelta(5, "h")
-    start_time = dataset.df.index[0].start_time
+    start_time = dataset.df.index[0].start_time  # type: ignore
     timestamp = start_time + pd.Timedelta(2, "h")
     percent_med = 0.5
 
