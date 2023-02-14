@@ -40,7 +40,8 @@ def lint(session: Session) -> None:
 def pyright(session: Session) -> None:
     """Type checking using pyright."""
     args = session.posargs or locations
-    session.install("pyright", "pytest", "pytest-mock", ".")
+    session.install("pyright", "pytest", "pytest-mock")
+    session.run_always("poetry", "install", external=True)
     session.run("pyright", *args)
 
 
