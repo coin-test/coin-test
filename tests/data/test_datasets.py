@@ -31,7 +31,7 @@ def test_validate_df_missing_col(hour_data_indexed_df: pd.DataFrame) -> None:
 def test_validate_df_duplicate_col(hour_data_indexed_df: pd.DataFrame) -> None:
     """Reject a df with a duplicate column."""
     hour_data_indexed_df.insert(
-        0, "Open", hour_data_indexed_df["Open"], allow_duplicates=True
+        0.0, "Open", hour_data_indexed_df["Open"], allow_duplicates=True
     )
     assert not PriceDataset._validate_df(hour_data_indexed_df)
 
