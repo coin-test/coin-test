@@ -40,6 +40,12 @@ def lint(session: Session) -> None:
 def pyright(session: Session) -> None:
     """Type checking using pyright."""
     args = session.posargs or locations
+    args = list(args) + [
+        "--project",
+        ".nox_pyright_config.json",
+        "--venv-path",
+        ".nox/pyright-3-10",
+    ]
     session.install("pyright", "pytest", "pytest-mock")
     session.run_always("poetry", "install", external=True)
     session.run("pyright", *args)
