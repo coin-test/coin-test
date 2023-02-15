@@ -19,18 +19,6 @@ from ..backtest import (
 from ..data import Composer, PriceDataset
 
 
-def _sim_param_generator(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
-) -> Iterator[tuple[int, list[PriceDataset], list[Strategy]]]:
-    """Yield all combinations of datasets and strategies."""
-    i = 0
-    for datasets in all_datasets:
-        for strategies in all_strategies:
-            yield i, datasets, strategies
-            i += 1
-
-
 def _run_backtest(
     i: int,
     datasets: list[PriceDataset],
@@ -55,6 +43,18 @@ def _run_backtest(
         with open(fn, "wb") as f:
             pickle.dump(results, f)
     return results
+
+
+def _sim_param_generator(
+    all_datasets: list[list[PriceDataset]],
+    all_strategies: list[list[Strategy]],
+) -> Iterator[tuple[int, list[PriceDataset], list[Strategy]]]:
+    """Yield all combinations of datasets and strategies."""
+    i = 0
+    for datasets in all_datasets:
+        for strategies in all_strategies:
+            yield i, datasets, strategies
+            i += 1
 
 
 def _run_agent(
@@ -82,34 +82,6 @@ def _run_agent(
             sender.put(results)
     except Exception as e:
         sender.put(e)
-
-
-def _run_serial(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
-    slippage_calculator: SlippageCalculator,
-    tx_calculator: TransactionFeeCalculator,
-    starting_portfolio: Portfolio,
-    backtest_length: pd.Timedelta | pd.DateOffset,
-    output_folder: str | None = None,
-) -> list[BacktestResults]:
-    results = []
-    for i, (datasets, strategies) in enumerate(
-        zip(all_datasets, all_strategies, strict=True)
-    ):
-        results.append(
-            _run_backtest(
-                i,
-                datasets,
-                strategies,
-                slippage_calculator,
-                tx_calculator,
-                starting_portfolio,
-                backtest_length,
-                output_folder,
-            )
-        )
-    return results
 
 
 def _run_multiprocessed(
@@ -164,6 +136,34 @@ def _run_multiprocessed(
     return results
 
 
+def _run_serial(
+    all_datasets: list[list[PriceDataset]],
+    all_strategies: list[list[Strategy]],
+    slippage_calculator: SlippageCalculator,
+    tx_calculator: TransactionFeeCalculator,
+    starting_portfolio: Portfolio,
+    backtest_length: pd.Timedelta | pd.DateOffset,
+    output_folder: str | None = None,
+) -> list[BacktestResults]:
+    results = []
+    for i, (datasets, strategies) in enumerate(
+        zip(all_datasets, all_strategies, strict=True)
+    ):
+        results.append(
+            _run_backtest(
+                i,
+                datasets,
+                strategies,
+                slippage_calculator,
+                tx_calculator,
+                starting_portfolio,
+                backtest_length,
+                output_folder,
+            )
+        )
+    return results
+
+
 def _gen_results(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
@@ -177,17 +177,7 @@ def _gen_results(
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)
 
-    if n_parallel <= 1:
-        return _run_serial(
-            all_datasets,
-            all_strategies,
-            slippage_calculator,
-            tx_calculator,
-            starting_portfolio,
-            backtest_length,
-            output_folder,
-        )
-    else:
+    if n_parallel > 1:
         return _run_multiprocessed(
             all_datasets,
             all_strategies,
@@ -196,6 +186,16 @@ def _gen_results(
             starting_portfolio,
             backtest_length,
             n_parallel,
+            output_folder,
+        )
+    else:
+        return _run_serial(
+            all_datasets,
+            all_strategies,
+            slippage_calculator,
+            tx_calculator,
+            starting_portfolio,
+            backtest_length,
             output_folder,
         )
 
