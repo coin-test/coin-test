@@ -25,6 +25,7 @@ def _run_backtest(
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
 ) -> BacktestResults:
+    """Run a single backtest."""
     composer = Composer(datasets, backtest_length)
     sim = Simulator(
         composer,
@@ -56,6 +57,7 @@ def _run_agent(
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
 ) -> None:
+    """Run method of a single process."""
     try:
         while (msg := receiver.get()) is not None:
             i, datasets, strategies = msg
@@ -72,7 +74,7 @@ def _run_agent(
         sender.put(e)
 
 
-def _run_multiprocessed(
+def _gen_multiprocessed(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
     slippage_calculator: SlippageCalculator,
@@ -82,6 +84,7 @@ def _run_multiprocessed(
     n_parallel: int,
     output_folder: str | None = None,
 ) -> list[BacktestResults]:
+    """Run multiprocessed backtests."""
     main_to_worker = Queue()
     worker_to_main = Queue()
 
@@ -128,7 +131,7 @@ def _run_multiprocessed(
     return results
 
 
-def _run_serial(
+def _gen_serial(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
     slippage_calculator: SlippageCalculator,
@@ -137,6 +140,7 @@ def _run_serial(
     backtest_length: pd.Timedelta | pd.DateOffset,
     output_folder: str | None = None,
 ) -> list[BacktestResults]:
+    """Run serial backtests."""
     results = []
     for i, (datasets, strategies) in enumerate(
         zip(all_datasets, all_strategies, strict=True)
@@ -165,8 +169,9 @@ def _gen_results(
     n_parallel: int,
     output_folder: str | None = None,
 ) -> list[BacktestResults]:
+    """Run backtests."""
     if n_parallel > 1:
-        return _run_multiprocessed(
+        return _gen_multiprocessed(
             all_datasets,
             all_strategies,
             slippage_calculator,
@@ -177,7 +182,7 @@ def _gen_results(
             output_folder,
         )
     else:
-        return _run_serial(
+        return _gen_serial(
             all_datasets,
             all_strategies,
             slippage_calculator,
