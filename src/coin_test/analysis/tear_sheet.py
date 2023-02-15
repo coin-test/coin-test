@@ -25,7 +25,7 @@ class TearSheet:
         # General metrics
         pct_change = price_series.pct_change().dropna()
         print(pct_change)
-        timedelta = price_series.index[1] - price_series.index[0]
+        timedelta = price_series.index[1] - price_series.index[0]  # type: ignore
         per_year = pd.Timedelta(days=365) / timedelta
 
         # Sharpe Ratio
