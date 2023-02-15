@@ -4,7 +4,7 @@ import multiprocessing
 from multiprocessing import Queue
 import os
 import pickle
-from typing import Iterator
+from typing import cast, Iterator
 
 import pandas as pd
 
@@ -115,19 +115,20 @@ def _run_multiprocessed(
     ]
 
     results = []
-    sim_params = _sim_param_generator(all_datasets, all_strategies)
     for process in processes:
         process.start()
-        main_to_worker.put(next(sim_params))
-    for params in sim_params:
+
+    sim_params = cast(
+        list[tuple[int, list[PriceDataset], list[Strategy]] | None],
+        _sim_param_generator(all_datasets, all_strategies),
+    )
+    messages = list(sim_params) + [None for _ in processes]
+    for msg in messages:
         child_ret = worker_to_main.get()
         if isinstance(child_ret, Exception):
             raise child_ret
         results.append(child_ret)
-        main_to_worker.put(params)
-
-    for _ in processes:
-        main_to_worker.put(None)
+        main_to_worker.put(msg)
 
     for process in processes:
         process.join()
