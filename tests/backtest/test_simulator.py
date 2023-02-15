@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pytest_mock import MockerFixture
 
-from coin_test.backtest import Simulator, Strategy
+from coin_test.backtest import BacktestResults, Simulator, Strategy
 from coin_test.util import AssetPair, Side
 
 
@@ -413,6 +413,10 @@ def test_run(
         mock_transaction_calculator,
     )
 
+    mocker.patch("coin_test.backtest.BacktestResults.create_date_price_df")
+    price = [Mock(), Mock(), Mock()]
+    BacktestResults.create_date_price_df.return_value = price
+
     backtest_results = sim.run()
     ex_hist_times = [
         mock_composer.start_time - mock_composer.freq,
@@ -441,8 +445,17 @@ def test_run(
         [mock_trade, mock_trade, mock_trade, mock_trade],
     ]
     df = pd.DataFrame(
-        list(zip(ex_hist_times, ex_hist_port, ex_hist_trades, ex_pending, strict=True)),
-        columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
+        list(
+            zip(
+                ex_hist_times,
+                ex_hist_port,
+                ex_hist_trades,
+                ex_pending,
+                price,
+                strict=True,
+            )
+        ),
+        columns=["Timestamp", "Portfolios", "Trades", "Pending Trades", "Price"],
     )
     df.set_index("Timestamp")
 
