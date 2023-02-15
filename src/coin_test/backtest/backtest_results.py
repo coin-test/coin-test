@@ -50,9 +50,7 @@ class BacktestResults:
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
         )
-
         self._sim_data.set_index("Timestamp")
-
         self._sim_data["Price"] = self.create_date_price_df(self._sim_data, composer)
 
     @staticmethod
@@ -61,17 +59,17 @@ class BacktestResults:
 
         def value_func(x: pd.Series) -> float:
             return BacktestResults.value_from_portfolio(
-                x["Timestamp"], x["Portfolio"], composer  # type: ignore
+                x.index, x["Portfolios"], composer  # type: ignore
             )
 
-        sim_price_data = sim_data.apply(value_func)
+        sim_price_data = sim_data.apply(value_func, axis=1)
         return sim_price_data
 
     @staticmethod
     def value_from_portfolio(t: pd.Timestamp, p: Portfolio, c: Composer) -> float:
         """Get the monetary value of a portfolio."""
         base_currency = p.base_currency
-        total = p.assets[base_currency].qty
+        total = p.available_assets(base_currency).qty
         all_assets = c.get_timestep(t)
 
         for ticker, money in p.assets.items():
