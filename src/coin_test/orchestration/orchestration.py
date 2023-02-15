@@ -84,6 +84,34 @@ def _run_agent(
         sender.put(e)
 
 
+def _run_serial(
+    all_datasets: list[list[PriceDataset]],
+    all_strategies: list[list[Strategy]],
+    slippage_calculator: SlippageCalculator,
+    tx_calculator: TransactionFeeCalculator,
+    starting_portfolio: Portfolio,
+    backtest_length: pd.Timedelta | pd.DateOffset,
+    output_folder: str | None = None,
+) -> list[BacktestResults]:
+    results = []
+    for i, (datasets, strategies) in enumerate(
+        zip(all_datasets, all_strategies, strict=True)
+    ):
+        results.append(
+            _run_backtest(
+                i,
+                datasets,
+                strategies,
+                slippage_calculator,
+                tx_calculator,
+                starting_portfolio,
+                backtest_length,
+                output_folder,
+            )
+        )
+    return results
+
+
 def _run_multiprocessed(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
@@ -136,7 +164,7 @@ def _run_multiprocessed(
     return results
 
 
-def _gen_result(
+def _gen_results(
     all_datasets: list[list[PriceDataset]],
     all_strategies: list[list[Strategy]],
     slippage_calculator: SlippageCalculator,
@@ -150,19 +178,17 @@ def _gen_result(
         os.makedirs(output_folder, exist_ok=True)
 
     if n_parallel <= 1:
-        result = _run_backtest(
-            0,
-            all_datasets[0],
-            all_strategies[0],
+        return _run_serial(
+            all_datasets,
+            all_strategies,
             slippage_calculator,
             tx_calculator,
             starting_portfolio,
             backtest_length,
             output_folder,
         )
-        results = [result]
     else:
-        results = _run_multiprocessed(
+        return _run_multiprocessed(
             all_datasets,
             all_strategies,
             slippage_calculator,
@@ -172,7 +198,6 @@ def _gen_result(
             n_parallel,
             output_folder,
         )
-    return results
 
 
 def run(
@@ -204,7 +229,7 @@ def run(
     Returns:
         List: All results of backtests
     """
-    results = _gen_result(
+    results = _gen_results(
         all_datasets,
         all_strategies,
         slippage_calculator,
