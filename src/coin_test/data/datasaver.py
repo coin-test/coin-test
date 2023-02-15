@@ -25,12 +25,10 @@ class Datasaver:
         else:
             self.datasets_lists = datasets
 
-    @staticmethod
-    def save(datasaver: "Datasaver", directory: str) -> str:
+    def save(self, directory: str) -> str:
         """Pickle a Datasaver to disk.
 
         Args:
-            datasaver (DataSaver): DataSaver object to save
             directory (str): Filepath to save to
 
         Returns:
@@ -38,9 +36,9 @@ class Datasaver:
         """
         if not os.path.exists(directory):
             os.makedirs(directory)
-        path = os.path.join(directory, datasaver.name + ".pkl")
+        path = os.path.join(directory, self.name + ".pkl")
         with open(path, "wb") as outp:
-            pickle.dump(datasaver, outp, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
         return path
 
     @staticmethod

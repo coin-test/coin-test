@@ -31,8 +31,9 @@ def test_datasaver_valid_construction_list_list() -> None:
 
 def test_datasaver_save(mocker: MockerFixture) -> None:
     """Pickle Datasaver object properly."""
-    dsaver = Mock(spec=Datasaver)
-    dsaver.name = "test"
+    name = "test_datasaver12"
+    datasets = [[Mock(spec=Dataset), Mock(spec=Dataset)], [Mock(spec=Dataset)]]
+    dsaver = Datasaver(name, datasets)  # pyright: ignore
     valid_local_path = "a_valid_path"
 
     mocker.patch("pickle.dump")
@@ -41,20 +42,19 @@ def test_datasaver_save(mocker: MockerFixture) -> None:
     mocker.patch("os.path.exists")
     os.path.exists.return_value = True
 
-    with patch("builtins.open", mock_open(read_data="data")):  # as mock_file:
-        final_path = Datasaver.save(dsaver, valid_local_path)
+    with patch("builtins.open", mock_open(read_data="data")):
+        final_path = dsaver.save(valid_local_path)
         pickle.dump.assert_called()
-
-        # TODO: One Mockfile has a spec?
-        # pickle.dump.assert_called_with(dsaver, mock_file, pickle.HIGHEST_PROTOCOL)
 
     assert final_path == valid_local_path + "/" + dsaver.name + ".pkl"
 
 
 def test_datasaver_save_new_dir(mocker: MockerFixture) -> None:
     """Pickle Datasaver object properly."""
-    dsaver = Mock(spec=Datasaver)
-    dsaver.name = "test"
+    name = "test_datasaver12"
+    datasets = [[Mock(spec=Dataset), Mock(spec=Dataset)], [Mock(spec=Dataset)]]
+    dsaver = Datasaver(name, datasets)  # pyright: ignore
+
     valid_local_path = "a_valid_path"
 
     mocker.patch("pickle.dump")
@@ -65,12 +65,9 @@ def test_datasaver_save_new_dir(mocker: MockerFixture) -> None:
 
     mocker.patch("os.makedirs")
 
-    with patch("builtins.open", mock_open(read_data="data")):  # as mock_file:
-        final_path = Datasaver.save(dsaver, valid_local_path)
+    with patch("builtins.open", mock_open(read_data="data")):
+        final_path = dsaver.save(valid_local_path)
         pickle.dump.assert_called()
-
-        # TODO: One Mockfile has a spec?
-        # pickle.dump.assert_called_with(dsaver, mock_file, pickle.HIGHEST_PROTOCOL)
 
     assert final_path == valid_local_path + "/" + dsaver.name + ".pkl"
 
@@ -83,10 +80,7 @@ def test_datasaver_load(mocker: MockerFixture) -> None:
     mocker.patch("pickle.load")
     pickle.load.return_value = datasaver
 
-    with patch("builtins.open", mock_open(read_data="data")):  # as mock_file:
+    with patch("builtins.open", mock_open(read_data="data")):
         test = Datasaver.load(valid_local_path)
         pickle.load.assert_called()
         assert test == datasaver
-
-        # TODO: One Mockfile has a spec?
-        # pickle.load.assert_called_with(mock_file)
