@@ -2,8 +2,6 @@
 
 import multiprocessing
 from multiprocessing import Queue
-import os
-import pickle
 from typing import cast, Iterator
 
 import pandas as pd
@@ -20,14 +18,12 @@ from ..data import Composer, PriceDataset
 
 
 def _run_backtest(
-    i: int,
     datasets: list[PriceDataset],
     strategies: list[Strategy],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
-    output_folder: str | None = None,
 ) -> BacktestResults:
     composer = Composer(datasets, backtest_length)
     sim = Simulator(
@@ -37,12 +33,7 @@ def _run_backtest(
         slippage_calculator,
         tx_calculator,
     )
-    results = sim.run()
-    if output_folder is not None:
-        fn = f"{i}_backtest_results.pkl"
-        with open(fn, "wb") as f:
-            pickle.dump(results, f)
-    return results
+    return sim.run()
 
 
 def _sim_param_generator(
@@ -64,22 +55,19 @@ def _run_agent(
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
-    output_folder: str | None = None,
 ) -> None:
     try:
         while (msg := receiver.get()) is not None:
             i, datasets, strategies = msg
             results = _run_backtest(
-                i,
                 datasets,
                 strategies,
                 slippage_calculator,
                 tx_calculator,
                 starting_portfolio,
                 backtest_length,
-                output_folder,
             )
-            sender.put(results)
+            sender.put((i, results))
     except Exception as e:
         sender.put(e)
 
@@ -110,6 +98,7 @@ def _run_multiprocessed(
                 backtest_length,
                 output_folder,
             ),
+            daemon=True,
         )
         for _ in range(n_parallel)
     ]
@@ -127,7 +116,10 @@ def _run_multiprocessed(
         child_ret = worker_to_main.get()
         if isinstance(child_ret, Exception):
             raise child_ret
-        results.append(child_ret)
+        i, result = child_ret
+        if output_folder is not None:
+            result.save(f"{i}_backtest_results.pkl")
+        results.append(result)
         main_to_worker.put(msg)
 
     for process in processes:
@@ -149,18 +141,17 @@ def _run_serial(
     for i, (datasets, strategies) in enumerate(
         zip(all_datasets, all_strategies, strict=True)
     ):
-        results.append(
-            _run_backtest(
-                i,
-                datasets,
-                strategies,
-                slippage_calculator,
-                tx_calculator,
-                starting_portfolio,
-                backtest_length,
-                output_folder,
-            )
+        result = _run_backtest(
+            datasets,
+            strategies,
+            slippage_calculator,
+            tx_calculator,
+            starting_portfolio,
+            backtest_length,
         )
+        if output_folder is not None:
+            result.save(f"{i}_backtest_results.pkl")
+        results.append(result)
     return results
 
 
@@ -174,9 +165,6 @@ def _gen_results(
     n_parallel: int,
     output_folder: str | None = None,
 ) -> list[BacktestResults]:
-    if output_folder is not None:
-        os.makedirs(output_folder, exist_ok=True)
-
     if n_parallel > 1:
         return _run_multiprocessed(
             all_datasets,

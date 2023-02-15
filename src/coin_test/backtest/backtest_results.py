@@ -1,5 +1,7 @@
 """Define the BacktestResults class."""
 
+import os
+import pickle
 from typing import Iterable
 
 import pandas as pd
@@ -51,3 +53,13 @@ class BacktestResults:
         )
 
         self._sim_data.set_index("Timestamp")
+
+    def save(self, path: str) -> None:
+        """Save to disk.
+
+        Args:
+            path: Path to save to.
+        """
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
