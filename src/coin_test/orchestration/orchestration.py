@@ -1,7 +1,7 @@
 """Define the orchestration function."""
-
 import multiprocessing
 from multiprocessing import Queue
+import os
 from typing import cast, Iterator, Sequence
 
 import pandas as pd
@@ -15,6 +15,12 @@ from ..backtest import (
     TransactionFeeCalculator,
 )
 from ..data import Composer, PriceDataset
+
+
+def _save(result: BacktestResults, output_folder: str | None, i: int) -> None:
+    if output_folder is not None:
+        fn = os.path.join(output_folder, f"{i}_backtest_results.pkl")
+        result.save(fn)
 
 
 def _run_backtest(
@@ -105,8 +111,6 @@ def _gen_multiprocessed(
         )
         for _ in range(n_parallel)
     ]
-
-    results = []
     for process in processes:
         process.start()
 
@@ -115,13 +119,17 @@ def _gen_multiprocessed(
         _sim_param_generator(all_datasets, all_strategies),
     )
     messages = list(sim_params) + [None for _ in processes]
-    for msg in messages:
+
+    for msg in messages[: len(processes)]:
+        main_to_worker.put(msg)
+
+    results = []
+    for msg in messages[len(processes) :]:
         child_ret = worker_to_main.get()
         if isinstance(child_ret, Exception):
             raise child_ret
         i, result = child_ret
-        if output_folder is not None:
-            result.save(f"{i}_backtest_results.pkl")
+        _save(result, output_folder, i)
         results.append(result)
         main_to_worker.put(msg)
 
@@ -153,8 +161,7 @@ def _gen_serial(
             starting_portfolio,
             backtest_length,
         )
-        if output_folder is not None:
-            result.save(f"{i}_backtest_results.pkl")
+        _save(result, output_folder, i)
         results.append(result)
     return results
 
