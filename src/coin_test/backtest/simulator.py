@@ -7,6 +7,7 @@ import datetime as dt
 from croniter import croniter
 import pandas as pd
 
+from .backtest_results import BacktestResults
 from .market import SlippageCalculator, TransactionFeeCalculator
 from .portfolio import Portfolio
 from .strategy import Strategy
@@ -234,15 +235,13 @@ class Simulator:
 
     def run(
         self,
-    ) -> tuple[
-        list[pd.Timestamp], list[Portfolio], list[Trade], list[list[TradeRequest]]
-    ]:
+    ) -> BacktestResults:
         """Run a simulation."""
         schedule = self._build_croniter_schedule(self._start_time, self._strategies)
 
         historical_portfolios = [self._portfolio]
-        historical_trades: list[Trade] = []
-        historical_pending_orders: list[list[TradeRequest]] = []
+        historical_trades: list[list[Trade]] = [[]]
+        historical_pending_orders: list[list[TradeRequest]] = [[]]
         historical_times: list[pd.Timestamp] = [
             pd.Timestamp(self._start_time - self._simulation_dt)
         ]
@@ -263,7 +262,7 @@ class Simulator:
                 self._slippage_calculator,
                 self._transaction_fee_calculator,
             )
-            historical_trades.extend(executed_trades)
+            trades = executed_trades
 
             trade_requests = self.run_strategies(schedule, time, portfolio)
 
@@ -276,15 +275,23 @@ class Simulator:
             )
 
             # TODO: DO these objects need to be copied
+            trades.extend(executed_trades)
             pending_orders.extend(remaining_tr)
-            historical_trades.extend(executed_trades)
+            historical_trades.append(trades)
             historical_portfolios.append(portfolio)
             historical_pending_orders.append(copy(pending_orders))
             historical_times.append(time)
             time += self._simulation_dt
-        return (
-            historical_times,
-            historical_portfolios,
-            historical_trades,
-            historical_pending_orders,
+        return BacktestResults(
+            self._composer,
+            historical_portfolios[0],
+            self._strategies,
+            (
+                historical_times,
+                historical_portfolios,
+                historical_trades,
+                historical_pending_orders,
+            ),
+            type(self._slippage_calculator),
+            type(self._transaction_fee_calculator),
         )

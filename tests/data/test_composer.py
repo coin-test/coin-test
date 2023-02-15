@@ -24,10 +24,15 @@ def _mock_dataset(
     return dataset, df_mock, metadata_mock
 
 
-def _patch_composer_val(currency: Ticker, mocker: MockerFixture) -> None:
+def _patch_composer_val(
+    start_time: pd.Timestamp,
+    end_time: pd.Timestamp,
+    currency: Ticker,
+    mocker: MockerFixture,
+) -> None:
     mocker.patch("coin_test.data.Composer._validate_params")
     mocker.patch("coin_test.data.Composer._get_min_freq")
-    Composer._validate_params.return_value = currency
+    Composer._validate_params.return_value = (start_time, end_time, currency)
 
 
 @pytest.fixture
@@ -71,27 +76,6 @@ def mocked_dataset(period_index_df: pd.DataFrame) -> Mock:
     return dataset
 
 
-def test_is_within_range_true(mocked_dataset: Mock) -> None:
-    """Validate dataset in time range."""
-    start_time = pd.Timestamp("2000-11")
-    end_time = pd.Timestamp("2023-4")
-    assert Composer._is_within_range(mocked_dataset, start_time, end_time)
-
-
-def test_is_within_range_start_off(mocked_dataset: Mock) -> None:
-    """Reject dataset missing end date."""
-    start_time = pd.Timestamp("2000-11")
-    end_time = pd.Timestamp("2040-4")
-    assert Composer._is_within_range(mocked_dataset, start_time, end_time) is False
-
-
-def test_is_within_range_end_off(mocked_dataset: Mock) -> None:
-    """Reject dataset missing start date."""
-    start_time = pd.Timestamp("1999-11")
-    end_time = pd.Timestamp("2021-4")
-    assert Composer._is_within_range(mocked_dataset, start_time, end_time) is False
-
-
 def test_missing_data_true(period_index_df: pd.DataFrame) -> None:
     """Return true on full dataset."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "Y")
@@ -103,9 +87,66 @@ def test_missing_data_missing(period_index_df: pd.DataFrame) -> None:
     """Return false on missing data."""
     period_index_df.drop(index=period_index_df.index[3], inplace=True)
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "Y")
-    print(period_index_df)
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
     assert not Composer._validate_missing_data(dataset)
+
+
+def test_get_start_end_single(period_index_df: pd.DataFrame) -> None:
+    """Return start and end time."""
+    length = pd.DateOffset(years=1)
+    dataset, _, _ = _mock_dataset(period_index_df, None)
+    start_end = Composer._get_start_end([dataset], length)
+
+    assert start_end is not None
+    start_time, end_time = start_end
+    assert start_time == pd.Timestamp("2022")
+    assert end_time == pd.Timestamp("2023")
+
+
+def test_get_start_end_single_exact(period_index_df: pd.DataFrame) -> None:
+    """Return start and end time."""
+    length = pd.DateOffset(years=23)
+    dataset, _, _ = _mock_dataset(period_index_df, None)
+    start_end = Composer._get_start_end([dataset], length)
+
+    assert start_end is not None
+    start_time, end_time = start_end
+    assert start_time == pd.Timestamp("2000")
+    assert end_time == pd.Timestamp("2023")
+
+
+def test_get_start_end_single_too_long(period_index_df: pd.DataFrame) -> None:
+    """Return start and end time."""
+    length = pd.DateOffset(years=24)
+    dataset, _, _ = _mock_dataset(period_index_df, None)
+    start_end = Composer._get_start_end([dataset], length)
+    assert start_end is None
+
+
+def test_get_start_end_multiple(period_index_df: pd.DataFrame) -> None:
+    """Return start and end time."""
+    length = pd.DateOffset(years=1)
+    dataset, _, _ = _mock_dataset(period_index_df, None)
+
+    shorter_df = period_index_df.head(-3)
+    shorter_dataset, _, _ = _mock_dataset(shorter_df, None)
+
+    start_end = Composer._get_start_end([dataset, shorter_dataset], length)
+
+    assert start_end is not None
+    start_time, end_time = start_end
+    assert start_time == pd.Timestamp("2019")
+    assert end_time == pd.Timestamp("2020")
+
+
+def test_get_start_end_multiple_too_long(period_index_df: pd.DataFrame) -> None:
+    """Return start and end time."""
+    length = pd.DateOffset(years=21)
+    dataset, _, _ = _mock_dataset(period_index_df, None)
+    shorter_df = period_index_df.head(-3)
+    shorter_dataset, _, _ = _mock_dataset(shorter_df, None)
+    start_end = Composer._get_start_end([dataset, shorter_dataset], length)
+    assert start_end is None
 
 
 def test_get_shared_currency() -> None:
@@ -153,88 +194,98 @@ def test_get_min_freq(freqs: tuple[str], target: pd.DateOffset) -> None:
     assert min_delta == target
 
 
+def test_validate_start_end_true() -> None:
+    """Do not error on correct times."""
+    start_time = pd.Timestamp("2019")
+    end_time = pd.Timestamp("2022")
+    Composer._validate_start_end(start_time, end_time)
+
+
+def test_validate_start_end_equal() -> None:
+    """Do not error on equal times."""
+    start_time = pd.Timestamp("2019")
+    Composer._validate_start_end(start_time, start_time)
+
+
+def test_validate_start_end_false() -> None:
+    """Error on incorrect times."""
+    start_time = pd.Timestamp("2019")
+    end_time = pd.Timestamp("2022")
+    with pytest.raises(ValueError) as e:
+        Composer._validate_start_end(end_time, start_time)
+    assert "must be earlier than" in str(e)
+
+
 def test_validate_params(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Call validation functions."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
+    length = pd.DateOffset(years=3)
+    start_time = pd.Timestamp("2019")
+    end_time = pd.Timestamp("2022")
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(simple_df, metadata)
 
-    mocker.patch("coin_test.data.Composer._is_within_range")
     mocker.patch("coin_test.data.Composer._validate_missing_data")
+    mocker.patch("coin_test.data.Composer._get_start_end")
     mocker.patch("coin_test.data.Composer._get_shared_currency")
+    Composer._get_start_end.return_value = (start_time, end_time)
     Composer._get_shared_currency.return_value = metadata.pair.currency
 
-    ticker = Composer._validate_params([dataset], start_time, end_time)
+    start, end, ticker = Composer._validate_params([dataset], length)
 
-    Composer._is_within_range.assert_called_once_with(dataset, start_time, end_time)
     Composer._validate_missing_data.assert_called_once_with(dataset)
+    Composer._get_start_end.assert_called_once_with([dataset], length)
     Composer._get_shared_currency.assert_called_once_with([dataset])
+    assert start == start_time
+    assert end == end_time
     assert ticker == metadata.pair.currency
-
-
-def test_validate_params_invalid_range() -> None:
-    """Error on invalid time range."""
-    start_time = pd.Timestamp("2021")
-    end_time = pd.Timestamp("2020")
-
-    with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "earlier than end time" in str(e)
 
 
 def test_validate_params_no_datasets() -> None:
     """Error on no datasets passed."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
+    length = pd.DateOffset(years=3)
 
     with pytest.raises(ValueError) as e:
-        Composer._validate_params([], start_time, end_time)
-        assert "At least one dataset must be defined." in str(e)
+        Composer._validate_params([], length)
+    assert "At least one dataset must be defined." in str(e)
 
 
-def test_validate_params_not_within_range(mocker: MockerFixture) -> None:
-    """Error on dataset not within range."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
+def test_validate_params_not_start_end(mocker: MockerFixture) -> None:
+    """Error on dataset not sharing currency."""
+    length = pd.DateOffset(years=3)
 
-    mocker.patch("coin_test.data.Composer._is_within_range")
-    Composer._is_within_range.return_value = False
+    mocker.patch("coin_test.data.Composer._validate_missing_data")
+    mocker.patch("coin_test.data.Composer._get_start_end")
+    Composer._get_start_end.return_value = None
 
     with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "Not all datasets cover requested time range" in str(e)
+        Composer._validate_params([Mock()], length)
+    assert "Overlapping time for datasets" in str(e)
 
 
 def test_validate_params_not_shared_currency(mocker: MockerFixture) -> None:
     """Error on dataset not sharing currency."""
-    start_time = pd.Timestamp("2020")
-    end_time = pd.Timestamp("2021")
+    length = pd.DateOffset(years=3)
 
-    mocker.patch("coin_test.data.Composer._is_within_range")
     mocker.patch("coin_test.data.Composer._validate_missing_data")
+    mocker.patch("coin_test.data.Composer._get_start_end")
     mocker.patch("coin_test.data.Composer._get_shared_currency")
-    Composer._is_within_range.return_value = True
-    Composer._validate_missing_data.return_value = True
+    Composer._get_start_end.return_value = Mock(), Mock()
     Composer._get_shared_currency.return_value = None
 
     with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
-        assert "Not all datasets share a single currency." in str(e)
+        Composer._validate_params([Mock()], length)
+    assert "Not all datasets share a single currency." in str(e)
 
 
 def test_validate_params_missing_data(mocker: MockerFixture) -> None:
     """Error on dataset missing data."""
-    start_time = pd.Timestamp("2019")
-    end_time = pd.Timestamp("2022")
+    length = pd.DateOffset(years=3)
 
-    mocker.patch("coin_test.data.Composer._is_within_range")
     mocker.patch("coin_test.data.Composer._validate_missing_data")
-    Composer._is_within_range.return_value = True
     Composer._validate_missing_data.return_value = False
 
     with pytest.raises(ValueError) as e:
-        Composer._validate_params([Mock()], start_time, end_time)
+        Composer._validate_params([Mock()], length)
     assert "does not have data for every period." in str(e)
 
 
@@ -242,18 +293,19 @@ def test_composer_init(simple_df: pd.DataFrame, mocker: MockerFixture) -> None:
     """Initialize correctly."""
     start_time = pd.Timestamp("2020")
     end_time = pd.Timestamp("2021")
+    length = pd.DateOffset(years=1)
 
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, df_mock, metadata_mock = _mock_dataset(simple_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(start_time, end_time, metadata.pair.currency, mocker)
 
-    composer = Composer([dataset], start_time, end_time)
+    composer = Composer([dataset], length)
 
     pd.testing.assert_frame_equal(composer.datasets[metadata.pair].df, simple_df)
 
     df_mock.assert_called()
     metadata_mock.assert_called()
-    Composer._validate_params.assert_called_once_with([dataset], start_time, end_time)
+    Composer._validate_params.assert_called_once_with([dataset], length)
     Composer._get_min_freq.assert_called_once_with([dataset])
 
     assert hasattr(composer, "datasets")
@@ -269,11 +321,15 @@ def test_composer_get_range(
     """Get range of data."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
 
     start_time = pd.Timestamp("2019")
     end_time = pd.Timestamp("2022")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
     data = composer.get_range(start_time, end_time, mask=False)
 
     assert len(data) == 1
@@ -289,11 +345,15 @@ def test_composer_get_range_higher_resolution(
     """Get range of data with higher resolution query."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
 
     start_time = pd.Timestamp("2019-12-30")
     end_time = pd.Timestamp("2022-1-15")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
     data = composer.get_range(start_time, end_time, mask=False)
 
     assert len(data) == 1
@@ -309,11 +369,15 @@ def test_composer_get_range_single(
     """Get single timestep."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
 
     start_time = pd.Timestamp("2019")
     end_time = pd.Timestamp("2019")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
     data = composer.get_range(start_time, end_time, mask=False)
 
     df = data[metadata.pair]
@@ -326,11 +390,15 @@ def test_composer_get_range_masked(
     """Mask final timestep of data."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
 
     start_time = pd.Timestamp("2019")
     end_time = pd.Timestamp("2022")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
     data = composer.get_range(start_time, end_time, mask=True)
 
     final_row = data[metadata.pair].iloc[-1]
@@ -347,12 +415,16 @@ def test_composer_get_range_skip_bad_key(
     """Ignore non-existent keys."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
 
     start_time = pd.Timestamp("2019")
     end_time = pd.Timestamp("2022")
     pair = AssetPair(Ticker("Test"), Ticker("Test"))
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
     data = composer.get_range(start_time, end_time, keys=[pair])
     assert len(data) == 0
 
@@ -363,12 +435,15 @@ def test_composer_get_timestep(
     """Calls get_range correctly."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "H")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
 
-    timestep = pd.Timestamp("2019")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
     composer.get_range = Mock()
 
+    timestep = pd.Timestamp("2019")
     composer.get_timestep(timestep, mask=True)
     composer.get_range.assert_called_once_with(timestep, timestep, keys=None, mask=True)
 
@@ -379,13 +454,16 @@ def test_composer_get_lookback(
     """Calls get_range correctly."""
     metadata = MetaData(AssetPair(Ticker("BTC"), Ticker("USDT")), "Y")
     dataset, _, _ = _mock_dataset(period_index_df, metadata)
-    _patch_composer_val(metadata.pair.currency, mocker)
+    _patch_composer_val(
+        pd.Timestamp("2008"), pd.Timestamp("2022"), metadata.pair.currency, mocker
+    )
+
+    length = pd.DateOffset(years=14)
+    composer = Composer([dataset], length)
+    composer.get_range = Mock()
+    composer.freq = cast(pd.DateOffset, to_offset("Y"))
 
     timestep = pd.Timestamp("2019")
-    composer = Composer([dataset], pd.Timestamp("2008"), pd.Timestamp("2022"))
-    composer.freq = cast(pd.DateOffset, to_offset("Y"))
-    composer.get_range = Mock()
-
     composer.get_lookback(timestep, 8, mask=True)
     composer.get_range.assert_called_once_with(
         pd.Timestamp("2011-12-31"), timestep, keys=None, mask=True
