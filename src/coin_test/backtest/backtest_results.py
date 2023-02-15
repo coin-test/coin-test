@@ -59,7 +59,7 @@ class BacktestResults:
 
         def value_func(x: pd.Series) -> float:
             return BacktestResults.value_from_portfolio(
-                x.index, x["Portfolios"], composer  # type: ignore
+                x["Timestamp"], x["Portfolios"], composer  # type: ignore
             )
 
         sim_price_data = sim_data.apply(value_func, axis=1)

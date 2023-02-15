@@ -44,7 +44,7 @@ def test_create_results_correctly(mocker: MockerFixture) -> None:
     col2 = [[Mock()], [Mock()]]
     col3 = [[Mock()], [Mock()]]
     price = [[Mock()], [Mock()]]
-    sim_data = (index, portfolios, col2, col3, price)
+    sim_data = (index, portfolios, col2, col3)
 
     sim_results = pd.DataFrame(
         list(
@@ -53,7 +53,7 @@ def test_create_results_correctly(mocker: MockerFixture) -> None:
                 sim_data[1],
                 sim_data[2],
                 sim_data[3],
-                sim_data[4],
+                price,
                 strict=True,
             )
         ),
