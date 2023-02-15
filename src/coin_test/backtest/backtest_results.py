@@ -39,19 +39,19 @@ class BacktestResults:
             slippage_calculator_type (type): Slippage Calculator used
             transaction_fee_calculator_type (type): Tx Fees used
         """
-        self._seed = None
-        self._starting_portfolio = starting_portfolio
-        self._slippage_type = slippage_calculator_type
-        self._tx_fee_type = transaction_fee_calculator_type
+        self.seed = None
+        self.starting_portfolio = starting_portfolio
+        self.slippage_type = slippage_calculator_type
+        self.tx_fee_type = transaction_fee_calculator_type
 
-        self._data_dict = {ds.metadata: ds.df for (_, ds) in composer.datasets.items()}
-        self._strategy_names = [s.name for s in strategies]
-        self._sim_data = pd.DataFrame(
+        self.data_dict = {ds.metadata: ds.df for (_, ds) in composer.datasets.items()}
+        self.strategy_names = [s.name for s in strategies]
+        self.sim_data = pd.DataFrame(
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
         )
-        self._sim_data.set_index("Timestamp")
-        self._sim_data["Price"] = self.create_date_price_df(self._sim_data, composer)
+        self.sim_data.set_index("Timestamp")
+        self.sim_data["Price"] = self.create_date_price_df(self.sim_data, composer)
 
     @staticmethod
     def create_date_price_df(sim_data: pd.DataFrame, composer: Composer) -> pd.Series:

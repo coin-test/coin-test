@@ -71,13 +71,13 @@ def test_create_results_correctly(mocker: MockerFixture) -> None:
         composer, init_portfolio, strategies, sim_data, slip, tx  # pyright: ignore
     )
 
-    assert results._seed is None
-    assert results._slippage_type == slip
-    assert results._tx_fee_type == tx
-    assert results._starting_portfolio == init_portfolio
-    assert results._data_dict == {mock_mdata: mock_df, mock_mdata2: mock_df2}
-    assert results._strategy_names == [strat1.name, strat2.name]
-    pd.testing.assert_frame_equal(results._sim_data, sim_results)
+    assert results.seed is None
+    assert results.slippage_type == slip
+    assert results.tx_fee_type == tx
+    assert results.starting_portfolio == init_portfolio
+    assert results.data_dict == {mock_mdata: mock_df, mock_mdata2: mock_df2}
+    assert results.strategy_names == [strat1.name, strat2.name]
+    pd.testing.assert_frame_equal(results.sim_data, sim_results)
 
 
 def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:

@@ -460,8 +460,8 @@ def test_run(
     df.set_index("Timestamp")
 
     # TODO: BacktestResults should be mocked and just called with correct items
-    pd.testing.assert_frame_equal(backtest_results._sim_data, df)
-    assert portfolio == backtest_results._starting_portfolio
+    pd.testing.assert_frame_equal(backtest_results.sim_data, df)
+    assert portfolio == backtest_results.starting_portfolio
 
 
 def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> None:
