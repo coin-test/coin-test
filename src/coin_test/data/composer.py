@@ -1,6 +1,6 @@
 """Define the Composer class."""
 
-from typing import cast, Iterable
+from typing import cast, Iterable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ class Composer:
 
     def __init__(
         self,
-        datasets: list[PriceDataset],
+        datasets: Sequence[PriceDataset],
         length: pd.Timedelta | pd.DateOffset,
     ) -> None:
         """Intialize a dataset.
@@ -34,7 +34,7 @@ class Composer:
 
     @staticmethod
     def _validate_params(
-        datasets: list[PriceDataset],
+        datasets: Sequence[PriceDataset],
         length: pd.Timedelta | pd.DateOffset,
     ) -> tuple[pd.Timestamp, pd.Timestamp, Ticker]:
         """Validates input parameters.
@@ -87,7 +87,7 @@ class Composer:
 
     @staticmethod
     def _get_start_end(
-        datasets: list[PriceDataset], length: pd.Timedelta | pd.DateOffset
+        datasets: Sequence[PriceDataset], length: pd.Timedelta | pd.DateOffset
     ) -> tuple[pd.Timestamp, pd.Timestamp] | None:
         """Get start and time for datasets."""
         start_times = [
@@ -105,7 +105,7 @@ class Composer:
         return end_time - length, end_time
 
     @staticmethod
-    def _get_shared_currency(datasets: list[PriceDataset]) -> Ticker | None:
+    def _get_shared_currency(datasets: Sequence[PriceDataset]) -> Ticker | None:
         """Get shared currency among datasets."""
         base_currency = datasets[0].metadata.pair.currency
         for dataset in datasets[1:]:
@@ -114,7 +114,7 @@ class Composer:
         return base_currency
 
     @staticmethod
-    def _get_min_freq(datasets: list[PriceDataset]) -> pd.DateOffset:
+    def _get_min_freq(datasets: Sequence[PriceDataset]) -> pd.DateOffset:
         """Get minimium frequency among datasets."""
         offsets = [
             cast(pd.DateOffset, to_offset(dataset.metadata.freq))

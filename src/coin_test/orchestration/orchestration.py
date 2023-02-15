@@ -2,7 +2,7 @@
 
 import multiprocessing
 from multiprocessing import Queue
-from typing import cast, Iterator
+from typing import cast, Iterator, Sequence
 
 import pandas as pd
 
@@ -18,8 +18,8 @@ from ..data import Composer, PriceDataset
 
 
 def _run_backtest(
-    datasets: list[PriceDataset],
-    strategies: list[Strategy],
+    datasets: Sequence[PriceDataset],
+    strategies: Sequence[Strategy],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
@@ -38,9 +38,9 @@ def _run_backtest(
 
 
 def _sim_param_generator(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
-) -> Iterator[tuple[int, list[PriceDataset], list[Strategy]]]:
+    all_datasets: Sequence[Sequence[PriceDataset]],
+    all_strategies: Sequence[Sequence[Strategy]],
+) -> Iterator[tuple[int, Sequence[PriceDataset], Sequence[Strategy]]]:
     """Yield all combinations of datasets and strategies."""
     i = 0
     for datasets in all_datasets:
@@ -75,8 +75,8 @@ def _run_agent(
 
 
 def _gen_multiprocessed(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
+    all_datasets: Sequence[Sequence[PriceDataset]],
+    all_strategies: Sequence[Sequence[Strategy]],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
@@ -132,8 +132,8 @@ def _gen_multiprocessed(
 
 
 def _gen_serial(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
+    all_datasets: Sequence[Sequence[PriceDataset]],
+    all_strategies: Sequence[Sequence[Strategy]],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
@@ -160,8 +160,8 @@ def _gen_serial(
 
 
 def _gen_results(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
+    all_datasets: Sequence[Sequence[PriceDataset]],
+    all_strategies: Sequence[Sequence[Strategy]],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
@@ -194,8 +194,8 @@ def _gen_results(
 
 
 def run(
-    all_datasets: list[list[PriceDataset]],
-    all_strategies: list[list[Strategy]],
+    all_datasets: Sequence[Sequence[PriceDataset]],
+    all_strategies: Sequence[Sequence[Strategy]],
     slippage_calculator: SlippageCalculator,
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
