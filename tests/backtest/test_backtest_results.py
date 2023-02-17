@@ -1,8 +1,11 @@
 """Test the BacktestResults class."""
 
-from unittest.mock import Mock
+import os
+import pickle
+from unittest.mock import Mock, mock_open
 
 import pandas as pd
+from pytest_mock import MockerFixture
 
 from coin_test.backtest import BacktestResults
 from coin_test.backtest.market import ConstantSlippage, ConstantTransactionFeeCalculator
@@ -57,3 +60,30 @@ def test_create_results_correctly() -> None:
     assert results._data_dict == {mock_mdata: mock_df, mock_mdata2: mock_df2}
     assert results._strategy_names == [strat1.name, strat2.name]
     pd.testing.assert_frame_equal(results._sim_data, sim_results)
+
+
+def test_results_save(mocker: MockerFixture) -> None:
+    """Pickle BacktestResults properly."""
+    test_file_name = "test_dir/test_name.pkl"
+
+    mocker.patch("pickle.dump")
+    mocker.patch("os.makedirs")
+    os.path.exists.return_value = True
+    mocker.patch("builtins.open", mock_open())
+
+    composer = Mock()
+    composer.datasets = {}
+
+    index = [pd.Timestamp("2023-01-01T12"), pd.Timestamp("2023-01-01T13")]
+    portfolios = [Mock(), Mock()]
+    col2 = [[Mock()], [Mock()]]
+    col3 = [[Mock()], [Mock()]]
+    sim_data = (index, portfolios, col2, col3)
+
+    results = BacktestResults(
+        composer, Mock(), [Mock()], sim_data, Mock(), Mock()  # type: ignore
+    )
+
+    results.save(test_file_name)
+    os.makedirs.assert_called_once_with("test_dir", exist_ok=True)
+    pickle.dump.assert_called()
