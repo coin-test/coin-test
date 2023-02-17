@@ -5,6 +5,7 @@ import os
 from typing import cast, Iterator, Sequence
 
 import pandas as pd
+from tqdm import tqdm
 
 from ..backtest import (
     BacktestResults,
@@ -123,8 +124,9 @@ def _gen_multiprocessed(
     for msg in messages[: len(processes)]:
         main_to_worker.put(msg)
 
+    print("Starting backtests...")
     results = []
-    for msg in messages[len(processes) :]:
+    for msg in tqdm(messages[len(processes) :]):
         child_ret = worker_to_main.get()
         if isinstance(child_ret, Exception):
             raise child_ret
@@ -149,8 +151,10 @@ def _gen_serial(
     output_folder: str | None = None,
 ) -> list[BacktestResults]:
     """Run serial backtests."""
+    print("Starting backtests...")
     results = []
-    for i, datasets, strategies in _sim_param_generator(all_datasets, all_strategies):
+    params = _sim_param_generator(all_datasets, all_strategies)
+    for i, datasets, strategies in tqdm(params):
         result = _run_backtest(
             datasets,
             strategies,
