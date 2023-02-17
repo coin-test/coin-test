@@ -150,9 +150,7 @@ def _gen_serial(
 ) -> list[BacktestResults]:
     """Run serial backtests."""
     results = []
-    for i, (datasets, strategies) in enumerate(
-        zip(all_datasets, all_strategies, strict=True)
-    ):
+    for i, datasets, strategies in _sim_param_generator(all_datasets, all_strategies):
         result = _run_backtest(
             datasets,
             strategies,
