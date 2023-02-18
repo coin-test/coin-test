@@ -1,5 +1,7 @@
 """Define the BacktestResults class."""
 
+import os
+import pickle
 from typing import Iterable
 
 import pandas as pd
@@ -52,6 +54,16 @@ class BacktestResults:
         )
         self.sim_data.set_index("Timestamp")
         self.sim_data["Price"] = self.create_date_price_df(self.sim_data, composer)
+
+    def save(self, path: str) -> None:
+        """Save to disk.
+
+        Args:
+            path: Path to save to.
+        """
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
 
     @staticmethod
     def create_date_price_df(sim_data: pd.DataFrame, composer: Composer) -> pd.Series:

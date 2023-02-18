@@ -1,6 +1,8 @@
 """Test the BacktestResults class."""
 
-from unittest.mock import MagicMock, Mock
+import os
+import pickle
+from unittest.mock import MagicMock, Mock, mock_open
 
 import pandas as pd
 from pytest_mock import MockerFixture
@@ -110,5 +112,32 @@ def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:
     sim_results.set_index("Timestamp")
 
     price_series = BacktestResults.create_date_price_df(sim_results, composer)
-
     pd.testing.assert_series_equal(price_series, pd.Series(data=[3756.0, 3756.0]))
+
+
+def test_results_save(mocker: MockerFixture) -> None:
+    """Pickle BacktestResults properly."""
+    test_file_name = "test_dir/test_name.pkl"
+
+    mocker.patch("pickle.dump")
+    mocker.patch("os.makedirs")
+    os.path.exists.return_value = True
+    mocker.patch("builtins.open", mock_open())
+    mocker.patch("coin_test.backtest.BacktestResults.value_from_portfolio")
+
+    composer = Mock()
+    composer.datasets = {}
+
+    index = [pd.Timestamp("2023-01-01T12"), pd.Timestamp("2023-01-01T13")]
+    portfolios = [Mock(), Mock()]
+    col2 = [[Mock()], [Mock()]]
+    col3 = [[Mock()], [Mock()]]
+    sim_data = (index, portfolios, col2, col3)
+
+    results = BacktestResults(
+        composer, Mock(), [Mock()], sim_data, Mock(), Mock()  # type: ignore
+    )
+
+    results.save(test_file_name)
+    os.makedirs.assert_called_once_with("test_dir", exist_ok=True)
+    pickle.dump.assert_called()
