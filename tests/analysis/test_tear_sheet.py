@@ -8,7 +8,4 @@ def test_single_backtest_tear_sheet(backtest_results: BacktestResults) -> None:
     """Successfully get metrics for a single backtest."""
     metrics = TearSheet.single_backtest_metrics(backtest_results)
 
-    print("yay")
-    print(metrics)
-
     assert (metrics["Sharpe Ratio"] - 3.817) < 1e-3
