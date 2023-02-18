@@ -1,13 +1,13 @@
 """Conftest file for testing."""
 
 import datetime as dt
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from croniter import croniter
 import pandas as pd
 import pytest
 
-from coin_test.backtest import Strategy
+from coin_test.backtest import Portfolio, Strategy
 from coin_test.util import AssetPair, Money, Ticker
 
 
@@ -66,3 +66,32 @@ def schedule(timestamp: dt.datetime) -> list[tuple[Strategy, croniter]]:
     cron_3 = croniter("0 0 * * *", start_time=timestamp)  # daily
     cron_3.get_next()
     return [(strat_1, cron_1), (strat_2, cron_2), (strat_3, cron_3)]
+
+
+@pytest.fixture
+def mock_portfolio() -> Portfolio:
+    """Create a mock portfolio."""
+    portfolio = MagicMock()
+    base_ticker = Ticker("USDT")
+    portfolio.base_currency = base_ticker
+    assets: dict[Ticker, Money] = {
+        base_ticker: Money(base_ticker, 256.00),
+        Ticker("BTC"): Money(Ticker("BTC"), 0.15625),
+        Ticker("ETH"): Money(Ticker("ETH"), 0.375),
+    }
+    portfolio.assets = MagicMock()
+    portfolio.assets.__getitem__.side_effect = assets.__getitem__
+
+    portfolio.assets.items = Mock()
+    portfolio.assets.items.return_value = assets.items()
+
+    def get_available_assets(x: Ticker) -> Money:
+        """Mock of get available assets."""
+        return assets[x]
+
+    portfolio.reserved = {a: Money(a, 0) for a in assets}
+
+    portfolio.available_assets = Mock()
+    portfolio.available_assets.side_effect = get_available_assets
+
+    return portfolio
