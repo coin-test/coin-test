@@ -106,7 +106,6 @@ def _gen_multiprocessed(
                 tx_calculator,
                 starting_portfolio,
                 backtest_length,
-                output_folder,
             ),
             daemon=True,
         )
