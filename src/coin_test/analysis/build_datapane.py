@@ -1,3 +1,2 @@
-"""Functions to build Datapane Locally"""
+"""Functions to build Datapane Locally."""
 import datapane as dp
-

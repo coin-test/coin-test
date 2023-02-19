@@ -17,6 +17,7 @@ pytest-sugar = "^0.9.6"
 pandas-stubs = "^1.5.3.230203"
 datapane = "^0.15.7"
 tqdm = "^4.64.1"
+plotly = "^5.13.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.3"

@@ -1,51 +1,55 @@
-import altair as alt
-from vega_datasets import data
+"""Build a Datapane using historical data."""
+import sys
+from unittest.mock import Mock
+
 import datapane as dp
 import pandas as pd
-import sys
+import plotly.express as px
 
-if(__name__ == "__main__"):
-#   modulename = 'datapane'
-#   if modulename not in sys.modules:
-#       print(f'You have not imported the {modulename} module')
+from coin_test.analysis.data_processing import PricePlotMultiple, PricePlotSingle
 
-#   df = data.iris()
-#   fig = (
-#       alt.Chart(df)
-#       .mark_point()
-#       .encode(x="petalLength:Q", y="petalWidth:Q", color="species:N")
-#   )
-#   app = dp.App(dp.Plot(fig), dp.DataTable(df))
-#   app.save(path="my_app.html")
+if __name__ == "__main__":
 
-    alt.data_transformers.disable_max_rows()
+    df = px.data.gapminder()
 
-    dataset = pd.read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
-    df = (
-        dataset.groupby(["continent", "date"])["new_cases_smoothed_per_million"]
-        .mean()
-        .reset_index()
+    plotly_chart = px.scatter(
+        df.query("year==2007"),
+        x="gdpPercap",
+        y="lifeExp",
+        size="pop",
+        color="continent",
+        hover_name="country",
+        log_x=True,
+        size_max=60,
     )
+    app = dp.App(dp.Plot(plotly_chart)).save(path="plotly-plot.html")
 
-    plot = (
-        alt.Chart(df)
-        .mark_area(opacity=0.4, stroke="black")
-        .encode(
-            x="date:T",
-            y=alt.Y("new_cases_smoothed_per_million:Q", stack=None),
-            color=alt.Color("continent:N", scale=alt.Scale(scheme="set1")),
-            tooltip="continent:N",
+    plot = PricePlotSingle.create(Mock())
+    multi_plot = PricePlotMultiple.create(Mock())
+    app_nathan = dp.App(
+        dp.Page(
+            title="Coin-Test Datapane",
+            blocks=[
+                "### Price Data",
+                dp.Group(plot, multi_plot, columns=2),
+            ],
         )
-        .interactive()
-        .properties(width="container")
     )
 
-    app = dp.App(    dp.Page(title="Titanic Dataset", blocks=["### Dataset", dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2)]),
-        dp.Page(title="Titanic Plot", blocks=["### Plot", dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2)])
-    )
-        
-        #dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2), dp.Group(dp.Plot(plot), dp.DataTable(df), columns=3))
+    app_nathan.save(path="nathan-plot.html")
 
-    
-    
-    app = app.save(path="grid-layout.html")
+    # app = dp.App(
+    #     dp.Page(
+    #         title="Titanic Dataset",
+    #         blocks=[
+    #             "### Dataset",
+    #             dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2),
+    #         ],
+    #     ),
+    #     dp.Page(
+    #         title="Titanic Plot",
+    #         blocks=["### Plot", dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2)],
+    #     ),
+    # )
+
+    # dp.Group(dp.Plot(plot), dp.DataTable(df), columns=2), dp.Group(dp.Plot(plot), dp.DataTable(df), columns=3))
