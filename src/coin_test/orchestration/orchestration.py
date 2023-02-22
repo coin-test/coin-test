@@ -3,10 +3,12 @@ import multiprocessing
 from multiprocessing import Queue
 import os
 from typing import cast, Iterator, Sequence
+import traceback
 
 import pandas as pd
 from tqdm import tqdm
 
+from ..analysis import build_datapane
 from ..backtest import (
     BacktestResults,
     Portfolio,
@@ -78,6 +80,7 @@ def _run_agent(
             )
             sender.put((i, results))
     except Exception as e:
+        print(traceback.format_exc())
         sender.put(e)
 
 
@@ -241,6 +244,6 @@ def run(
         output_folder,
     )
 
-    # ... Call analysis on results here ...
+    build_datapane(results)
 
     return results

@@ -1,14 +1,13 @@
 """Generate plots for analysis."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Sequence
 
 import datapane as dp
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from coin_test.backtest.backtest_results import BacktestResults
 
@@ -16,21 +15,18 @@ from coin_test.backtest.backtest_results import BacktestResults
 class DataframeGenerator(ABC):
     """Generate a pandas DataFrame using a single BacktestResults."""
 
+    name = ""
+
     @staticmethod
     @abstractmethod
     def create(backtest_results: BacktestResults) -> pd.DataFrame:
         """Create dataframe."""
-        df = pd.DataFrame(
-            {
-                "A": np.random.normal(-1, 1, 5000),
-                "B": np.random.normal(1, 2, 5000),
-            }
-        )
-        return df
 
 
 class DataframeGeneratorMultiple(ABC):
     """Generate a pandas DataFrame using a multiple BacktestResults."""
+
+    name = ""
 
     @staticmethod
     @abstractmethod
@@ -73,7 +69,7 @@ class PlotParameters:
     ) -> None:
         """Update Plotly figure"""
         fig.update_layout(
-            title={"text": title, "font": plot_params.title_font},
+            # title={"text": title, "font": plot_params.title_font},
             xaxis_title={"text": x_lbl, "font": plot_params.axes_font},
             yaxis_title={"text": y_lbl, "font": plot_params.axes_font},
             legend_title={"text": legend_title, "font": plot_params.legend_font},
@@ -82,6 +78,8 @@ class PlotParameters:
 
 class SinglePlotGenerator(ABC):
     """Generate a plot using a single BacktestResults."""
+
+    name = ""
 
     @staticmethod
     @abstractmethod
@@ -93,6 +91,8 @@ class SinglePlotGenerator(ABC):
 
 class DistributionalPlotGenerator(ABC):
     """Generate a plot using a multiple BacktestResults."""
+
+    name = ""
 
     @staticmethod
     @abstractmethod
@@ -130,60 +130,102 @@ class PricePlotSingle(SinglePlotGenerator):
 class PricePlotMultiple(DistributionalPlotGenerator):
     """Create Price plot from multiple Datasets"""
 
+    name = "Portfolio Value"
+
     @staticmethod
     def create(
-        backtest_results: BacktestResults, plot_params: PlotParameters
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
-        df = pd.read_csv(
-            "https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv"
-        )
-
         fig = go.Figure()
         # Create and style traces
-        fig.add_trace(
-            go.Scatter(
-                x=df["Date"],
-                y=df["AAPL.High"],
-                name="main",
-                line=dict(
-                    color=plot_params.line_colors[0],
-                    width=plot_params.line_width,
-                    dash=plot_params.line_styles[0],
-                ),
+        for i, result in enumerate(backtest_results):
+            df = result.sim_data
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df["Price"],
+                    name=f"Dataset {i}",
+                    line=dict(
+                        color=plot_params.line_colors[i % 3],
+                        width=plot_params.line_width,
+                        dash=plot_params.line_styles[i % 3],
+                    ),
+                )
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=df["Date"],
-                y=df["AAPL.Low"],
-                name="Low",
-                line=dict(
-                    color=plot_params.line_colors[1],
-                    width=plot_params.line_width,
-                    dash=plot_params.line_styles[1],
-                ),
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=df["Date"],
-                y=df["AAPL.Open"],
-                name="Open",
-                line=dict(
-                    color=plot_params.line_colors[2],
-                    width=plot_params.line_width,
-                    dash=plot_params.line_styles[2],
-                ),  # dash options include 'dash', 'dot', and 'dashdot'
-            )
-        )
-
-        # Should be able to update colors further here but I am unable
-        # colors = ['gold', 'mediumturquoise','lightgreen']
-        # fig.update_traces(hoverinfo='name', textfont_size=20,
-        #           marker=dict(autocolorscale=False, line=dict(color=colors, width=2))) #color=colors
-
         PlotParameters.update_plotly_fig(
-            plot_params, fig, "My title", "x_lbl", "y_lbl", "Legend"
+            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
+        )
+        return dp.Plot(fig)
+
+
+class DataPlot(DistributionalPlotGenerator):
+    """Create Price plot from multiple Datasets"""
+
+    name = "Candles vs Portfolio Value"
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        # fig = go.Figure()
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        # Create and style traces
+        for i, result in enumerate(backtest_results):
+            df = result.sim_data.tail(-1)
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df["Price"],
+                    name="Portfolio Value",
+                    line=dict(
+                        color=plot_params.line_colors[1],
+                        width=plot_params.line_width,
+                        dash=plot_params.line_styles[1],
+                    ),
+                    visible=(i == 0),
+                ),
+                secondary_y=False,
+            )
+            candles = list(result.data_dict.values())[0]
+            fig.add_trace(
+                go.Candlestick(
+                    x=df.index,
+                    open=candles["Open"],
+                    high=candles["High"],
+                    low=candles["Low"],
+                    close=candles["Close"],
+                    name="Candles",
+                    visible=(i == 0),
+                ),
+                secondary_y=True,
+            )
+        PlotParameters.update_plotly_fig(
+            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
+        )
+        visibles = [
+            [i // 2 == j for i in range(len(backtest_results) * 2)]
+            for j in range(len(backtest_results))
+        ]
+        fig.update_layout(
+            updatemenus=[
+                dict(
+                    active=0,
+                    buttons=[
+                        dict(
+                            label=f"Dataset {i}",
+                            method="update",
+                            args=[
+                                {
+                                    "visible": visibles[i],
+                                    "title": f"Dataset {i}",
+                                }
+                            ],
+                        )
+                        for i in range(len(backtest_results))
+                    ],
+                ),
+            ]
         )
         return dp.Plot(fig)

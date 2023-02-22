@@ -21,12 +21,13 @@ class MetricsGenerator(DataframeGeneratorMultiple):
         Returns:
             dict: dictionary of metrics
         """
+        index = backtest_results.sim_data.index
         price_series = backtest_results.sim_data.loc[:, "Price"]
         metrics: dict[str, float] = {}
 
         # General metrics
         pct_change = price_series.pct_change().dropna()
-        timedelta = price_series.index[1] - price_series.index[0]  # type: ignore
+        timedelta = index[1] - index[0]  # type: ignore
         per_year = pd.Timedelta(days=365) / timedelta
 
         # Sharpe Ratio
@@ -61,15 +62,15 @@ class MetricsGenerator(DataframeGeneratorMultiple):
 class TearSheet(DataframeGeneratorMultiple):
     """Summary metrics generator."""
 
+    name = "Tear Sheet"
+
     @staticmethod
     def _summary_metrics(metrics_df: pd.DataFrame) -> pd.DataFrame:
-        means = metrics_df.mean()
-        stds = metrics_df.std()
-        summary_df = pd.DataFrame(
-            [means, stds],
-            columns=["Mean", "Standard Deviation"],
-            index=[col_name for col_name in metrics_df.columns],
-        )
+        cols = {
+            "Mean": metrics_df.mean(),
+            "Standard Deviation": metrics_df.std(),
+        }
+        summary_df = pd.DataFrame.from_dict(cols)
         return summary_df
 
     @staticmethod

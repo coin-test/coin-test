@@ -52,7 +52,7 @@ class BacktestResults:
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
         )
-        self.sim_data.set_index("Timestamp")
+        self.sim_data.set_index("Timestamp", inplace=True)
         self.sim_data["Price"] = self.create_date_price_df(self.sim_data, composer)
 
     def save(self, path: str) -> None:
@@ -71,7 +71,7 @@ class BacktestResults:
 
         def value_func(x: pd.Series) -> float:
             return BacktestResults.value_from_portfolio(
-                x["Timestamp"], x["Portfolios"], composer  # type: ignore
+                x.name, x["Portfolios"], composer  # type: ignore
             )
 
         sim_price_data = sim_data.apply(value_func, axis=1)
@@ -88,7 +88,10 @@ class BacktestResults:
             if ticker == base_currency:
                 continue
 
-            asset_pair = AssetPair(base_currency, ticker)
+            asset_pair = AssetPair(ticker, base_currency)
+            if len(all_assets[asset_pair]) == 0:
+                continue
+
             conversion = all_assets[asset_pair]["Open"].iloc[0]
             total += conversion * money.qty
 
