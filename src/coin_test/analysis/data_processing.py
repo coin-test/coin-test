@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 import datapane as dp
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -19,6 +20,13 @@ class DataframeGenerator(ABC):
     @abstractmethod
     def create(backtest_results: BacktestResults) -> pd.DataFrame:
         """Create dataframe."""
+        df = pd.DataFrame(
+            {
+                "A": np.random.normal(-1, 1, 5000),
+                "B": np.random.normal(1, 2, 5000),
+            }
+        )
+        return df
 
 
 class DataframeGeneratorMultiple(ABC):
