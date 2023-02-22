@@ -95,7 +95,7 @@ def _gen_multiprocessed(
     main_to_worker = Queue()
     worker_to_main = Queue()
 
-    ctx = multiprocessing.get_context("spawn")
+    ctx = multiprocessing.get_context("fork")
     processes = [
         ctx.Process(
             target=_run_agent,
@@ -106,7 +106,6 @@ def _gen_multiprocessed(
                 tx_calculator,
                 starting_portfolio,
                 backtest_length,
-                output_folder,
             ),
             daemon=True,
         )
