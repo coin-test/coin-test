@@ -174,7 +174,7 @@ def test_gen_multiprocessed(mocker: MockerFixture) -> None:
         datasets, strategies, sc, tc, portfolio, length, n_parallel, output_folder
     )
 
-    orc.multiprocessing.get_context.assert_called_once_with("spawn")
+    orc.multiprocessing.get_context.assert_called_once_with("fork")
     assert len(mock_ctx.Process.call_args_list) == n_parallel
     process_calls = [
         call(
@@ -186,7 +186,6 @@ def test_gen_multiprocessed(mocker: MockerFixture) -> None:
                 tc,
                 portfolio,
                 length,
-                output_folder,
             ),
             daemon=True,
         )

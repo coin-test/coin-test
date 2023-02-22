@@ -179,15 +179,15 @@ def test_validate_split_valid_timestamp_index(
     valid_index = pd.Timestamp("2022-09-28T11")
 
     mocker.patch("coin_test.data.Dataset._calculate_split_index")
-    mocker.patch("coin_test.data.Dataset._dataset_from_split")
+    mocker.patch("coin_test.data.CustomDataset._dataset_from_split")
     Dataset._calculate_split_index.return_value = valid_index
-    Dataset._dataset_from_split.return_value = mock_datasets
+    CustomDataset._dataset_from_split.return_value = mock_datasets
 
     pre_df = dataset.df[:valid_index]
     post_df = dataset.df[valid_index:].tail(-1)
     pre, post = dataset.split()
 
-    call_args = Dataset._dataset_from_split.call_args_list
+    call_args = CustomDataset._dataset_from_split.call_args_list
     pd.testing.assert_frame_equal(pre_df, call_args[0][0][0])
     pd.testing.assert_frame_equal(post_df, call_args[1][0][0])
     assert call_args[0][0][1] == dataset
@@ -208,15 +208,15 @@ def test_validate_split_valid_integer_index(
     dataset = CustomDataset(hour_data_indexed_df, freq, pair)
 
     mocker.patch("coin_test.data.Dataset._calculate_split_index")
-    mocker.patch("coin_test.data.Dataset._dataset_from_split")
+    mocker.patch("coin_test.data.CustomDataset._dataset_from_split")
     Dataset._calculate_split_index.return_value = valid_index
-    Dataset._dataset_from_split.return_value = mock_datasets
+    CustomDataset._dataset_from_split.return_value = mock_datasets
 
     pre_df = dataset.df[:valid_index]
     post_df = dataset.df[valid_index:].tail(-1)
     pre, post = dataset.split()
 
-    call_args = Dataset._dataset_from_split.call_args_list
+    call_args = CustomDataset._dataset_from_split.call_args_list
     pd.testing.assert_frame_equal(pre_df, call_args[0][0][0])
     pd.testing.assert_frame_equal(post_df, call_args[1][0][0])
     assert call_args[0][0][1] == dataset

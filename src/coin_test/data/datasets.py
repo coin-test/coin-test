@@ -154,8 +154,8 @@ class Dataset(metaclass=DatasetMetaclass):
         pre_df = self.df[:index]
         post_df = self.df[index:].tail(-1)
 
-        pre_dataset = Dataset._dataset_from_split(pre_df, self)
-        post_dataset = Dataset._dataset_from_split(post_df, self)
+        pre_dataset = self._dataset_from_split(pre_df, self)
+        post_dataset = self._dataset_from_split(post_df, self)
         return pre_dataset, post_dataset
 
     @staticmethod
