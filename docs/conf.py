@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath("../src"))
 autodoc_mock_imports = ["numpy", "pandas", "croniter"]
 
 project = "coin-test"
-copyright = "2022, Olin SCOPE"
+copyright = "2023, Olin SCOPE"
 author = "Olin SCOPE"
 release = "0.1"
 
@@ -32,5 +32,5 @@ language = "python"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
