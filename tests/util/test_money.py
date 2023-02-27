@@ -28,7 +28,7 @@ def test_compute_equality() -> None:
 
 
 def test_compute_inequality() -> None:
-    """Accurately tests when two Money objects are equal."""
+    """Accurately tests when two Money objects are not equal."""
     example_ticker = Ticker("BTC")
     example_qty_1 = 12.5
     example_qty_2 = 500
