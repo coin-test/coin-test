@@ -72,7 +72,7 @@ def test_invalid_comparison() -> None:
     y = Money(example_ticker_2, example_qty_2)
 
     with pytest.raises(NotImplementedError):
-        assert x == example_ticker_1
+        assert x == example_ticker_1  # pyright: ignore
 
     with pytest.raises(ValueError):
         assert x > y
