@@ -1,8 +1,9 @@
 """Functions to build Datapane Locally."""
 
-from typing import Type
+from typing import Sequence, Type
 
 import datapane as dp
+import pandas as pd
 
 from .data_processing import (
     ConfidencePricePlot,
@@ -28,21 +29,30 @@ def _flatten_strategies(results: BacktestResults) -> str:
     return "-".join(results.strategy_names)
 
 
-def _get_strategies(results: list[BacktestResults]) -> list[str]:
+def _get_strategies(results: Sequence[BacktestResults]) -> list[str]:
     return sorted(list(set(_flatten_strategies(r) for r in results)))
 
 
+def _get_strategy_results(
+    results: Sequence[BacktestResults],
+) -> dict[str, list[BacktestResults]]:
+    strategies = _get_strategies(results)
+    strategy_results = {}
+    for strategy in strategies:
+        strategy_results[strategy] = []
+    for result in results:
+        strategy = _flatten_strategies(result)
+        strategy_results[strategy].append(result)
+    return strategy_results
+
+
 def _build_strategy_page(
-    results: list[BacktestResults],
     strategy_name: str,
+    results: list[BacktestResults],
     plot_params: PlotParameters,
 ) -> dp.Page:
-    strategy_results = [r for r in results if _flatten_strategies(r) == strategy_name]
-
-    tables = [(gen.name, gen.create(strategy_results)) for gen in STRATEGY_TABLES]
-    graphs = [
-        (gen.name, gen.create(strategy_results, plot_params)) for gen in STRATEGY_GRAPHS
-    ]
+    tables = [(gen.name, gen.create(results)) for gen in STRATEGY_TABLES]
+    graphs = [(gen.name, gen.create(results, plot_params)) for gen in STRATEGY_GRAPHS]
 
     blocks = []
     for name, table in tables:
@@ -55,6 +65,24 @@ def _build_strategy_page(
     page = dp.Page(
         title=strategy_name,
         blocks=blocks,
+    )
+    return page
+
+
+def _build_home_page(
+    strategy_results: dict[str, list[BacktestResults]], plot_params: PlotParameters
+) -> dp.Page:
+    metrics = {}
+    for strategy, results in strategy_results.items():
+        tear_sheet = TearSheet.create(results)
+        mean = tear_sheet["Mean"].round(2).astype(str)
+        std = tear_sheet["Standard Deviation"].round(2).astype(str)
+        metrics[strategy] = mean + " ± " + std
+    tear_sheet = pd.DataFrame.from_dict(metrics).transpose()
+
+    page = dp.Page(
+        title="Home",
+        blocks=["### Tear Sheet", tear_sheet],
     )
     return page
 
@@ -99,10 +127,12 @@ def build_datapane(results: list[BacktestResults]) -> None:
     """
     plot_params = PlotParameters()
 
-    strategies = _get_strategies(results)
-    strategy_pages = [_build_strategy_page(results, s, plot_params) for s in strategies]
-
-    page_list = strategy_pages
+    strategy_results = _get_strategy_results(results)
+    page_list = [_build_home_page(strategy_results, plot_params)]
+    page_list += [
+        _build_strategy_page(strategy, result, plot_params)
+        for strategy, result in strategy_results.items()
+    ]
     dashboard = dp.App(blocks=page_list)
 
     dashboard.save(path="report.html")
