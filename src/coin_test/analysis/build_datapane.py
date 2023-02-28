@@ -28,8 +28,8 @@ def _flatten_strategies(results: BacktestResults) -> str:
     return "-".join(results.strategy_names)
 
 
-def _get_strategies(results: list[BacktestResults]) -> set[str]:
-    return set(_flatten_strategies(r) for r in results)
+def _get_strategies(results: list[BacktestResults]) -> list[str]:
+    return sorted(list(set(_flatten_strategies(r) for r in results)))
 
 
 def _build_strategy_page(

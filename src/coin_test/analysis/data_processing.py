@@ -8,7 +8,6 @@ import datapane as dp
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from coin_test.backtest.backtest_results import BacktestResults
 
@@ -309,77 +308,5 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         )
         PlotParameters.update_plotly_fig(
             plot_params, fig, "", "Dataset Return", "Portfolio Return", "Legend"
-        )
-        return dp.Plot(fig)
-
-
-class DataPlot(DistributionalPlotGenerator):
-    """Create Price plot from multiple Datasets."""
-
-    name = "Candles vs Portfolio Value"
-
-    @staticmethod
-    def create(
-        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
-        """Create plot object."""
-        # fig = go.Figure()
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        # Create and style traces
-        for i, result in enumerate(backtest_results):
-            df = result.sim_data.tail(-1)
-            fig.add_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df["Price"],
-                    name="Portfolio Value",
-                    line=dict(
-                        color=plot_params.line_colors[1],
-                        width=plot_params.line_width,
-                        dash=plot_params.line_styles[1],
-                    ),
-                    visible=(i == 0),
-                ),
-                secondary_y=False,
-            )
-            candles = list(result.data_dict.values())[0]
-            fig.add_trace(
-                go.Candlestick(
-                    x=df.index,
-                    open=candles["Open"],
-                    high=candles["High"],
-                    low=candles["Low"],
-                    close=candles["Close"],
-                    name="Candles",
-                    visible=(i == 0),
-                ),
-                secondary_y=True,
-            )
-        PlotParameters.update_plotly_fig(
-            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
-        )
-        visibles = [
-            [i // 2 == j for i in range(len(backtest_results) * 2)]
-            for j in range(len(backtest_results))
-        ]
-        fig.update_layout(
-            updatemenus=[
-                dict(
-                    active=0,
-                    buttons=[
-                        dict(
-                            label=f"Dataset {i}",
-                            method="update",
-                            args=[
-                                {
-                                    "visible": visibles[i],
-                                    "title": f"Dataset {i}",
-                                }
-                            ],
-                        )
-                        for i in range(len(backtest_results))
-                    ],
-                ),
-            ]
         )
         return dp.Plot(fig)
