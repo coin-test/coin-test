@@ -1,6 +1,7 @@
 """Generate plots for analysis."""
 
 from abc import ABC, abstractmethod
+import math
 from typing import Sequence
 
 import datapane as dp
@@ -70,7 +71,7 @@ class PlotParameters:
     ) -> None:
         """Update Plotly figure."""
         fig.update_layout(
-            # title={"text": title, "font": plot_params.title_font},
+            title={"text": title, "font": plot_params.title_font},
             xaxis_title={"text": x_lbl, "font": plot_params.axes_font},
             yaxis_title={"text": y_lbl, "font": plot_params.axes_font},
             legend_title={"text": legend_title, "font": plot_params.legend_font},
@@ -239,6 +240,75 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
             plot_params, fig, "", "Time", "Returns", "Legend"
+        )
+        return dp.Plot(fig)
+
+
+class ReturnsHeatmapPlot(DistributionalPlotGenerator):
+    """Create strategy vs dataset returns heatmap."""
+
+    name = "Strategy vs Dataset Returns"
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        x = []
+        y = []
+        for result in backtest_results:
+            asset_value = list(result.data_dict.values())[0]["Open"]
+            asset_change = asset_value.iloc[-1] / asset_value[0]
+            x.append(asset_change)
+            portfolio_value = result.sim_data["Price"]
+            portfolio_change = portfolio_value.iloc[-1] / portfolio_value.iloc[0]
+            y.append(portfolio_change)
+
+        lb = math.floor(min(min(x), min(y)) * 10) / 10
+        ub = math.ceil(max(max(x), max(y)) * 10) / 10
+        step = 0.05
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y,
+                mode="markers",
+                showlegend=False,
+                marker=dict(
+                    symbol="circle",
+                    opacity=0.7,
+                    color="white",
+                    line=dict(width=1),
+                ),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[lb, ub],
+                y=[lb, ub],
+                mode="lines",
+                showlegend=False,
+                marker=dict(
+                    opacity=0.5,
+                    color="white",
+                ),
+            )
+        )
+        fig.add_trace(
+            go.Histogram2d(
+                x=x,
+                y=y,
+                autobinx=False,
+                xbins=dict(start=lb, end=ub, size=step),
+                ybins=dict(start=lb, end=ub, size=step),
+            )
+        )
+        fig.update_layout(
+            yaxis_range=[lb, ub],
+            xaxis_range=[lb, ub],
+        )
+        PlotParameters.update_plotly_fig(
+            plot_params, fig, "", "Dataset Return", "Portfolio Return", "Legend"
         )
         return dp.Plot(fig)
 

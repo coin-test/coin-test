@@ -10,6 +10,7 @@ from .data_processing import (
     DataframeGeneratorMultiple,
     DistributionalPlotGenerator,
     PlotParameters,
+    ReturnsHeatmapPlot,
 )
 from .tear_sheet import TearSheet
 from ..backtest import BacktestResults
@@ -19,6 +20,7 @@ STRATEGY_TABLES: list[Type[DataframeGeneratorMultiple]] = [TearSheet]
 STRATEGY_GRAPHS: list[Type[DistributionalPlotGenerator]] = [
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
+    ReturnsHeatmapPlot,
 ]
 
 
