@@ -95,7 +95,6 @@ def build_datapane(results: list[BacktestResults]) -> None:
     plot_params = PlotParameters()
 
     strategies = _get_strategies(results)
-    print(strategies)
     strategy_pages = [_build_strategy_page(results, s, plot_params) for s in strategies]
 
     page_list = strategy_pages
