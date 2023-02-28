@@ -161,7 +161,47 @@ class PricePlotMultiple(DistributionalPlotGenerator):
         return dp.Plot(fig)
 
 
-class PricePlotConfidence(DistributionalPlotGenerator):
+def _build_confidence_traces(
+    name: str,
+    df: pd.DataFrame,
+    plot_params: PlotParameters,
+) -> list[go.Scatter]:
+    mean = df.mean(axis=1)
+    std = df.std(axis=1)
+    upper = mean + std
+    lower = mean - std
+    return [
+        go.Scatter(
+            name=name,
+            x=df.index,
+            y=mean,
+            mode="lines",
+            line=dict(color=plot_params.line_colors[0]),
+        ),
+        go.Scatter(
+            name="70% Confidence Upper Bound",
+            x=df.index,
+            y=upper,
+            mode="lines",
+            marker=dict(color=plot_params.line_colors[1]),
+            line=dict(width=0),
+            showlegend=False,
+        ),
+        go.Scatter(
+            name="70% Confidence Lower Bound",
+            x=df.index,
+            y=lower,
+            marker=dict(color=plot_params.line_colors[1]),
+            line=dict(width=0),
+            mode="lines",
+            fillcolor="rgba(68, 68, 68, 0.3)",
+            fill="tonexty",
+            showlegend=False,
+        ),
+    ]
+
+
+class ConfidencePricePlot(DistributionalPlotGenerator):
     """Create Price plot with confidence band."""
 
     name = "Portfolio Value"
@@ -173,44 +213,32 @@ class PricePlotConfidence(DistributionalPlotGenerator):
         """Create plot object."""
         price_series = [results.sim_data["Price"] for results in backtest_results]
         price_df = pd.concat(price_series, axis=1)
+        traces = _build_confidence_traces("Portfolio Value", price_df, plot_params)
 
-        mean = price_df.mean(axis=1)
-        std = price_df.std(axis=1)
-        upper = mean + std
-        lower = mean - std
-
-        traces = [
-            go.Scatter(
-                name="Mean",
-                x=price_df.index,
-                y=mean,
-                mode="lines",
-                line=dict(color=plot_params.line_colors[0]),
-            ),
-            go.Scatter(
-                name="70% Confidence Upper Bound",
-                x=price_df.index,
-                y=upper,
-                mode="lines",
-                marker=dict(color=plot_params.line_colors[1]),
-                line=dict(width=0),
-                showlegend=False,
-            ),
-            go.Scatter(
-                name="70% Confidence Lower Bound",
-                x=price_df.index,
-                y=lower,
-                marker=dict(color=plot_params.line_colors[1]),
-                line=dict(width=0),
-                mode="lines",
-                fillcolor="rgba(68, 68, 68, 0.3)",
-                fill="tonexty",
-                showlegend=False,
-            ),
-        ]
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
             plot_params, fig, "", "Time", "Portfolio Value", "Legend"
+        )
+        return dp.Plot(fig)
+
+
+class ConfidenceReturnsPlot(DistributionalPlotGenerator):
+    """Create returns plot with confidence band."""
+
+    name = "Returns"
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        price_series = [results.sim_data["Price"] for results in backtest_results]
+        price_df = pd.concat(price_series, axis=1)
+        returns_df = price_df.pct_change()
+        traces = _build_confidence_traces("Returns", returns_df, plot_params)
+        fig = go.Figure(traces)
+        PlotParameters.update_plotly_fig(
+            plot_params, fig, "", "Time", "Returns", "Legend"
         )
         return dp.Plot(fig)
 
