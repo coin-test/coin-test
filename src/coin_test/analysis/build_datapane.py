@@ -6,17 +6,16 @@ import datapane as dp
 
 from .data_processing import (
     DataframeGeneratorMultiple,
-    DataPlot,
     DistributionalPlotGenerator,
     PlotParameters,
-    PricePlotMultiple,
+    PricePlotConfidence,
 )
 from .tear_sheet import TearSheet
 from ..backtest import BacktestResults
 
 
 STRATEGY_TABLES: list[Type[DataframeGeneratorMultiple]] = [TearSheet]
-STRATEGY_GRAPHS: list[Type[DistributionalPlotGenerator]] = [PricePlotMultiple, DataPlot]
+STRATEGY_GRAPHS: list[Type[DistributionalPlotGenerator]] = [PricePlotConfidence]
 
 
 def _flatten_strategies(results: BacktestResults) -> str:

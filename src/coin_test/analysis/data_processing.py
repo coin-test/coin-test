@@ -39,14 +39,15 @@ class PlotParameters:
 
     def __init__(
         self,
-        line_styles: list[str] = ["solid", "dash", "dot", "dashdot"],
-        line_colors: list[str] = ["firebrick", "blue", "rebeccapurple"],
+        line_styles: tuple[str, ...] = ("solid", "dash", "dot", "dashdot"),
+        line_colors: tuple[str, ...] = ("firebrick", "blue", "rebeccapurple"),
         label_font_color: str = "black",
         label_font_family: str = "Courier New, monospace",
         title_font_size: int = 18,
         axes_font_size: int = 10,
         line_width: int = 2,
     ) -> None:
+        """Initialize plot parameters."""
         self.line_styles = line_styles
         self.line_colors = line_colors
         self.line_width = line_width
@@ -67,7 +68,7 @@ class PlotParameters:
         y_lbl: str,
         legend_title: str = "",
     ) -> None:
-        """Update Plotly figure"""
+        """Update Plotly figure."""
         fig.update_layout(
             # title={"text": title, "font": plot_params.title_font},
             xaxis_title={"text": x_lbl, "font": plot_params.axes_font},
@@ -103,12 +104,13 @@ class DistributionalPlotGenerator(ABC):
 
 
 class PricePlotSingle(SinglePlotGenerator):
+    """Create price plot from single dataset."""
+
     @staticmethod
     def create(
         backtest_results: BacktestResults, plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
-
         df = pd.read_csv(
             "https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv"
         )
@@ -128,7 +130,7 @@ class PricePlotSingle(SinglePlotGenerator):
 
 
 class PricePlotMultiple(DistributionalPlotGenerator):
-    """Create Price plot from multiple Datasets"""
+    """Create Price plot from multiple Datasets."""
 
     name = "Portfolio Value"
 
@@ -159,8 +161,62 @@ class PricePlotMultiple(DistributionalPlotGenerator):
         return dp.Plot(fig)
 
 
+class PricePlotConfidence(DistributionalPlotGenerator):
+    """Create Price plot with confidence band."""
+
+    name = "Portfolio Value"
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        price_series = [results.sim_data["Price"] for results in backtest_results]
+        price_df = pd.concat(price_series, axis=1)
+
+        mean = price_df.mean(axis=1)
+        std = price_df.std(axis=1)
+        upper = mean + std
+        lower = mean - std
+
+        traces = [
+            go.Scatter(
+                name="Mean",
+                x=price_df.index,
+                y=mean,
+                mode="lines",
+                line=dict(color=plot_params.line_colors[0]),
+            ),
+            go.Scatter(
+                name="70% Confidence Upper Bound",
+                x=price_df.index,
+                y=upper,
+                mode="lines",
+                marker=dict(color=plot_params.line_colors[1]),
+                line=dict(width=0),
+                showlegend=False,
+            ),
+            go.Scatter(
+                name="70% Confidence Lower Bound",
+                x=price_df.index,
+                y=lower,
+                marker=dict(color=plot_params.line_colors[1]),
+                line=dict(width=0),
+                mode="lines",
+                fillcolor="rgba(68, 68, 68, 0.3)",
+                fill="tonexty",
+                showlegend=False,
+            ),
+        ]
+        fig = go.Figure(traces)
+        PlotParameters.update_plotly_fig(
+            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
+        )
+        return dp.Plot(fig)
+
+
 class DataPlot(DistributionalPlotGenerator):
-    """Create Price plot from multiple Datasets"""
+    """Create Price plot from multiple Datasets."""
 
     name = "Candles vs Portfolio Value"
 
