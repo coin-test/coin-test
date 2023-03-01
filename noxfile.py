@@ -77,12 +77,5 @@ def coverage(session: Session) -> None:
 @session(python=python_versions)
 def docs(session: Session) -> None:
     """Generate the docs."""
-    session.install(
-        "sphinx_autodoc_typehints",
-        "sphinx-rtd-theme",
-        "pandas",
-        "croniter",
-        "numpy",
-        "sphinx",
-    )
+    session.install("sphinx_autodoc_typehints", "sphinx-rtd-theme", "sphinx", ".")
     session.run("sphinx-build", "docs", "_build", "-W", "--keep-going")
