@@ -70,6 +70,7 @@ class ReturnsDatasetGenerator(DatasetGenerator):
             synthetic_df.index = period_index.copy()
             new_datasets.append(
                 self.DATASET_TYPE(
+                    f"dataset_{i}",
                     synthetic_df,
                     self.metadata.freq,
                     self.metadata.pair,

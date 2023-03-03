@@ -81,6 +81,7 @@ def test_dataset_generator_create_datasets(
     metadata = MetaData(pair, freq)
     mock_dataset.metadata = metadata
     mock_dataset.df = hour_data_indexed_df
+    mock_dataset.name = "dataset_0"
 
     gen = ReturnsDatasetGenerator(mock_dataset)
     timedelta = pd.Timedelta(hours=3)
@@ -93,9 +94,10 @@ def test_dataset_generator_create_datasets(
 
     assert len(dataset_params) == 2
 
-    (s_df, s_freq, s_pair), s_opts = dataset_params[0]
+    (s_name, s_df, s_freq, s_pair), s_opts = dataset_params[0]
 
     assert isinstance(s_df.index, pd.PeriodIndex)
+    assert s_name == mock_dataset.name
     assert s_freq == freq
     assert s_pair == pair
     assert s_opts == {"synthetic": True}

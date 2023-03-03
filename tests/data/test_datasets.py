@@ -17,6 +17,21 @@ def test_dataset_construction_fails() -> None:
         Dataset()
 
 
+def test_dataset_construction_fails_no_name(mocker: MockerFixture) -> None:
+    """Raise error when creating base class."""
+
+    class FakeDataset(Dataset):
+        def __init__(self, df: pd.DataFrame) -> None:
+            self.df = df
+            super().__init__()
+
+    mocker.patch("coin_test.data.Dataset._validate_df")
+    FakeDataset._validate_df.return_value = True
+
+    with pytest.raises(ValueError):
+        FakeDataset(Mock())
+
+
 def test_validate_df_correct(hour_data_indexed_df: pd.DataFrame) -> None:
     """Validate a correctly formatted df."""
     assert PriceDataset._validate_df(hour_data_indexed_df)
@@ -117,15 +132,16 @@ def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) 
     """Initialize correctly."""
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
-
+    name = "dataset_name"
     mocker.patch("coin_test.data.CustomDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
 
     CustomDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
 
-    dataset = CustomDataset(hour_data_df, freq, pair)
+    dataset = CustomDataset(name, hour_data_df, freq, pair)
 
+    assert dataset.name == name
     pd.testing.assert_frame_equal(dataset.df, hour_data_df)
     assert dataset.metadata.pair == pair
     assert dataset.metadata.freq == freq
@@ -144,7 +160,7 @@ def test_init_custom_dataset_invalid_df(
     CustomDataset._validate_df.return_value = False
 
     with pytest.raises(ValueError):
-        CustomDataset(simple_df, "H", AssetPair(Ticker("BTC"), Ticker("USDT")))
+        CustomDataset("", simple_df, "H", AssetPair(Ticker("BTC"), Ticker("USDT")))
 
 
 def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
@@ -160,7 +176,7 @@ def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     CustomDataset._validate_df.return_value = True
     processor.return_value = hour_data_df
 
-    dataset = CustomDataset(hour_data_df, freq, pair)
+    dataset = CustomDataset("", hour_data_df, freq, pair)
     processed_dataset = dataset.process([processor])
 
     assert dataset == processed_dataset
@@ -174,8 +190,15 @@ def test_validate_split_valid_timestamp_index(
     """Calculate split index correctly with Timestamp."""
     pair = AssetPair(Ticker("ETH"), Ticker("USDT"))
     freq = "H"
-    dataset = CustomDataset(hour_data_indexed_df, freq, pair)
+    dataset = CustomDataset("", hour_data_indexed_df, freq, pair)
     mock_datasets = Mock()
+    mock_datasets.name = "dataset_name"
+
+    pre_mock_dataset = mock_datasets
+    pre_mock_dataset.name += "_pre"
+    post_mock_dataset = mock_datasets
+    post_mock_dataset.name += "_post"
+
     valid_index = pd.Timestamp("2022-09-28T11")
 
     mocker.patch("coin_test.data.Dataset._calculate_split_index")
@@ -188,12 +211,12 @@ def test_validate_split_valid_timestamp_index(
     pre, post = dataset.split()
 
     call_args = CustomDataset._dataset_from_split.call_args_list
-    pd.testing.assert_frame_equal(pre_df, call_args[0][0][0])
-    pd.testing.assert_frame_equal(post_df, call_args[1][0][0])
-    assert call_args[0][0][1] == dataset
-    assert call_args[1][0][1] == dataset
-    assert pre == mock_datasets
-    assert post == mock_datasets
+    pd.testing.assert_frame_equal(pre_df, call_args[0][0][-2])
+    pd.testing.assert_frame_equal(post_df, call_args[1][0][-2])
+    assert call_args[0][0][-1] == dataset
+    assert call_args[1][0][-1] == dataset
+    assert pre == pre_mock_dataset
+    assert post == post_mock_dataset
 
 
 def test_validate_split_valid_integer_index(
@@ -205,7 +228,7 @@ def test_validate_split_valid_integer_index(
 
     valid_index = 5
     mock_datasets = Mock()
-    dataset = CustomDataset(hour_data_indexed_df, freq, pair)
+    dataset = CustomDataset("", hour_data_indexed_df, freq, pair)
 
     mocker.patch("coin_test.data.Dataset._calculate_split_index")
     mocker.patch("coin_test.data.CustomDataset._dataset_from_split")
@@ -217,10 +240,11 @@ def test_validate_split_valid_integer_index(
     pre, post = dataset.split()
 
     call_args = CustomDataset._dataset_from_split.call_args_list
-    pd.testing.assert_frame_equal(pre_df, call_args[0][0][0])
-    pd.testing.assert_frame_equal(post_df, call_args[1][0][0])
-    assert call_args[0][0][1] == dataset
-    assert call_args[1][0][1] == dataset
+
+    pd.testing.assert_frame_equal(pre_df, call_args[0][0][-2])
+    pd.testing.assert_frame_equal(post_df, call_args[1][0][-2])
+    assert call_args[0][0][-1] == dataset
+    assert call_args[1][0][-1] == dataset
     assert pre == mock_datasets
     assert post == mock_datasets
 
@@ -259,7 +283,7 @@ def test_calculate_split_index_invalid_args(
     """Raise ValueError when no arguments provided."""
     pair = AssetPair(Ticker("ETH"), Ticker("USDT"))
     freq = "H"
-    dataset = CustomDataset(hour_data_indexed_df, freq, pair)
+    dataset = CustomDataset("", hour_data_indexed_df, freq, pair)
 
     index = dataset.df.index
     timestamp_low = index[0].start_time - pd.Timedelta(2, "h")  # type: ignore
@@ -289,7 +313,7 @@ def test_calculate_split_index_valid_args(
     """Raise ValueError when no arguments provided."""
     pair = AssetPair(Ticker("ETH"), Ticker("USDT"))
     freq = "H"
-    dataset = CustomDataset(hour_data_indexed_df, freq, pair)
+    dataset = CustomDataset("", hour_data_indexed_df, freq, pair)
 
     timedelta = pd.Timedelta(5, "h")
     start_time = dataset.df.index[0].start_time  # type: ignore
@@ -318,7 +342,10 @@ def test_validate_customdataset_from_split(
     mock_dataset = Mock()
     mock_dataset.metadata.freq = "H"
     mock_dataset.metadata.pair = mock_asset_pair
-
-    dataset = PriceDataset._dataset_from_split(hour_data_indexed_df, mock_dataset)
+    split_name = "name"
+    dataset = PriceDataset._dataset_from_split(
+        split_name, hour_data_indexed_df, mock_dataset
+    )
 
     pd.testing.assert_frame_equal(dataset.df, hour_data_indexed_df)
+    assert dataset.name == split_name  # type: ignore
