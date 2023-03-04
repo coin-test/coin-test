@@ -81,7 +81,7 @@ def test_dataset_generator_create_datasets(
     metadata = MetaData(pair, freq)
     mock_dataset.metadata = metadata
     mock_dataset.df = hour_data_indexed_df
-    mock_dataset.name = "dataset_0"
+    mock_dataset.name = f"{ReturnsDatasetGenerator.__name__}_0"
 
     gen = ReturnsDatasetGenerator(mock_dataset)
     timedelta = pd.Timedelta(hours=3)
