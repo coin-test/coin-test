@@ -34,7 +34,7 @@ class SlippageCalculator(ABC):
 class ConstantSlippage(SlippageCalculator):
     """A Constant slippage Calculator."""
 
-    def __init__(self, basis_points: float) -> None:
+    def __init__(self, basis_points: float = 50.0) -> None:
         """Initialize a Constant SlippageCalculator.
 
         Args:
@@ -132,7 +132,7 @@ class TransactionFeeCalculator(ABC):
 class ConstantTransactionFeeCalculator(TransactionFeeCalculator):
     """Calculate Constant the transactions fees for a trade."""
 
-    def __init__(self, basis_points: float) -> None:
+    def __init__(self, basis_points: float = 50.0) -> None:
         """Initialize a Constant TransactionFeeCalculator.
 
         Args:
