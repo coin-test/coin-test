@@ -24,6 +24,8 @@ class DatasetMetaclass(type):
         instance = super().__call__(*args, **kwargs)
         if not hasattr(instance, "df"):
             raise ValueError("`df` not defined in Dataset!")
+        if not hasattr(instance, "name"):
+            raise ValueError("`name` not defined in Dataset!")
         return instance
 
 
@@ -139,6 +141,8 @@ class Dataset(metaclass=DatasetMetaclass):
         timestamp: pd.Timestamp | None = None,
         length: pd.Timedelta | None = None,
         percent: float | None = None,
+        pre_name: str = "_pre",
+        post_name: str = "_post",
     ) -> tuple["Dataset", "Dataset"]:
         """Split Dataset into Pre and Post split Datasets.
 
@@ -146,6 +150,8 @@ class Dataset(metaclass=DatasetMetaclass):
             timestamp: [Optional] Timestamp to split Dataset on
             length: [Optional] pd.Timedelta to specify length of the pre-split dataset
             percent: [Optional] float percentage of the data to split on
+            pre_name: Suffix to append to dataset name for pre section of the split
+            post_name: Suffix to append to dataset name for post section of the split
 
         Returns:
             tuple: Pre and post split datasets of the same type as the original dataset
@@ -154,13 +160,19 @@ class Dataset(metaclass=DatasetMetaclass):
         pre_df = self.df[:index]
         post_df = self.df[index:].tail(-1)
 
-        pre_dataset = self._dataset_from_split(pre_df, self)
-        post_dataset = self._dataset_from_split(post_df, self)
+        pre_dataset = self._dataset_from_split(
+            self.name + pre_name, pre_df, self  # type: ignore
+        )
+        post_dataset = self._dataset_from_split(
+            self.name + post_name, post_df, self  # type: ignore
+        )
         return pre_dataset, post_dataset
 
     @staticmethod
     @abstractmethod
-    def _dataset_from_split(df: pd.DataFrame, dataset: "Dataset") -> "Dataset":
+    def _dataset_from_split(
+        name: str, df: pd.DataFrame, dataset: "Dataset"
+    ) -> "Dataset":
         """Create Dataset from Dataframe and a corresponding Dataset."""
 
 
@@ -186,35 +198,45 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
         """The dataframe metadata."""
 
     @staticmethod
-    def _dataset_from_split(df: pd.DataFrame, dataset: "PriceDataset") -> Dataset:
+    def _dataset_from_split(
+        name: str, df: pd.DataFrame, dataset: "PriceDataset"
+    ) -> "PriceDataset":
         """Create Dataset from Dataframe and a corresponding PriceDataset.
 
         Args:
+            name: Name to be assigned to the new dataset
             df: pd.DataFrame To create a new dataset around
             dataset: Dataset to use for metadata
 
         Returns:
             Dataset: Datasets of the same type as the original dataset with the new df
         """
-        return CustomDataset(df, dataset.metadata.freq, dataset.metadata.pair)
+        return CustomDataset(name, df, dataset.metadata.freq, dataset.metadata.pair)
 
 
 class CustomDataset(PriceDataset):
     """Load a DataFrame in the expected format of price data."""
 
     def __init__(
-        self, df: pd.DataFrame, freq: str, pair: AssetPair, synthetic: bool = False
+        self,
+        name: str,
+        df: pd.DataFrame,
+        freq: str,
+        pair: AssetPair,
+        synthetic: bool = False,
     ) -> None:
         """Initialize a PriceDataLoader.
 
         Validate DataFrame format correctness and infer timestep interval.
 
         Args:
+            name: Name to be assigned to the new dataset
             df: DataFrame to load
             freq: Pandas period string representing price data interval
             pair: AssetPair represented in datal
             synthetic: Boolean indicating if this data is synthetic
         """
+        self.name = name
         self.df = self._add_period_index(df, freq)
         self._metadata = MetaData(pair, freq)
         self.synthetic = synthetic
