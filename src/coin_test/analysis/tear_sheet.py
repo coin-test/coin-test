@@ -4,7 +4,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from .data_processing import DataframeGeneratorMultiple
+from .data_processing import _get_strategy_results, DataframeGeneratorMultiple
 from ..backtest import BacktestResults
 
 
@@ -33,10 +33,6 @@ class MetricsGenerator(DataframeGeneratorMultiple):
         # Sharpe Ratio
         mean_return = pct_change.mean()
         std_return = pct_change.std()
-        # print(backtest_results.strategy_names)
-        # print(mean_return)
-        # print(std_return)
-        # input()
 
         metrics["Average Annual Return"] = mean_return * per_year
 
@@ -103,8 +99,38 @@ class TearSheet(DataframeGeneratorMultiple):
 
         Returns:
             DataFrame: DataFrame of summary metrics. Columns are "Mean" and
-            "Standard Deviation" and rows are metrics.
+                "Standard Deviation" and rows are metrics.
         """
         metrics_df = MetricsGenerator.create(backtest_results_list)
         summary_df = TearSheet._summary_metrics(metrics_df)
         return summary_df
+
+
+class SummaryTearSheet(DataframeGeneratorMultiple):
+    """Strategy level tear sheet."""
+
+    name = "Total Tear Sheet"
+
+    @staticmethod
+    def create(backtest_results_list: Sequence[BacktestResults]) -> pd.DataFrame:
+        """Generate strategy level summary metrics.
+
+        Args:
+            backtest_results_list: List of backtest results.
+
+        Returns:
+            DataFrame: DataFrame of summary metrics. Columns are metrics and
+                rows are strategies.
+        """
+        strategy_results = _get_strategy_results(backtest_results_list)
+        raw_metrics = {}
+        summary_metrics = {}
+        for strategy, results in strategy_results.items():
+            raw = MetricsGenerator.create(results)
+            raw_metrics[strategy] = raw
+            tear_sheet = TearSheet.create(results)
+            mean = tear_sheet["Mean"].round(2).astype(str)
+            std = tear_sheet["Standard Deviation"].round(2).astype(str)
+            summary_metrics[strategy] = mean + " ± " + std
+        tear_sheet = pd.DataFrame.from_dict(summary_metrics).transpose()
+        return tear_sheet

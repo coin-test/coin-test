@@ -12,6 +12,27 @@ import plotly.graph_objects as go
 from coin_test.backtest.backtest_results import BacktestResults
 
 
+def _flatten_strategies(results: BacktestResults) -> str:
+    return "-".join(results.strategy_names)
+
+
+def _get_strategies(results: Sequence[BacktestResults]) -> list[str]:
+    return sorted(list(set(_flatten_strategies(r) for r in results)))
+
+
+def _get_strategy_results(
+    results: Sequence[BacktestResults],
+) -> dict[str, list[BacktestResults]]:
+    strategies = _get_strategies(results)
+    strategy_results = {}
+    for strategy in strategies:
+        strategy_results[strategy] = []
+    for result in results:
+        strategy = _flatten_strategies(result)
+        strategy_results[strategy].append(result)
+    return strategy_results
+
+
 class DataframeGenerator(ABC):
     """Generate a pandas DataFrame using a single BacktestResults."""
 
@@ -253,6 +274,8 @@ class ConfidenceDataPlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
+        strategy_results = _get_strategy_results(backtest_results)
+        backtest_results = list(strategy_results.values())[0]
         dfs = []
         base_index = None
         for results in backtest_results:
