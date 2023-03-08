@@ -187,20 +187,27 @@ def _build_confidence_traces(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> list[go.Scatter]:
-    mean = df.mean(axis=1)
-    std = df.std(axis=1)
-    upper = mean + std
-    lower = mean - std
+    mid = df.mean(axis=1)
+    mid = df.quantile(0.5, axis=1)
+    upper = df.quantile(0.75, axis=1)
+    lower = df.quantile(0.25, axis=1)
     return [
         go.Scatter(
-            name=name,
+            name="Mean " + name,
             x=df.index,
-            y=mean,
+            y=mid,
             mode="lines",
             line=dict(color=plot_params.line_colors[0]),
         ),
         go.Scatter(
-            name="70% Confidence Upper Bound",
+            name="Median " + name,
+            x=df.index,
+            y=mid,
+            mode="lines",
+            line=dict(color=plot_params.line_colors[0]),
+        ),
+        go.Scatter(
+            name="75th Percentile",
             x=df.index,
             y=upper,
             mode="lines",
@@ -209,7 +216,7 @@ def _build_confidence_traces(
             showlegend=False,
         ),
         go.Scatter(
-            name="70% Confidence Lower Bound",
+            name="25th Percentile",
             x=df.index,
             y=lower,
             marker=dict(color=plot_params.line_colors[1]),
