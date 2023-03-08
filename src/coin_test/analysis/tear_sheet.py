@@ -33,17 +33,21 @@ class MetricsGenerator(DataframeGeneratorMultiple):
         # Sharpe Ratio
         mean_return = pct_change.mean()
         std_return = pct_change.std()
+        # print(backtest_results.strategy_names)
+        # print(mean_return)
+        # print(std_return)
+        # input()
 
         metrics["Average Annual Return"] = mean_return * per_year
 
         metrics["Sharpe Ratio"] = (mean_return * per_year) / (
-            std_return * per_year**0.5
+            std_return * per_year**0.5 + 1e-10
         )
 
         # Sortino Ratio
         neg_stddev = pct_change[pct_change < 0].std()
         metrics["Sortino Ratio"] = (mean_return * per_year) / (
-            neg_stddev * per_year**0.5
+            neg_stddev * per_year**0.5 + 1e-10
         )
 
         # Calmar Ratio
@@ -51,7 +55,9 @@ class MetricsGenerator(DataframeGeneratorMultiple):
         peak = cumilative_returns.expanding(min_periods=1).max()
         draw_downs = (cumilative_returns / peak) - 1
         metrics["Max Drawdown"] = abs(draw_downs.min())
-        metrics["Calmar Ratio"] = mean_return * per_year / metrics["Max Drawdown"]
+        metrics["Calmar Ratio"] = (
+            mean_return * per_year / (metrics["Max Drawdown"] + 1e-10)
+        )
 
         return metrics
 

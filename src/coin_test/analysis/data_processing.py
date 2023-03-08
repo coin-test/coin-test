@@ -243,6 +243,35 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         return dp.Plot(fig)
 
 
+class ConfidenceDataPlot(DistributionalPlotGenerator):
+    """Create data plot with confidence band."""
+
+    name = "Data"
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        dfs = []
+        base_index = None
+        for results in backtest_results:
+            index = results.sim_data.index
+            df = list(results.data_dict.values())[0]
+            df = df.loc[index[0] : index[-1]]["Open"]
+            if base_index is None:
+                base_index = df.index.to_timestamp()  # type: ignore
+            dfs.append(df.reset_index(drop=True))
+        data_df = pd.concat(dfs, axis=1)
+        data_df.set_index(base_index, inplace=True)
+        traces = _build_confidence_traces("Data", data_df, plot_params)
+        fig = go.Figure(traces)
+        PlotParameters.update_plotly_fig(
+            plot_params, fig, ConfidenceDataPlot.name, "Time", "Price", "Legend"
+        )
+        return dp.Plot(fig)
+
+
 class ReturnsHeatmapPlot(DistributionalPlotGenerator):
     """Create strategy vs dataset returns heatmap."""
 

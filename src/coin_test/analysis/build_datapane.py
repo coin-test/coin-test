@@ -1,11 +1,15 @@
 """Functions to build Datapane Locally."""
 
+import math
 from typing import Sequence, Type
 
 import datapane as dp
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from .data_processing import (
+    ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
     DataframeGeneratorMultiple,
@@ -13,7 +17,7 @@ from .data_processing import (
     PlotParameters,
     ReturnsHeatmapPlot,
 )
-from .tear_sheet import TearSheet
+from .tear_sheet import MetricsGenerator, TearSheet
 from ..backtest import BacktestResults
 
 
@@ -72,51 +76,58 @@ def _build_strategy_page(
 def _build_home_page(
     strategy_results: dict[str, list[BacktestResults]], plot_params: PlotParameters
 ) -> dp.Page:
-    metrics = {}
+    blocks = []
+    raw_metrics = {}
+    summary_metrics = {}
     for strategy, results in strategy_results.items():
+        raw = MetricsGenerator.create(results)
+        raw_metrics[strategy] = raw
         tear_sheet = TearSheet.create(results)
         mean = tear_sheet["Mean"].round(2).astype(str)
         std = tear_sheet["Standard Deviation"].round(2).astype(str)
-        metrics[strategy] = mean + " ± " + std
-    tear_sheet = pd.DataFrame.from_dict(metrics).transpose()
+        summary_metrics[strategy] = mean + " ± " + std
+    tear_sheet = pd.DataFrame.from_dict(summary_metrics).transpose()
+    blocks.extend(["### Tear Sheet", tear_sheet])
 
-    page = dp.Page(
-        title="Home",
-        blocks=["### Tear Sheet", tear_sheet],
+    raw_df = pd.concat(raw_metrics, axis=1).transpose()
+    raw_df = raw_df.swaplevel()
+    metrics = raw_df.index.get_level_values(0).unique()
+    fig = make_subplots(
+        rows=math.ceil(len(raw_df.groupby(level=0)) / 2),
+        cols=2,
+        subplot_titles=metrics,
     )
+    for i, metric in enumerate(metrics):
+        df = raw_df[raw_df.index.get_level_values(0) == metric]
+        df.index = df.index.get_level_values(1)
+        for strategy, data in df.iterrows():
+            fig.add_trace(
+                go.Violin(
+                    y=data.dropna(),
+                    name=strategy,
+                    legendgroup="test",
+                    scalemode="count",
+                ),
+                row=(i // 2) + 1,
+                col=(i % 2) + 1,
+            )
+    fig.update_layout(height=1024, width=512, showlegend=True)
+    blocks.append(dp.Plot(fig))
+
+    page = dp.Page(title="Home", blocks=blocks)
     return page
 
 
-# def _build_page(results: list[BacktestResults]) -> dp.Page:
-#     """Build a page based on a list of backtest results."""
-#     # if len(results) == 1:
-#     metrics = DataframeGenerator.create(results[0])
-#     page = dp.Page(
-#         # title=f"Results{''.join(results[0].strategy_names)} Metrics",
-#         blocks=[
-#             "### Metrics",
-#             dp.Group(metrics, metrics, columns=2),
-#         ],
-#     )
-
-#     return page
-# else:
-#     return dp.Page(
-#         title="Lol imagine having multi df support",
-#         blocks=[
-#             "### ...",
-#         ],
-#     )
-# Build cumulative Metrics
-
-
-# def _build_dataset_page(results: list[BacktestResults]) -> dp.Page:
-#     """Build page that contains the real test data/split."""
-#     raise NotImplementedError("Missing support for named datasets")
-
-
-# def _build_home_page() -> dp.Page:
-#     return _build_page([Mock()])  # dp.Page(dp.Text("Coin-test Dashboard"))
+def _build_data_page(
+    results: list[BacktestResults], plot_params: PlotParameters
+) -> dp.Page:
+    confidence_graph = ConfidenceDataPlot.create(results, plot_params)
+    blocks = [
+        "# Data",
+        confidence_graph,
+    ]
+    page = dp.Page(title="Data", blocks=blocks)
+    return page
 
 
 def build_datapane(results: list[BacktestResults]) -> None:
@@ -128,11 +139,15 @@ def build_datapane(results: list[BacktestResults]) -> None:
     plot_params = PlotParameters()
 
     strategy_results = _get_strategy_results(results)
-    page_list = [_build_home_page(strategy_results, plot_params)]
-    page_list += [
-        _build_strategy_page(strategy, result, plot_params)
-        for strategy, result in strategy_results.items()
-    ]
+    page_list = []
+    page_list.append(_build_home_page(strategy_results, plot_params))
+    page_list.append(_build_data_page(results, plot_params))
+    page_list.extend(
+        [
+            _build_strategy_page(strategy, result, plot_params)
+            for strategy, result in strategy_results.items()
+        ]
+    )
     dashboard = dp.App(blocks=page_list)
 
     dashboard.save(path="report.html")
