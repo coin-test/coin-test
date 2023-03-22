@@ -187,7 +187,7 @@ def _build_confidence_traces(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> list[go.Scatter]:
-    mid = df.mean(axis=1)
+    mean = df.mean(axis=1)
     mid = df.quantile(0.5, axis=1)
     upper = df.quantile(0.75, axis=1)
     lower = df.quantile(0.25, axis=1)
@@ -195,7 +195,7 @@ def _build_confidence_traces(
         go.Scatter(
             name="Mean " + name,
             x=df.index,
-            y=mid,
+            y=mean,
             mode="lines",
             line=dict(color=plot_params.line_colors[0]),
         ),
@@ -204,14 +204,14 @@ def _build_confidence_traces(
             x=df.index,
             y=mid,
             mode="lines",
-            line=dict(color=plot_params.line_colors[0]),
+            line=dict(color=plot_params.line_colors[1]),
         ),
         go.Scatter(
             name="75th Percentile",
             x=df.index,
             y=upper,
             mode="lines",
-            marker=dict(color=plot_params.line_colors[1]),
+            marker=dict(color=plot_params.line_colors[2]),
             line=dict(width=0),
             showlegend=False,
         ),
@@ -219,7 +219,7 @@ def _build_confidence_traces(
             name="25th Percentile",
             x=df.index,
             y=lower,
-            marker=dict(color=plot_params.line_colors[1]),
+            marker=dict(color=plot_params.line_colors[2]),
             line=dict(width=0),
             mode="lines",
             fillcolor="rgba(68, 68, 68, 0.3)",
@@ -245,7 +245,12 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
 
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
-            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
+            plot_params,
+            fig,
+            ConfidencePricePlot.name,
+            "Time",
+            "Portfolio Value",
+            "Legend",
         )
         return dp.Plot(fig)
 
@@ -266,7 +271,7 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         traces = _build_confidence_traces("Returns", returns_df, plot_params)
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
-            plot_params, fig, "", "Time", "Returns", "Legend"
+            plot_params, fig, ConfidenceReturnsPlot.name, "Time", "Returns", "Legend"
         )
         return dp.Plot(fig)
 
@@ -366,6 +371,11 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
             xaxis_range=[lb, ub],
         )
         PlotParameters.update_plotly_fig(
-            plot_params, fig, "", "Dataset Return", "Portfolio Return", "Legend"
+            plot_params,
+            fig,
+            ReturnsHeatmapPlot.name,
+            "Dataset Return",
+            "Portfolio Return",
+            "Legend",
         )
         return dp.Plot(fig)
