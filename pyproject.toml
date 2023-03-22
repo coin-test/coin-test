@@ -2,7 +2,7 @@
 name = "coin-test"
 version = "0.1.0"
 description = "Robust and rigorous backtesting framework for cryptocurrencies."
-authors = ["Eamon Ito-Fisher <eamon@itofisher.com>"]
+authors = ["Gati Aher <gativaher@gmail.com>", "Nathan Faber <ntfaber@gmail.com>", "Eamon Ito-Fisher <eamon@itofisher.com>", "Andrew Mascillaro <amascillaro@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "coin_test", from = "src"}]
