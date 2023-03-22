@@ -9,12 +9,11 @@ from .data_processing import (
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
-    DataframeGeneratorMultiple,
     DistributionalPlotGenerator,
     PlotParameters,
     ReturnsHeatmapPlot,
 )
-from .tear_sheet import SummaryTearSheet, TearSheet
+from .tables import DataframeGeneratorMultiple, SummaryTearSheet, TearSheet
 from ..backtest import BacktestResults
 
 

@@ -33,28 +33,6 @@ def _get_strategy_results(
     return strategy_results
 
 
-class DataframeGenerator(ABC):
-    """Generate a pandas DataFrame using a single BacktestResults."""
-
-    name = ""
-
-    @staticmethod
-    @abstractmethod
-    def create(backtest_results: BacktestResults) -> pd.DataFrame:
-        """Create dataframe."""
-
-
-class DataframeGeneratorMultiple(ABC):
-    """Generate a pandas DataFrame using a multiple BacktestResults."""
-
-    name = ""
-
-    @staticmethod
-    @abstractmethod
-    def create(backtest_results_list: Sequence[BacktestResults]) -> pd.DataFrame:
-        """Create dataframe."""
-
-
 class PlotParameters:
     """Plot parameters to pass to each plot."""
 

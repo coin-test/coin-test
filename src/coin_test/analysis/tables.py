@@ -1,11 +1,39 @@
 """Tear sheet class implementation."""
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Sequence
 
 import pandas as pd
 
-from .data_processing import _get_strategy_results, DataframeGeneratorMultiple
+from .data_processing import _get_strategy_results
 from ..backtest import BacktestResults
+
+
+def _to_percent(series: pd.Series) -> pd.Series:
+    percent = (series.round(2) * 100).astype(int)
+    return percent.astype(str) + "%"
+
+
+class DataframeGenerator(ABC):
+    """Generate a pandas DataFrame using a single BacktestResults."""
+
+    name = ""
+
+    @staticmethod
+    @abstractmethod
+    def create(backtest_results: BacktestResults) -> pd.DataFrame:
+        """Create dataframe."""
+
+
+class DataframeGeneratorMultiple(ABC):
+    """Generate a pandas DataFrame using a multiple BacktestResults."""
+
+    name = ""
+
+    @staticmethod
+    @abstractmethod
+    def create(backtest_results_list: Sequence[BacktestResults]) -> pd.DataFrame:
+        """Create dataframe."""
 
 
 class MetricsGenerator(DataframeGeneratorMultiple):
@@ -25,17 +53,16 @@ class MetricsGenerator(DataframeGeneratorMultiple):
         price_series = backtest_results.sim_data.loc[:, "Price"]
         metrics: dict[str, float] = {}
 
-        # General metrics
         pct_change = price_series.pct_change().dropna()
         timedelta = index[1] - index[0]  # type: ignore
         per_year = pd.Timedelta(days=365) / timedelta
 
-        # Sharpe Ratio
         mean_return = pct_change.mean()
-        std_return = pct_change.std()
 
         metrics["Average Annual Return"] = mean_return * per_year
 
+        # Sharpe Ratio
+        std_return = pct_change.std()
         metrics["Sharpe Ratio"] = (mean_return * per_year) / (
             std_return * per_year**0.5 + 1e-10
         )
@@ -77,18 +104,9 @@ class MetricsGenerator(DataframeGeneratorMultiple):
 
 
 class TearSheet(DataframeGeneratorMultiple):
-    """Summary metrics generator."""
+    """Single strategy metrics."""
 
     name = "Tear Sheet"
-
-    @staticmethod
-    def _summary_metrics(metrics_df: pd.DataFrame) -> pd.DataFrame:
-        cols = {
-            "Mean": metrics_df.mean(),
-            "Standard Deviation": metrics_df.std(),
-        }
-        summary_df = pd.DataFrame.from_dict(cols)
-        return summary_df
 
     @staticmethod
     def create(backtest_results_list: Sequence[BacktestResults]) -> pd.DataFrame:
@@ -102,18 +120,25 @@ class TearSheet(DataframeGeneratorMultiple):
                 "Standard Deviation" and rows are metrics.
         """
         metrics_df = MetricsGenerator.create(backtest_results_list)
-        summary_df = TearSheet._summary_metrics(metrics_df)
+        cols = {
+            "Mean": metrics_df.mean(),
+            "Standard Deviation": metrics_df.std(),
+        }
+        summary_df = pd.DataFrame.from_dict(cols)
+        for col in ("Mean", "Standard Deviation"):
+            summary_df[col] = _to_percent(summary_df[col])
+
         return summary_df
 
 
 class SummaryTearSheet(DataframeGeneratorMultiple):
-    """Strategy level tear sheet."""
+    """Multiple strategy metrics."""
 
     name = "Total Tear Sheet"
 
     @staticmethod
     def create(backtest_results_list: Sequence[BacktestResults]) -> pd.DataFrame:
-        """Generate strategy level summary metrics.
+        """Generate multiple strategy summary metrics.
 
         Args:
             backtest_results_list: List of backtest results.
@@ -129,8 +154,8 @@ class SummaryTearSheet(DataframeGeneratorMultiple):
             raw = MetricsGenerator.create(results)
             raw_metrics[strategy] = raw
             tear_sheet = TearSheet.create(results)
-            mean = tear_sheet["Mean"].round(2).astype(str)
-            std = tear_sheet["Standard Deviation"].round(2).astype(str)
+            mean = _to_percent(tear_sheet["Mean"])
+            std = _to_percent(tear_sheet["Standard Deviation"])
             summary_metrics[strategy] = mean + " ± " + std
         tear_sheet = pd.DataFrame.from_dict(summary_metrics).transpose()
         return tear_sheet
