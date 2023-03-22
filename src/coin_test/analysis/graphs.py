@@ -6,7 +6,6 @@ from typing import Sequence
 
 import datapane as dp
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 from coin_test.backtest.backtest_results import BacktestResults
@@ -100,64 +99,6 @@ class DistributionalPlotGenerator(ABC):
         backtest_results_list: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create distributional plot object."""
-
-
-class PricePlotSingle(SinglePlotGenerator):
-    """Create price plot from single dataset."""
-
-    @staticmethod
-    def create(
-        backtest_results: BacktestResults, plot_params: PlotParameters
-    ) -> dp.Plot:
-        """Create plot object."""
-        df = pd.read_csv(
-            "https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv"
-        )
-        fig = px.line(
-            x=df["Date"],
-            y=df["AAPL.High"],
-            color_discrete_sequence=px.colors.sequential.Plasma_r,
-        )
-        fig.update_layout(
-            title="Plot Title",
-            xaxis_title="X Axis Title",
-            yaxis_title="Y Axis Title",
-            legend_title="Legend Title",
-            font=plot_params.title_font,
-        )
-        return dp.Plot(fig)
-
-
-class PricePlotMultiple(DistributionalPlotGenerator):
-    """Create Price plot from multiple Datasets."""
-
-    name = "Portfolio Value"
-
-    @staticmethod
-    def create(
-        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
-        """Create plot object."""
-        fig = go.Figure()
-        # Create and style traces
-        for i, result in enumerate(backtest_results):
-            df = result.sim_data
-            fig.add_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df["Price"],
-                    name=f"Dataset {i}",
-                    line=dict(
-                        color=plot_params.line_colors[i % 3],
-                        width=plot_params.line_width,
-                        dash=plot_params.line_styles[i % 3],
-                    ),
-                )
-            )
-        PlotParameters.update_plotly_fig(
-            plot_params, fig, "", "Time", "Portfolio Value", "Legend"
-        )
-        return dp.Plot(fig)
 
 
 def _build_confidence_traces(
@@ -309,20 +250,6 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         ub = math.ceil(max(max(x), max(y)) * 10) / 10
         step = 0.05
         fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="markers",
-                showlegend=False,
-                marker=dict(
-                    symbol="circle",
-                    opacity=0.7,
-                    color="white",
-                    line=dict(width=1),
-                ),
-            )
-        )
         fig.add_trace(
             go.Scatter(
                 x=[lb, ub],

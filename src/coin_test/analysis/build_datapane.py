@@ -4,7 +4,7 @@ from typing import Sequence, Type
 
 import datapane as dp
 
-from .data_processing import (
+from .graphs import (
     _get_strategy_results,
     ConfidenceDataPlot,
     ConfidencePricePlot,
