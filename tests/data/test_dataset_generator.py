@@ -31,6 +31,24 @@ def test_chunked_dataset_generator_initialized(
     assert isinstance(gen.start, pd.Period)
 
 
+def test_returns_dataset_generator_initialized(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Initialize the ReturnsDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    gen = ReturnsDatasetGenerator(mock_dataset)
+
+    assert gen.dataset == mock_dataset
+    assert gen.metadata == metadata
+    assert gen.chunk_size == 1
+    assert isinstance(gen.start, pd.Period)
+
+
 def test_chunked_dataset_generator_err_on_initialization(
     hour_data_indexed_df: pd.DataFrame,
 ) -> None:

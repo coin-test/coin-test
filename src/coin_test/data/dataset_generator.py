@@ -77,20 +77,20 @@ class StitchedChunkDatasetGenerator(DatasetGenerator):
         return df
 
     @staticmethod
-    def unnormalize(normalized_df: pd.DataFrame) -> pd.DataFrame:
+    def unnormalize(synthetic_df: pd.DataFrame) -> pd.DataFrame:
         """Take a normalized Dataframe and unnormalize it.
 
         Essentially, convert columns from representing percentage increases
         to actual prices.
 
         Args:
-            normalized_df: Normalized Dataframe
+            synthetic_df: Normalized Dataframe
 
         Returns:
             pd.DataFrame: The unnormalized Dataframe
         """
         # Stack Open and Close data in one column
-        oc_stacked = normalized_df.melt(
+        oc_stacked = synthetic_df.melt(
             id_vars=["High", "Low"],
             value_vars=["Open", "Close"],
             var_name="O/C",
@@ -108,12 +108,12 @@ class StitchedChunkDatasetGenerator(DatasetGenerator):
         oc_unstacked = oc_stacked.pivot(index="index", columns="O/C", values="Price")
 
         # Put unstacked data in sample data
-        normalized_df["Open"] = oc_unstacked["Open"]
-        normalized_df["Close"] = oc_unstacked["Close"]
-        normalized_df["High"] = oc_unstacked["Open"] * normalized_df["High"]
-        normalized_df["Low"] = oc_unstacked["Open"] * normalized_df["Low"]
+        synthetic_df["Open"] = oc_unstacked["Open"]
+        synthetic_df["Close"] = oc_unstacked["Close"]
+        synthetic_df["High"] = oc_unstacked["Open"] * synthetic_df["High"]
+        synthetic_df["Low"] = oc_unstacked["Open"] * synthetic_df["Low"]
 
-        return normalized_df
+        return synthetic_df
 
     def generate(
         self,
@@ -139,7 +139,6 @@ class StitchedChunkDatasetGenerator(DatasetGenerator):
 
         period_index = self.create_index(self.start, timedelta, self.metadata.freq)
         num_rows = len(period_index)
-        print("num_rows in period_index", num_rows)
 
         new_datasets = []
         for i in range(n):
@@ -185,7 +184,7 @@ class StitchedChunkDatasetGenerator(DatasetGenerator):
         """
         # Select Chunk Length Windows
         chunks = tuple(df_norm.rolling(chunk_size))[chunk_size - 1 :]
-        print("\n\n".join(repr(x) for x in chunks))
+
         rows_per_chunk = len(chunks[0])
         num_chunks = ceil(num_rows / rows_per_chunk)
 
@@ -197,11 +196,9 @@ class StitchedChunkDatasetGenerator(DatasetGenerator):
         # shrink to size of dataset
         sampled_data = sampled_data.head(num_rows).reset_index(drop=True)
 
-        print(sampled_data)
-
         sampled_data.loc[0, "Open"] = starting_price
         unnormalized_df = ReturnsDatasetGenerator.unnormalize(sampled_data)
-        print(unnormalized_df)
+
         return unnormalized_df
 
 
@@ -213,30 +210,3 @@ class ReturnsDatasetGenerator(StitchedChunkDatasetGenerator):
     def __init__(self, dataset: "ReturnsDatasetGenerator.DATASET_TYPE") -> None:
         """Initialize a ResultsDatasetGenerator object."""
         super().__init__(dataset, chunk_size=1)
-
-    # @staticmethod
-    # def select_data(
-    #     df_norm: pd.DataFrame,
-    #     starting_price: float,
-    #     num_rows: int,
-    #     rng: np.random.Generator,
-    # ) -> pd.DataFrame:
-    #     """Take a normalized Dataframe and create a synthetic dataset from it.
-
-    #     Args:
-    #         df_norm: Normalized Dataframe of original data
-    #         starting_price: The first open price for the data
-    #         num_rows: The number of rows in the dataset
-    #         rng: A numpy random number generator
-
-    #     Returns:
-    #         pd.DataFrame: The synthetic dataset
-    #     """
-    #     # Select data
-    #     sampled_data = df_norm.sample(
-    #         n=num_rows, replace=True, random_state=rng
-    #     ).reset_index(drop=True)
-    #     sampled_data.loc[0, "Open"] = starting_price
-
-    #     unnormalized_df = ReturnsDatasetGenerator.unnormalize(sampled_data)
-    #     return unnormalized_df
