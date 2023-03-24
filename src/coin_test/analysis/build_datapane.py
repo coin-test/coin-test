@@ -39,10 +39,14 @@ def _build_strategy_page(
     blocks = [
         "# " + strategy_name,
         "## Tables",
+        "### Tear Sheet",
         tear_sheet,
         "## Graphs",
+        "### Portfolio Value Over Time",
         confidence_price,
+        "### Portfolio Return Over Time",
         confidence_returns,
+        "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
     ]
     page = dp.Page(
@@ -68,7 +72,8 @@ def _build_home_page(
     tear_sheet = SummaryTearSheet.create(results)
     blocks = [
         "# Home",
-        "### Strategy Metrics",
+        "## Strategy Metrics",
+        "### Tear Sheet",
         tear_sheet,
     ]
     page = dp.Page(title="Home", blocks=blocks)
@@ -81,6 +86,7 @@ def _build_data_page(
     confidence_graph = ConfidenceDataPlot.create(results, plot_params)
     blocks = [
         "# Data",
+        "### Asset Value Over Time",
         confidence_graph,
     ]
     page = dp.Page(title="Data", blocks=blocks)

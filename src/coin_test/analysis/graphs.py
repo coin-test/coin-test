@@ -6,7 +6,9 @@ from typing import Sequence
 
 import datapane as dp
 import pandas as pd
+from plotly.colors import n_colors
 import plotly.graph_objects as go
+
 
 from coin_test.backtest.backtest_results import BacktestResults
 
@@ -38,7 +40,11 @@ class PlotParameters:
     def __init__(
         self,
         line_styles: tuple[str, ...] = ("solid", "dash", "dot", "dashdot"),
-        line_colors: tuple[str, ...] = ("firebrick", "blue", "rebeccapurple"),
+        line_colors: tuple[str, ...] = (
+            "rgb(5, 200, 200)",
+            "rgb(200, 10, 10)",
+            "rgb(150, 10, 150)",
+        ),
         label_font_color: str = "black",
         label_font_family: str = "Courier New, monospace",
         title_font_size: int = 18,
@@ -61,7 +67,7 @@ class PlotParameters:
     def update_plotly_fig(
         plot_params: "PlotParameters",
         fig: go.Figure,
-        title: str,
+        title: str | None,
         x_lbl: str,
         y_lbl: str,
         legend_title: str = "",
@@ -97,16 +103,16 @@ class DistributionalPlotGenerator(ABC):
         """Create distributional plot object."""
 
 
-def _build_confidence_traces(
+def _build_percentiles(
     name: str,
     df: pd.DataFrame,
     plot_params: PlotParameters,
-) -> list[go.Scatter]:
+) -> go.Figure:
     mean = df.mean(axis=1)
     mid = df.quantile(0.5, axis=1)
     upper = df.quantile(0.75, axis=1)
     lower = df.quantile(0.25, axis=1)
-    return [
+    traces = [
         go.Scatter(
             name="Mean " + name,
             x=df.index,
@@ -142,6 +148,94 @@ def _build_confidence_traces(
             showlegend=False,
         ),
     ]
+    fig = go.Figure(traces)
+    PlotParameters.update_plotly_fig(
+        plot_params,
+        fig,
+        "Percentiles",
+        "Time",
+        "Portfolio Value",
+        "Legend",
+    )
+    return fig
+
+
+def _build_ridgeline(
+    df: pd.DataFrame,
+    plot_params: PlotParameters,
+) -> list[go.Scatter]:
+    colors = n_colors(
+        plot_params.line_colors[0],
+        plot_params.line_colors[1],
+        len(df),
+        colortype="rgb",
+    )
+    df["colors"] = colors
+    index = df.index
+    df = df.reset_index(drop=True)
+
+    def _make_ridgeline(series: pd.Series) -> go.Violin:
+        color = series.iloc[-1]
+        series = series.iloc[:-1]
+        return go.Violin(
+            y=series, name=str(series.name), line_color=color, showlegend=False
+        )
+
+    traces = df.apply(_make_ridgeline, axis=1).to_list()
+    fig = go.Figure(traces)
+    fig.update_traces(width=3, orientation="v", side="positive", points=False)
+    fig.update_layout(
+        xaxis_showgrid=False,
+        xaxis_zeroline=False,
+        violingroupgap=1,
+    )
+
+    tickvals = [0, len(df)]
+    ticktext = [str(index[0]), str(index[-1])]
+    fig.update_xaxes(tickvals=tickvals, ticktext=ticktext)
+
+    colorbar_trace = go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
+        showlegend=False,
+        marker=dict(
+            colorscale=[[0, colors[0]], [1, colors[-1]]],
+            showscale=True,
+            cmin=-1,
+            cmax=1,
+            colorbar=dict(
+                thickness=5,
+                tickvals=[-1, 1],
+                ticktext=[str(index[0]), str(index[-1])],
+                outlinewidth=0,
+            ),
+        ),
+        hoverinfo="none",
+    )
+    fig.add_trace(colorbar_trace)
+
+    PlotParameters.update_plotly_fig(
+        plot_params,
+        fig,
+        "Ridgeplot",
+        "Time",
+        "Portfolio Value",
+    )
+    return fig
+
+
+def _build_distributions_selection(
+    name: str,
+    df: pd.DataFrame,
+    plot_params: PlotParameters,
+) -> dp.Select:
+    band_fig = _build_percentiles(name, df, plot_params)
+    ridge_fig = _build_ridgeline(df, plot_params)
+    return dp.Select(
+        dp.Plot(band_fig, label="Percentiles"),
+        dp.Plot(ridge_fig, label="Ridge Plot"),
+    )
 
 
 class ConfidencePricePlot(DistributionalPlotGenerator):
@@ -154,18 +248,7 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
         """Create plot object."""
         price_series = [results.sim_data["Price"] for results in backtest_results]
         price_df = pd.concat(price_series, axis=1)
-        traces = _build_confidence_traces("Portfolio Value", price_df, plot_params)
-
-        fig = go.Figure(traces)
-        PlotParameters.update_plotly_fig(
-            plot_params,
-            fig,
-            "Portfolio Value Over Time",
-            "Time",
-            "Portfolio Value",
-            "Legend",
-        )
-        return dp.Plot(fig)
+        return _build_distributions_selection("Portfolio Value", price_df, plot_params)
 
 
 class ConfidenceReturnsPlot(DistributionalPlotGenerator):
@@ -179,12 +262,9 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         price_series = [results.sim_data["Price"] for results in backtest_results]
         price_df = pd.concat(price_series, axis=1)
         returns_df = price_df.pct_change()
-        traces = _build_confidence_traces("Returns", returns_df, plot_params)
-        fig = go.Figure(traces)
-        PlotParameters.update_plotly_fig(
-            plot_params, fig, "Returns Over Time", "Time", "Returns", "Legend"
+        return _build_distributions_selection(
+            "Portfolio Return Over Time", returns_df, plot_params
         )
-        return dp.Plot(fig)
 
 
 class ConfidenceDataPlot(DistributionalPlotGenerator):
@@ -208,12 +288,9 @@ class ConfidenceDataPlot(DistributionalPlotGenerator):
             dfs.append(df.reset_index(drop=True))
         data_df = pd.concat(dfs, axis=1)
         data_df.set_index(base_index, inplace=True)
-        traces = _build_confidence_traces("Data", data_df, plot_params)
-        fig = go.Figure(traces)
-        PlotParameters.update_plotly_fig(
-            plot_params, fig, "Asset Price Over Time", "Time", "Price", "Legend"
+        return _build_distributions_selection(
+            "Asset Value Over Time", data_df, plot_params
         )
-        return dp.Plot(fig)
 
 
 class ReturnsHeatmapPlot(DistributionalPlotGenerator):
@@ -266,7 +343,8 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         PlotParameters.update_plotly_fig(
             plot_params,
             fig,
-            "Strategy vs Dataset Returns" "Dataset Return",
+            None,
+            "Dataset Return",
             "Portfolio Return",
             "Legend",
         )
