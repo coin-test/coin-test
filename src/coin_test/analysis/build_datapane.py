@@ -1,6 +1,6 @@
 """Functions to build Datapane Locally."""
 
-from typing import Sequence, Type
+from typing import Sequence
 
 import datapane as dp
 
@@ -9,20 +9,11 @@ from .graphs import (
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
-    DistributionalPlotGenerator,
     PlotParameters,
     ReturnsHeatmapPlot,
 )
-from .tables import DataframeGeneratorMultiple, SummaryTearSheet, TearSheet
+from .tables import SummaryTearSheet, TearSheet
 from ..backtest import BacktestResults
-
-
-STRATEGY_TABLES: list[Type[DataframeGeneratorMultiple]] = [TearSheet]
-STRATEGY_GRAPHS: list[Type[DistributionalPlotGenerator]] = [
-    ConfidencePricePlot,
-    ConfidenceReturnsPlot,
-    ReturnsHeatmapPlot,
-]
 
 
 def _build_strategy_page(
