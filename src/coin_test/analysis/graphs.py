@@ -154,16 +154,17 @@ def _build_percentiles(
         fig,
         "Percentiles",
         "Time",
-        "Portfolio Value",
+        name,
         "Legend",
     )
     return fig
 
 
 def _build_ridgeline(
+    name: str,
     df: pd.DataFrame,
     plot_params: PlotParameters,
-) -> list[go.Scatter]:
+) -> go.Figure:
     colors = n_colors(
         plot_params.line_colors[0],
         plot_params.line_colors[1],
@@ -177,13 +178,17 @@ def _build_ridgeline(
     def _make_ridgeline(series: pd.Series) -> go.Violin:
         color = series.iloc[-1]
         series = series.iloc[:-1]
-        return go.Violin(
-            y=series, name=str(series.name), line_color=color, showlegend=False
-        )
+        return go.Violin(y=series, name=str(series.name), line_color=color)
 
     traces = df.apply(_make_ridgeline, axis=1).to_list()
     fig = go.Figure(traces)
-    fig.update_traces(width=3, orientation="v", side="positive", points=False)
+    fig.update_traces(
+        width=5,
+        orientation="v",
+        side="positive",
+        points=False,
+        showlegend=False,
+    )
     fig.update_layout(
         xaxis_showgrid=False,
         xaxis_zeroline=False,
@@ -218,9 +223,36 @@ def _build_ridgeline(
     PlotParameters.update_plotly_fig(
         plot_params,
         fig,
-        "Ridgeplot",
+        "Ridge Plot",
         "Time",
-        "Portfolio Value",
+        name,
+    )
+    return fig
+
+
+def _build_lines(
+    name: str,
+    df: pd.DataFrame,
+    plot_params: PlotParameters,
+) -> go.Figure:
+    def _make_lines(series: pd.Series) -> go.Scatter:
+        return go.Scatter(
+            y=series,
+            x=df.index,
+            opacity=0.1,
+            mode="lines",
+            marker=dict(color=plot_params.line_colors[0]),
+            showlegend=False,
+        )
+
+    traces = df.apply(_make_lines, axis=0).to_list()
+    fig = go.Figure(traces)
+    PlotParameters.update_plotly_fig(
+        plot_params,
+        fig,
+        "Line Plot",
+        "Time",
+        name,
     )
     return fig
 
@@ -230,11 +262,17 @@ def _build_distributions_selection(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> dp.Select:
+    min_price, max_price = df.to_numpy().min() * 0.9, df.to_numpy().max() * 1.1
     band_fig = _build_percentiles(name, df, plot_params)
-    ridge_fig = _build_ridgeline(df, plot_params)
+    ridge_fig = _build_ridgeline(name, df, plot_params)
+    lines_fig = _build_lines(name, df, plot_params)
+    band_fig.update_yaxes(range=[min_price, max_price])
+    ridge_fig.update_yaxes(range=[min_price, max_price])
+    lines_fig.update_yaxes(range=[min_price, max_price])
     return dp.Select(
         dp.Plot(band_fig, label="Percentiles"),
         dp.Plot(ridge_fig, label="Ridge Plot"),
+        dp.Plot(lines_fig, label="Line Plot"),
     )
 
 
@@ -304,12 +342,17 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         x = []
         y = []
         for result in backtest_results:
-            asset_value = list(result.data_dict.values())[0]["Open"]
-            asset_change = asset_value.iloc[-1] / asset_value[0]
-            x.append(asset_change)
             portfolio_value = result.sim_data["Price"]
             portfolio_change = portfolio_value.iloc[-1] / portfolio_value.iloc[0]
             y.append(portfolio_change)
+            trading_start = portfolio_value.index[0]
+            trading_end = portfolio_value.index[-1]
+            asset_value = list(result.data_dict.values())[0]["Open"]
+            asset_change = (
+                asset_value[trading_end:trading_end].iloc[0]
+                / asset_value[trading_start:trading_start].iloc[0]
+            )
+            x.append(asset_change)
 
         lb = math.floor(min(min(x), min(y)) * 10) / 10
         ub = math.ceil(max(max(x), max(y)) * 10) / 10

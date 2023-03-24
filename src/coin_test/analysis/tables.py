@@ -120,12 +120,9 @@ class TearSheet(DataframeGeneratorMultiple):
         }
 
         def _round(series: pd.Series) -> str:
-            index_val = series.name
+            # index_val = series.name
             metric_val = series.iloc[0]
-            if "%" in index_val:  # type: ignore
-                metric_val = int(metric_val)
-            else:
-                metric_val = round(metric_val, 2)
+            metric_val = round(metric_val, 2)
             return str(metric_val)
 
         cols = {k: pd.DataFrame(s).apply(_round, axis=1) for k, s in cols.items()}
