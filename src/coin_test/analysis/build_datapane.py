@@ -30,17 +30,21 @@ def _build_strategy_page(
     results: Sequence[BacktestResults],
     plot_params: PlotParameters,
 ) -> dp.Page:
-    tables = [(gen.name, gen.create(results)) for gen in STRATEGY_TABLES]
-    graphs = [(gen.name, gen.create(results, plot_params)) for gen in STRATEGY_GRAPHS]
+    tear_sheet = TearSheet.create(results)
 
-    blocks = []
-    for name, table in tables:
-        blocks.append("### " + name)
-        blocks.append(table)
-    for name, graph in graphs:
-        blocks.append("### " + name)
-        blocks.append(graph)
+    confidence_price = ConfidencePricePlot.create(results, plot_params)
+    confidence_returns = ConfidenceReturnsPlot.create(results, plot_params)
+    returns_heatmap = ReturnsHeatmapPlot.create(results, plot_params)
 
+    blocks = [
+        "# " + strategy_name,
+        "## Tables",
+        tear_sheet,
+        "## Graphs",
+        confidence_price,
+        confidence_returns,
+        returns_heatmap,
+    ]
     page = dp.Page(
         title=strategy_name,
         blocks=blocks,

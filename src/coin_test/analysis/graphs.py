@@ -78,8 +78,6 @@ class PlotParameters:
 class SinglePlotGenerator(ABC):
     """Generate a plot using a single BacktestResults."""
 
-    name = ""
-
     @staticmethod
     @abstractmethod
     def create(
@@ -90,8 +88,6 @@ class SinglePlotGenerator(ABC):
 
 class DistributionalPlotGenerator(ABC):
     """Generate a plot using a multiple BacktestResults."""
-
-    name = ""
 
     @staticmethod
     @abstractmethod
@@ -151,8 +147,6 @@ def _build_confidence_traces(
 class ConfidencePricePlot(DistributionalPlotGenerator):
     """Create Price plot with confidence band."""
 
-    name = "Portfolio Value"
-
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
@@ -166,7 +160,7 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
         PlotParameters.update_plotly_fig(
             plot_params,
             fig,
-            ConfidencePricePlot.name,
+            "Portfolio Value Over Time",
             "Time",
             "Portfolio Value",
             "Legend",
@@ -176,8 +170,6 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
 
 class ConfidenceReturnsPlot(DistributionalPlotGenerator):
     """Create returns plot with confidence band."""
-
-    name = "Returns"
 
     @staticmethod
     def create(
@@ -190,15 +182,13 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         traces = _build_confidence_traces("Returns", returns_df, plot_params)
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
-            plot_params, fig, ConfidenceReturnsPlot.name, "Time", "Returns", "Legend"
+            plot_params, fig, "Returns Over Time", "Time", "Returns", "Legend"
         )
         return dp.Plot(fig)
 
 
 class ConfidenceDataPlot(DistributionalPlotGenerator):
     """Create data plot with confidence band."""
-
-    name = "Data"
 
     @staticmethod
     def create(
@@ -221,15 +211,13 @@ class ConfidenceDataPlot(DistributionalPlotGenerator):
         traces = _build_confidence_traces("Data", data_df, plot_params)
         fig = go.Figure(traces)
         PlotParameters.update_plotly_fig(
-            plot_params, fig, ConfidenceDataPlot.name, "Time", "Price", "Legend"
+            plot_params, fig, "Asset Price Over Time", "Time", "Price", "Legend"
         )
         return dp.Plot(fig)
 
 
 class ReturnsHeatmapPlot(DistributionalPlotGenerator):
     """Create strategy vs dataset returns heatmap."""
-
-    name = "Strategy vs Dataset Returns"
 
     @staticmethod
     def create(
@@ -278,8 +266,7 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         PlotParameters.update_plotly_fig(
             plot_params,
             fig,
-            ReturnsHeatmapPlot.name,
-            "Dataset Return",
+            "Strategy vs Dataset Returns" "Dataset Return",
             "Portfolio Return",
             "Legend",
         )
