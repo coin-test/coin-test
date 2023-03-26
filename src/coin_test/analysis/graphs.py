@@ -251,11 +251,13 @@ def _build_lines(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> go.Figure:
+    opacity = 1 / len(df.columns) * 5
+
     def _make_lines(series: pd.Series) -> go.Scatter:
         return go.Scatter(
             y=series,
             x=df.index,
-            opacity=0.1,
+            opacity=opacity,
             mode="lines",
             marker=dict(color=plot_params.line_colors[0]),
             showlegend=False,
@@ -416,6 +418,7 @@ def _build_signal_traces(
     trades: pd.Series,
     lookback: pd.Timedelta,
     plot_params: PlotParameters,
+    opacity: float,
 ) -> list[go.Scatter]:
     num_trades = trades.apply(len)
     trade_times = backtest_results.sim_data.index[num_trades >= 1]
@@ -435,7 +438,7 @@ def _build_signal_traces(
     def _build_traces(sliced_data: pd.Series) -> go.Scatter:
         return go.Scatter(
             y=sliced_data.y,
-            opacity=0.1,
+            opacity=opacity,
             mode="lines",
             marker=dict(color=plot_params.line_colors[0]),
             showlegend=False,
@@ -457,6 +460,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
         buy_traces, sell_traces = [], []
         lookback = max(backtest_results[0].strategy_lookbacks)
+        opacity = 1 / len(backtest_results)
         for results in backtest_results:
             trades = results.sim_data["Trades"]
 
@@ -465,7 +469,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
             buys = trades.apply(_get_buy)
             buy_traces.extend(
-                _build_signal_traces(results, buys, lookback, plot_params)
+                _build_signal_traces(results, buys, lookback, plot_params, opacity)
             )
 
             def _get_sell(trades: list[TradeRequest]) -> list[TradeRequest]:
@@ -473,7 +477,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
             sells = trades.apply(_get_sell)
             sell_traces.extend(
-                _build_signal_traces(results, sells, lookback, plot_params)
+                _build_signal_traces(results, sells, lookback, plot_params, opacity)
             )
 
         buy_fig = go.Figure(buy_traces)
