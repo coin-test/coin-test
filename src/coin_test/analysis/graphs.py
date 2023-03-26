@@ -9,8 +9,20 @@ import pandas as pd
 from plotly.colors import n_colors
 import plotly.graph_objects as go
 
-
+from coin_test.backtest import TradeRequest
 from coin_test.backtest.backtest_results import BacktestResults
+from coin_test.util import Side
+
+
+def _get_lims(
+    figs: Sequence[go.Figure],
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    x_vals, y_vals = [], []
+    for fig in figs:
+        full_fig = fig.full_figure_for_development(warn=False)
+        x_vals.extend(full_fig.layout.xaxis.range)
+        y_vals.extend(full_fig.layout.yaxis.range)
+    return (min(x_vals), max(x_vals)), (min(y_vals), max(y_vals))
 
 
 def _flatten_strategies(results: BacktestResults) -> str:
@@ -192,7 +204,6 @@ def _build_ridgeline(
     fig.update_layout(
         xaxis_showgrid=False,
         xaxis_zeroline=False,
-        violingroupgap=1,
     )
 
     tickvals = [0, len(df)]
@@ -216,7 +227,7 @@ def _build_ridgeline(
                 outlinewidth=0,
             ),
         ),
-        hoverinfo="none",
+        hoverinfo="skip",
     )
     fig.add_trace(colorbar_trace)
 
@@ -243,6 +254,7 @@ def _build_lines(
             mode="lines",
             marker=dict(color=plot_params.line_colors[0]),
             showlegend=False,
+            hoverinfo="skip",
         )
 
     traces = df.apply(_make_lines, axis=0).to_list()
@@ -392,3 +404,95 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
             "Legend",
         )
         return dp.Plot(fig)
+
+
+def _build_signal_traces(
+    backtest_results: BacktestResults,
+    trades: pd.Series,
+    lookback: pd.Timedelta,
+    plot_params: PlotParameters,
+) -> list[go.Scatter]:
+    num_trades = trades.apply(len)
+    trade_times = backtest_results.sim_data.index[num_trades >= 1]
+    df = list(backtest_results.data_dict.values())[0]
+
+    def _slice_data(timestamp: pd.Timestamp, df: pd.DataFrame = df) -> pd.Series:
+        ret = pd.Series(dtype=object)
+        y = df[timestamp - lookback : timestamp + lookback]
+        x = y.index
+        y = y["Open"].reset_index(drop=True)
+        ret["x"] = x
+        ret["y"] = y / y[0]
+        return ret
+
+    sliced_data = pd.Series(trade_times).apply(_slice_data)
+
+    def _build_traces(sliced_data: pd.Series) -> go.Scatter:
+        return go.Scatter(
+            y=sliced_data.y,
+            opacity=0.1,
+            mode="lines",
+            marker=dict(color=plot_params.line_colors[0]),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+
+    return sliced_data.apply(_build_traces, axis=1).to_list()
+
+
+class SignalPricePlot(DistributionalPlotGenerator):
+    """Create Price plot around trade signals."""
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> dp.Plot:
+        """Create plot object."""
+        assert len(_get_strategies(backtest_results)) == 1
+
+        buy_traces, sell_traces = [], []
+        lookback = max(backtest_results[0].strategy_lookbacks)
+        for results in backtest_results:
+            trades = results.sim_data["Trades"]
+
+            def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
+                return [trade for trade in trades if trade.side is Side.BUY]
+
+            buys = trades.apply(_get_buy)
+            buy_traces.extend(
+                _build_signal_traces(results, buys, lookback, plot_params)
+            )
+
+            def _get_sell(trades: list[TradeRequest]) -> list[TradeRequest]:
+                return [trade for trade in trades if trade.side is Side.SELL]
+
+            sells = trades.apply(_get_sell)
+            sell_traces.extend(
+                _build_signal_traces(results, sells, lookback, plot_params)
+            )
+
+        buy_fig = go.Figure(buy_traces)
+        sell_fig = go.Figure(sell_traces)
+        x_lims, y_lims = _get_lims((buy_fig, sell_fig))
+        mid = (x_lims[1] - x_lims[0]) // 2
+
+        for fig, name in ((buy_fig, "Buy"), (sell_fig, "Sell")):
+            PlotParameters.update_plotly_fig(
+                plot_params,
+                fig,
+                name + " Patterns",
+                "Time",
+                "Normalized Asset Value",
+            )
+            fig.update_yaxes(range=y_lims)
+            fig.add_vline(
+                x=mid,
+                line_dash="dot",
+                annotation_text=name + " Signal",
+                annotation_position="bottom right",
+            )
+
+        return dp.Select(
+            dp.Plot(buy_fig, label="Buy Patterns"),
+            dp.Plot(sell_fig, label="Sell Patterns"),
+        )

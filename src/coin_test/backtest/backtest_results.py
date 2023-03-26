@@ -48,6 +48,7 @@ class BacktestResults:
 
         self.data_dict = {ds.metadata: ds.df for (_, ds) in composer.datasets.items()}
         self.strategy_names = [s.name for s in strategies]
+        self.strategy_lookbacks = [s.lookback for s in strategies]
         self.sim_data = pd.DataFrame(
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],

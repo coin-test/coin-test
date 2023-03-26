@@ -11,6 +11,7 @@ from .graphs import (
     ConfidenceReturnsPlot,
     PlotParameters,
     ReturnsHeatmapPlot,
+    SignalPricePlot,
 )
 from .tables import SummaryTearSheet, TearSheet
 from ..backtest import BacktestResults
@@ -26,6 +27,7 @@ def _build_strategy_page(
     confidence_price = ConfidencePricePlot.create(results, plot_params)
     confidence_returns = ConfidenceReturnsPlot.create(results, plot_params)
     returns_heatmap = ReturnsHeatmapPlot.create(results, plot_params)
+    signal_price = SignalPricePlot.create(results, plot_params)
 
     blocks = [
         "# " + strategy_name,
@@ -39,6 +41,8 @@ def _build_strategy_page(
         confidence_returns,
         "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
+        "### Signal Plot",
+        signal_price,
     ]
     page = dp.Page(
         title=strategy_name,
