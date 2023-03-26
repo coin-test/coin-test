@@ -15,14 +15,19 @@ from coin_test.util import Side
 
 
 def _get_lims(
-    figs: Sequence[go.Figure],
-) -> tuple[tuple[float, float], tuple[float, float]]:
+    figs: Sequence[go.Figure], x: bool = True, y: bool = True
+) -> list[tuple[float, float]]:
     x_vals, y_vals = [], []
     for fig in figs:
         full_fig = fig.full_figure_for_development(warn=False)
         x_vals.extend(full_fig.layout.xaxis.range)
         y_vals.extend(full_fig.layout.yaxis.range)
-    return (min(x_vals), max(x_vals)), (min(y_vals), max(y_vals))
+    ret = []
+    if x:
+        ret.append((min(x_vals), max(x_vals)))
+    if y:
+        ret.append((min(y_vals), max(y_vals)))
+    return ret
 
 
 def _flatten_strategies(results: BacktestResults) -> str:
@@ -274,13 +279,13 @@ def _build_distributions_selection(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> dp.Select:
-    min_price, max_price = df.to_numpy().min() * 0.9, df.to_numpy().max() * 1.1
     band_fig = _build_percentiles(name, df, plot_params)
     ridge_fig = _build_ridgeline(name, df, plot_params)
     lines_fig = _build_lines(name, df, plot_params)
-    band_fig.update_yaxes(range=[min_price, max_price])
-    ridge_fig.update_yaxes(range=[min_price, max_price])
-    lines_fig.update_yaxes(range=[min_price, max_price])
+    y_lims = _get_lims((band_fig, ridge_fig, lines_fig), x=False)[0]
+    band_fig.update_yaxes(range=y_lims)
+    ridge_fig.update_yaxes(range=y_lims)
+    lines_fig.update_yaxes(range=y_lims)
     return dp.Select(
         dp.Plot(band_fig, label="Percentiles"),
         dp.Plot(ridge_fig, label="Ridge Plot"),
