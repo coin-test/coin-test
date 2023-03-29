@@ -340,11 +340,68 @@ def test_run(mocker: MockerFixture) -> None:
     mocker.patch("coin_test.orchestration.orchestration.build_datapane")
 
     results = orc.run(
-        datasets, strategies, sc, tc, portfolio, length, n_parallel, output_folder
+        datasets,
+        strategies,
+        portfolio,
+        length,
+        n_parallel,
+        output_folder,
+        sc,
+        tc,
     )
 
     orc._gen_results.assert_called_once_with(
-        datasets, strategies, sc, tc, portfolio, length, n_parallel, output_folder
+        datasets,
+        strategies,
+        sc,
+        tc,
+        portfolio,
+        length,
+        n_parallel,
+        output_folder,
+    )
+
+    assert results == mock_results
+
+
+def test_run_defaults(mocker: MockerFixture) -> None:
+    """Run backtests with defulat slippage and tx calculators."""
+    strategies, datasets, _, _, portfolio, length = _build_backtest_arg_mocks()
+    n_parallel = 4
+    output_folder = "test_folder/"
+
+    mock_results = [Mock()]
+    mocker.patch("coin_test.orchestration.orchestration._gen_results")
+    orc._gen_results.return_value = mock_results
+
+    mocker.patch("coin_test.orchestration.orchestration.ConstantSlippage")
+    sc = Mock()
+    cast(Mock, orc.ConstantSlippage).return_value = sc
+
+    mocker.patch(
+        "coin_test.orchestration.orchestration.ConstantTransactionFeeCalculator"
+    )
+    tc = Mock()
+    cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
+
+    results = orc.run(
+        datasets,
+        strategies,
+        portfolio,
+        length,
+        n_parallel,
+        output_folder,
+    )
+
+    orc._gen_results.assert_called_once_with(
+        datasets,
+        strategies,
+        sc,
+        tc,
+        portfolio,
+        length,
+        n_parallel,
+        output_folder,
     )
 
     assert results == mock_results

@@ -72,3 +72,10 @@ def coverage(session: Session) -> None:
     """Generate the coverage data."""
     session.install("coverage[toml]", "codecov")
     session.run("coverage", "xml", "--fail-under=0")
+
+
+@session(python=python_versions)
+def docs(session: Session) -> None:
+    """Generate the docs."""
+    session.install("sphinx_autodoc_typehints", "sphinx-rtd-theme", "sphinx", ".")
+    session.run("sphinx-build", "docs", "_build", "-W", "--keep-going")

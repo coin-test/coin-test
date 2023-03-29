@@ -11,6 +11,8 @@ from tqdm import tqdm
 from ..analysis import build_datapane
 from ..backtest import (
     BacktestResults,
+    ConstantSlippage,
+    ConstantTransactionFeeCalculator,
     Portfolio,
     Simulator,
     SlippageCalculator,
@@ -207,12 +209,12 @@ def _gen_results(
 def run(
     all_datasets: Sequence[Sequence[PriceDataset]],
     all_strategies: Sequence[Sequence[Strategy]],
-    slippage_calculator: SlippageCalculator,
-    tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
     n_parallel: int = 1,
     output_folder: str | None = None,
+    slippage_calculator: SlippageCalculator | None = None,
+    tx_calculator: TransactionFeeCalculator | None = None,
 ) -> list[BacktestResults]:
     """Run a full set of backtests.
 
@@ -222,17 +224,22 @@ def run(
     Args:
         all_datasets: List of sets of datasets to be used in backtests.
         all_strategies: List of sets of strategies to be used in backtests.
-        slippage_calculator: Slippage calculator to use in simulations.
-        tx_calculator: Transaction calculator to use in simulations.
         starting_portfolio: Starting portfolio to use in simulations.
         backtest_length: Length of each backtest.
         n_parallel: Number of parallel simulations to run.
         output_folder: Folder to save backtest results to. If None, results are
             not saved to disk.
+        slippage_calculator: Slippage calc to use in simulations. Defaults to Constant
+        tx_calculator: Transaction calc to use in simulations. Defaults to Constant_tx
 
     Returns:
         List: All results of backtests
     """
+    if slippage_calculator is None:
+        slippage_calculator = ConstantSlippage()
+    if tx_calculator is None:
+        tx_calculator = ConstantTransactionFeeCalculator()
+
     results = _gen_results(
         all_datasets,
         all_strategies,
