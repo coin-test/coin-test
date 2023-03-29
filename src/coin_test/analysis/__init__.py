@@ -2,6 +2,4 @@
 
 from .build_datapane import build_datapane
 
-__all__ = [
-    "build_datapane",
-]
+__all__ = ["build_datapane"]

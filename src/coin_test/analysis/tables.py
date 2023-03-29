@@ -12,8 +12,6 @@ from ..backtest import BacktestResults
 class DataframeGenerator(ABC):
     """Generate a pandas DataFrame using a single BacktestResults."""
 
-    name = ""
-
     @staticmethod
     @abstractmethod
     def create(backtest_results: BacktestResults) -> pd.DataFrame:
@@ -22,8 +20,6 @@ class DataframeGenerator(ABC):
 
 class DataframeGeneratorMultiple(ABC):
     """Generate a pandas DataFrame using a multiple BacktestResults."""
-
-    name = ""
 
     @staticmethod
     @abstractmethod
@@ -115,17 +111,9 @@ class TearSheet(DataframeGeneratorMultiple):
         """
         metrics_df = MetricsGenerator.create(backtest_results_list)
         cols = {
-            "Mean": metrics_df.mean(),
-            "Standard Deviation": metrics_df.std(),
+            "Mean": metrics_df.mean().round(2).astype(str),
+            "Standard Deviation": metrics_df.std().round(2).astype(str),
         }
-
-        def _round(series: pd.Series) -> str:
-            # index_val = series.name
-            metric_val = series.iloc[0]
-            metric_val = round(metric_val, 2)
-            return str(metric_val)
-
-        cols = {k: pd.DataFrame(s).apply(_round, axis=1) for k, s in cols.items()}
         summary_df = pd.DataFrame.from_dict(cols)
         summary_df = summary_df.set_index(metrics_df.columns)
         return summary_df
