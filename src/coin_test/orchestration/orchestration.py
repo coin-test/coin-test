@@ -2,8 +2,8 @@
 import multiprocessing
 from multiprocessing import Queue
 import os
-from typing import cast, Iterator, Sequence
 import traceback
+from typing import cast, Iterator, Sequence
 
 import pandas as pd
 from tqdm import tqdm

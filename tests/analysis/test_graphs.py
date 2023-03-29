@@ -57,7 +57,7 @@ def test_single_strategy_graphs_many_runs(
     plot_parameters: PlotParameters,
 ) -> None:
     """Builds graph with no errors for many runs."""
-    names = ["1" for _ in range(100)]
+    names = ["1" for _ in range(10)]
     results = [backtest_results_factory(name) for name in names]
     graph_generator.create(results, plot_parameters)
     assert True

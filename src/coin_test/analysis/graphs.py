@@ -14,9 +14,7 @@ from coin_test.backtest.backtest_results import BacktestResults
 from coin_test.util import Side
 
 
-def _get_lims(
-    figs: Sequence[go.Figure], x: bool = True, y: bool = True
-) -> list[tuple[float, float]]:
+def _get_lims(figs: Sequence[go.Figure], x: bool = True) -> list[tuple[float, float]]:
     x_vals, y_vals = [], []
     for fig in figs:
         full_fig = fig.full_figure_for_development(warn=False)
@@ -25,8 +23,7 @@ def _get_lims(
     ret = []
     if x:
         ret.append((min(x_vals), max(x_vals)))
-    if y:
-        ret.append((min(y_vals), max(y_vals)))
+    ret.append((min(y_vals), max(y_vals)))
     return ret
 
 
@@ -437,9 +434,7 @@ def _build_signal_traces(
     def _slice_data(timestamp: pd.Timestamp, df: pd.DataFrame = df) -> pd.Series:
         ret = pd.Series(dtype=object)
         y = df[timestamp - lookback : timestamp + lookback]
-        x = y.index
         y = y["Open"].reset_index(drop=True)
-        ret["x"] = x
         ret["y"] = y / y[0]
         return ret
 
@@ -474,10 +469,8 @@ class SignalPricePlot(DistributionalPlotGenerator):
         opacity = min(opacity, 0.1)
         for results in backtest_results:
             trades = results.sim_data["Trades"]
-            print(trades)
 
             def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
-                print(trades)
                 return [trade for trade in trades if trade.side is Side.BUY]
 
             buys = trades.apply(_get_buy)

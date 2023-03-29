@@ -53,7 +53,7 @@ class BacktestResults:
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
         )
-        self.sim_data.set_index("Timestamp", inplace=True)
+        self.sim_data.set_index("Timestamp", inplace=True, drop=True)
         self.sim_data["Price"] = self.create_date_price_df(self.sim_data, composer)
 
     def save(self, path: str) -> None:
@@ -76,6 +76,7 @@ class BacktestResults:
             )
 
         sim_price_data = sim_data.apply(value_func, axis=1)
+        sim_price_data.index.name = None  # Otherwise will retain "Timestamp" name
         return sim_price_data
 
     @staticmethod

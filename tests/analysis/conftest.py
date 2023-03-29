@@ -8,7 +8,7 @@ import pytest
 
 from coin_test.backtest import BacktestResults
 from coin_test.data import MetaData
-from coin_test.util import AssetPair, Ticker
+from coin_test.util import AssetPair, Side, Ticker
 
 
 @pytest.fixture
@@ -50,8 +50,18 @@ def _build_backtest_results(
         index=sim_data_df.index,
     )
     sim_data_df["Portfolios"] = mock_col
-    sim_data_df["Trades"] = mock_col
     sim_data_df["Pending Trades"] = mock_col
+
+    mock_buy = Mock()
+    mock_buy.side = Side.BUY
+    mock_sell = Mock()
+    mock_sell.side = Side.SELL
+    mock_trades = [mock_buy, mock_buy, mock_sell, mock_sell]
+    mock_trades_col = pd.Series(
+        (mock_trades for _ in range(len(sim_data_df))),
+        index=sim_data_df.index,
+    )
+    sim_data_df["Trades"] = mock_trades_col
 
     backtest_results.sim_data = sim_data_df
 
