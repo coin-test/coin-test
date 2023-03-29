@@ -243,6 +243,8 @@ class Simulator:
         self,
     ) -> BacktestResults:
         """Run a simulation."""
+        logger.debug("Starting a simulation")
+
         schedule = self._build_croniter_schedule(self._start_time, self._strategies)
 
         historical_portfolios = [self._portfolio]
