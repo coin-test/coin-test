@@ -2,6 +2,9 @@
 
 [![Tests](https://github.com/coin-test/coin-test/workflows/Tests/badge.svg)](https://github.com/coin-test/coin-test/actions?workflow=Tests)
 [![Codecov](https://codecov.io/gh/coin-test/coin-test/branch/main/graph/badge.svg)](https://codecov.io/gh/coin-test/coin-test)
+[![License](https://img.shields.io/pypi/l/coin-test)](https://pypi.org/project/coin-test/)
+[![Version](https://img.shields.io/pypi/v/coin-test)](https://pypi.org/project/coin-test/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/coin-test)](https://pypi.org/project/coin-test/)
 
 Coin-test is a backtesting library designed for cryptocurrency trading. It supports trading strategies across multiple currencies and advanced configurations of tests, including cron-based scheduled execution of strategies, synthetic data generation, slippage modeling, and trading fees.
 
