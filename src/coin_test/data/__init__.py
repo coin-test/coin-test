@@ -2,7 +2,11 @@
 
 from .composer import Composer
 from .datasaver import Datasaver
-from .dataset_generator import DatasetGenerator, ReturnsDatasetGenerator
+from .dataset_generator import (
+    DatasetGenerator,
+    ReturnsDatasetGenerator,
+    StitchedChunkDatasetGenerator,
+)
 from .datasets import CustomDataset, Dataset, PriceDataset
 from .metadata import MetaData
 from .processors import FillProcessor, IdentityProcessor, Processor
@@ -19,4 +23,5 @@ __all__ = [
     "IdentityProcessor",
     "Processor",
     "ReturnsDatasetGenerator",
+    "StitchedChunkDatasetGenerator",
 ]
