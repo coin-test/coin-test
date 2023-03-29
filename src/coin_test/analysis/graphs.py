@@ -100,6 +100,9 @@ class PlotParameters:
         )
 
 
+PLOT_RETURN_TYPE = dp.Plot | dp.Select | dp.Group | dp.Toggle
+
+
 class SinglePlotGenerator(ABC):
     """Generate a plot using a single BacktestResults."""
 
@@ -107,7 +110,7 @@ class SinglePlotGenerator(ABC):
     @abstractmethod
     def create(
         backtest_results: BacktestResults, plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
 
 
@@ -118,7 +121,7 @@ class DistributionalPlotGenerator(ABC):
     @abstractmethod
     def create(
         backtest_results_list: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create distributional plot object."""
 
 
@@ -305,7 +308,7 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
         _is_single_strategy(backtest_results)
         price_series = [results.sim_data["Price"] for results in backtest_results]
@@ -319,7 +322,7 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
         _is_single_strategy(backtest_results)
         price_series = [results.sim_data["Price"] for results in backtest_results]
@@ -336,7 +339,7 @@ class ConfidenceDataPlot(DistributionalPlotGenerator):
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
         strategy_results = _get_strategy_results(backtest_results)
         backtest_results = list(strategy_results.values())[0]
@@ -362,7 +365,7 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
         _is_single_strategy(backtest_results)
         x = []
@@ -459,7 +462,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
     @staticmethod
     def create(
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
-    ) -> dp.Plot:
+    ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
         _is_single_strategy(backtest_results)
 
