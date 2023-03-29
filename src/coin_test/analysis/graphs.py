@@ -51,6 +51,11 @@ def _get_strategy_results(
     return strategy_results
 
 
+def _is_single_strategy(results: Sequence[BacktestResults]) -> None:
+    if len(_get_strategies(results)) != 1:
+        raise ValueError("Multiple strategies passed to single strategy plot!")
+
+
 class PlotParameters:
     """Plot parameters to pass to each plot."""
 
@@ -188,6 +193,7 @@ def _build_ridgeline(
         len(df),
         colortype="rgb",
     )
+    df = df.copy()
     df["colors"] = colors
     index = df.index
     df = df.reset_index(drop=True)
@@ -252,6 +258,7 @@ def _build_lines(
     plot_params: PlotParameters,
 ) -> go.Figure:
     opacity = 1 / len(df.columns) * 5
+    opacity = min(opacity, 0.1)
 
     def _make_lines(series: pd.Series) -> go.Scatter:
         return go.Scatter(
@@ -303,6 +310,7 @@ class ConfidencePricePlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
+        _is_single_strategy(backtest_results)
         price_series = [results.sim_data["Price"] for results in backtest_results]
         price_df = pd.concat(price_series, axis=1)
         return _build_distributions_selection("Portfolio Value", price_df, plot_params)
@@ -316,6 +324,7 @@ class ConfidenceReturnsPlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
+        _is_single_strategy(backtest_results)
         price_series = [results.sim_data["Price"] for results in backtest_results]
         price_df = pd.concat(price_series, axis=1)
         returns_df = price_df.pct_change()
@@ -358,6 +367,7 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
+        _is_single_strategy(backtest_results)
         x = []
         y = []
         for result in backtest_results:
@@ -456,15 +466,18 @@ class SignalPricePlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> dp.Plot:
         """Create plot object."""
-        assert len(_get_strategies(backtest_results)) == 1
+        _is_single_strategy(backtest_results)
 
         buy_traces, sell_traces = [], []
         lookback = max(backtest_results[0].strategy_lookbacks)
         opacity = 1 / len(backtest_results)
+        opacity = min(opacity, 0.1)
         for results in backtest_results:
             trades = results.sim_data["Trades"]
+            print(trades)
 
             def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
+                print(trades)
                 return [trade for trade in trades if trade.side is Side.BUY]
 
             buys = trades.apply(_get_buy)

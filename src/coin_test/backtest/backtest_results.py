@@ -46,7 +46,7 @@ class BacktestResults:
         self.slippage_type = slippage_calculator_type
         self.tx_fee_type = transaction_fee_calculator_type
 
-        self.data_dict = {ds.metadata: ds.df for (_, ds) in composer.datasets.items()}
+        self.data_dict = {ds.metadata: ds.df for ds in composer.datasets.values()}
         self.strategy_names = [s.name for s in strategies]
         self.strategy_lookbacks = [s.lookback for s in strategies]
         self.sim_data = pd.DataFrame(
