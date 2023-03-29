@@ -18,6 +18,9 @@ from ..data import Composer
 from ..util import AssetPair
 
 
+logger = logging.getLogger(__name__)
+
+
 class Simulator:
     """Manage the simulation of a backtest."""
 
@@ -42,6 +45,8 @@ class Simulator:
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
         """
+        logger.debug("Creating simulator")
+
         self._portfolio = starting_portfolio
         self._composer = composer
         self._strategies = strategies
