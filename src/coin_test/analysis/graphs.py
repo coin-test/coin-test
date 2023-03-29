@@ -203,7 +203,7 @@ def _build_ridgeline(
         series = series.iloc[:-1]
         return go.Violin(y=series, name=str(series.name), line_color=color)
 
-    traces = df.apply(_make_ridgeline, axis=1).to_list()
+    traces = df.apply(_make_ridgeline, axis=1).tolist()
     fig = go.Figure(traces)
     fig.update_traces(
         width=5,
@@ -271,7 +271,7 @@ def _build_lines(
             hoverinfo="skip",
         )
 
-    traces = df.apply(_make_lines, axis=0).to_list()
+    traces = df.apply(_make_lines, axis=0).tolist()  # type: ignore
     fig = go.Figure(traces)
     PlotParameters.update_plotly_fig(
         plot_params,
@@ -453,7 +453,7 @@ def _build_signal_traces(
             hoverinfo="skip",
         )
 
-    return sliced_data.apply(_build_traces, axis=1).to_list()
+    return sliced_data.apply(_build_traces, axis=1).tolist()
 
 
 class SignalPricePlot(DistributionalPlotGenerator):

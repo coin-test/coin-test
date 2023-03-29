@@ -384,6 +384,8 @@ def test_run_defaults(mocker: MockerFixture) -> None:
     tc = Mock()
     cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
 
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+
     results = orc.run(
         datasets,
         strategies,
