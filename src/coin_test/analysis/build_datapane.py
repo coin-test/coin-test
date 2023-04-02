@@ -22,6 +22,16 @@ def _build_strategy_page(
     results: Sequence[BacktestResults],
     plot_params: PlotParameters,
 ) -> dp.Page:
+    """Builds a single strategy page.
+
+    Args:
+        strategy_name: Name of the strategy.
+        results: Sequence of backtest results produced by the strategy.
+        plot_params: Plot parameters.
+
+    Returns:
+        dp.Page: Strategy page.
+    """
     tear_sheet = TearSheet.create(results)
 
     confidence_price = ConfidencePricePlot.create(results, plot_params)
@@ -54,6 +64,15 @@ def _build_strategy_page(
 def _build_strategy_pages(
     results: Sequence[BacktestResults], plot_params: PlotParameters
 ) -> list[dp.Page]:
+    """Builds the strategy pages.
+
+    Args:
+        results: Sequence of backtest results produced by all strategies.
+        plot_params: Plot parameters.
+
+    Returns:
+        list[dp.Page]: List of all strategy pages.
+    """
     strategy_results = _get_strategy_results(results)
     return [
         _build_strategy_page(strategy, result, plot_params)
@@ -64,6 +83,15 @@ def _build_strategy_pages(
 def _build_home_page(
     results: Sequence[BacktestResults], plot_params: PlotParameters
 ) -> dp.Page:
+    """Builds the home page.
+
+    Args:
+        results: Sequence of backtest results produced by all strategies.
+        plot_params: Plot parameters.
+
+    Returns:
+        dp.Page: Home page.
+    """
     tear_sheet = SummaryTearSheet.create(results)
     blocks = [
         "# Home",
@@ -78,6 +106,15 @@ def _build_home_page(
 def _build_data_page(
     results: Sequence[BacktestResults], plot_params: PlotParameters
 ) -> dp.Page:
+    """Builds the data page.
+
+    Args:
+        results: Sequence of backtest results produced by all strategies.
+        plot_params: Plot parameters.
+
+    Returns:
+        dp.Page: Data page.
+    """
     confidence_graph = ConfidenceDataPlot.create(results, plot_params)
     blocks = [
         "# Data",

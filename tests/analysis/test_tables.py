@@ -26,7 +26,7 @@ def test_metrics_generator_single_metrics(backtest_results: BacktestResults) -> 
     """Successfully get metrics for a single backtest."""
     metrics = MetricsGenerator._single_metrics(backtest_results)
 
-    assert (metrics["Sharpe Ratio"] - 3.817) < 1e-3
+    assert pytest.approx(metrics["Sharpe Ratio"]) == 3.817
 
 
 def test_metrics_generator_create(
@@ -50,7 +50,7 @@ def test_metrics_generator_create(
 def test_tear_sheet_create(
     backtest_results: BacktestResults, mock_metrics: str, mocker: MockerFixture
 ) -> None:
-    """Returns dataframe with proper shape."""
+    """Returns tear sheet with proper shape."""
     mocker.patch("coin_test.analysis.tables.MetricsGenerator.create")
     metrics = {m: [0 for _ in range(100)] for m in mock_metrics}
     df = pd.DataFrame.from_dict(metrics)
@@ -74,7 +74,7 @@ def test_summary_tear_sheet_create(
     mock_metrics: str,
     mocker: MockerFixture,
 ) -> None:
-    """Returns dataframe with proper shape."""
+    """Returns summary tear sheet with proper shape."""
     mocker.patch("coin_test.analysis.tables.TearSheet.create")
     metrics = {
         "Mean": ["0" for _ in range(len(mock_metrics))],
