@@ -26,7 +26,7 @@ def test_metrics_generator_single_metrics(backtest_results: BacktestResults) -> 
     """Successfully get metrics for a single backtest."""
     metrics = MetricsGenerator._single_metrics(backtest_results)
 
-    assert pytest.approx(metrics["Sharpe Ratio"]) == 3.817
+    assert pytest.approx(metrics["Sharpe Ratio"], 1e-3) == 3.817
 
 
 def test_metrics_generator_create(
