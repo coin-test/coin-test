@@ -46,13 +46,14 @@ class BacktestResults:
         self.slippage_type = slippage_calculator_type
         self.tx_fee_type = transaction_fee_calculator_type
 
-        self.data_dict = {ds.metadata: ds.df for (_, ds) in composer.datasets.items()}
+        self.data_dict = {ds.metadata: ds.df for ds in composer.datasets.values()}
         self.strategy_names = [s.name for s in strategies]
+        self.strategy_lookbacks = [s.lookback for s in strategies]
         self.sim_data = pd.DataFrame(
             list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
             columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
         )
-        self.sim_data.set_index("Timestamp")
+        self.sim_data.set_index("Timestamp", inplace=True, drop=True)
         self.sim_data["Price"] = self.create_date_price_df(self.sim_data, composer)
 
     def save(self, path: str) -> None:
@@ -71,10 +72,11 @@ class BacktestResults:
 
         def value_func(x: pd.Series) -> float:
             return BacktestResults.value_from_portfolio(
-                x["Timestamp"], x["Portfolios"], composer  # type: ignore
+                x.name, x["Portfolios"], composer  # type: ignore
             )
 
         sim_price_data = sim_data.apply(value_func, axis=1)
+        sim_price_data.index.name = None  # Otherwise will retain "Timestamp" name
         return sim_price_data
 
     @staticmethod
@@ -88,7 +90,10 @@ class BacktestResults:
             if ticker == base_currency:
                 continue
 
-            asset_pair = AssetPair(base_currency, ticker)
+            asset_pair = AssetPair(ticker, base_currency)
+            if len(all_assets[asset_pair]) == 0:
+                continue
+
             conversion = all_assets[asset_pair]["Open"].iloc[0]
             total += conversion * money.qty
 

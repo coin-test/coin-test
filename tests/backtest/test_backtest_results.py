@@ -61,7 +61,7 @@ def test_create_results_correctly(mocker: MockerFixture) -> None:
         ),
         columns=["Timestamp", "Portfolios", "Trades", "Pending Trades", "Price"],
     )
-    sim_results.set_index("Timestamp")
+    sim_results = sim_results.set_index("Timestamp", drop=True)
 
     slip = ConstantSlippage
     tx = ConstantTransactionFeeCalculator
@@ -87,12 +87,12 @@ def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:
     composer = MagicMock()
 
     prices_right_now = {
-        AssetPair(Ticker("USDT"), Ticker("BTC")): pd.DataFrame(
+        AssetPair(Ticker("BTC"), Ticker("USDT")): pd.DataFrame(
             columns=["Open"], data=[20000.0]
         ),
-        AssetPair(Ticker("USDT"), Ticker("ETH")): pd.DataFrame(
-            columns=["Open"], data=[1000.0]
-        ),
+        AssetPair(Ticker("ETH"), Ticker("USDT")): pd.DataFrame(
+            columns=["Open"], data=[]
+        ),  # Ensure missing data doesn't raise error
     }
     mock_get_timestep = MagicMock()
 
@@ -109,10 +109,12 @@ def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:
         list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
         columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
     )
-    sim_results.set_index("Timestamp")
+    sim_results = sim_results.set_index("Timestamp", drop=True)
 
     price_series = BacktestResults.create_date_price_df(sim_results, composer)
-    pd.testing.assert_series_equal(price_series, pd.Series(data=[3756.0, 3756.0]))
+    pd.testing.assert_series_equal(
+        price_series, pd.Series(data=[3381.0, 3381.0], index=index)
+    )
 
 
 def test_results_save(mocker: MockerFixture) -> None:

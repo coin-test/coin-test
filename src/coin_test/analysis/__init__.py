@@ -1,7 +1,5 @@
 """Analysis module of the coin-test library."""
 
-from .tear_sheet import TearSheet
+from .build_datapane import build_datapane
 
-__all__ = [
-    "TearSheet",
-]
+__all__ = ["build_datapane"]
