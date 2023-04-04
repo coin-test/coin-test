@@ -142,5 +142,5 @@ class SummaryTearSheet(DataframeGeneratorMultiple):
             summary_metrics[strategy] = (
                 tear_sheet["Mean"] + " ± " + tear_sheet["Standard Deviation"]
             )
-        tear_sheet = pd.DataFrame.from_dict(summary_metrics).transpose()
+        tear_sheet = pd.DataFrame.from_dict(summary_metrics, orient="index")
         return tear_sheet

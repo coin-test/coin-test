@@ -52,7 +52,7 @@ def test_tear_sheet_create(
 ) -> None:
     """Returns tear sheet with proper shape."""
     mocker.patch("coin_test.analysis.tables.MetricsGenerator.create")
-    metrics = {m: [0 for _ in range(100)] for m in mock_metrics}
+    metrics = {m: [0] * 100 for m in mock_metrics}
     df = pd.DataFrame.from_dict(metrics)
     MetricsGenerator.create.return_value = df
 
@@ -77,8 +77,8 @@ def test_summary_tear_sheet_create(
     """Returns summary tear sheet with proper shape."""
     mocker.patch("coin_test.analysis.tables.TearSheet.create")
     metrics = {
-        "Mean": ["0" for _ in range(len(mock_metrics))],
-        "Standard Deviation": ["0" for _ in range(len(mock_metrics))],
+        "Mean": ["0"] * len(mock_metrics),
+        "Standard Deviation": ["0"] * len(mock_metrics),
     }
     df = pd.DataFrame.from_dict(metrics)
     df = df.set_index(pd.Series(mock_metrics))
