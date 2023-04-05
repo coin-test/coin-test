@@ -354,7 +354,7 @@ def test_warning_on_run_strategies(
         (
             "coin_test.backtest.simulator",
             logging.WARN,
-            "Strategy strategy1 caught an exception.",
+            "Strategy strategy1 raised an exception.",
         ),
         ("coin_test.backtest.simulator", logging.WARN, "Error Message in Strategy"),
     ]
