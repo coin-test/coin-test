@@ -5,6 +5,7 @@ from .datasaver import Datasaver
 from .dataset_generator import (
     DatasetGenerator,
     ReturnsDatasetGenerator,
+    SamplingDatasetGenerator,
     StitchedChunkDatasetGenerator,
 )
 from .datasets import CustomDataset, Dataset, PriceDataset
@@ -23,5 +24,6 @@ __all__ = [
     "IdentityProcessor",
     "Processor",
     "ReturnsDatasetGenerator",
+    "SamplingDatasetGenerator",
     "StitchedChunkDatasetGenerator",
 ]
