@@ -4,7 +4,6 @@ from collections.abc import Iterable
 from copy import copy
 import datetime as dt
 import logging
-from typing import Any
 
 from croniter import croniter
 import pandas as pd
@@ -32,7 +31,7 @@ class Simulator:
         strategies: Iterable[Strategy],
         slippage_calculator: SlippageCalculator,
         transaction_fee_calculator: TransactionFeeCalculator,
-        **kwargs: Any,
+        warn_on_error: bool = True,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -43,7 +42,8 @@ class Simulator:
             strategies: User Defined strategies to run in the simulation
             slippage_calculator: Slippage Calculator implementation
             transaction_fee_calculator: Transaction Fee Calculator implementation
-            **kwargs: Extra options
+            warn_on_error: Log a warning instead of throwing an error when a strategy
+                raises an exception
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
@@ -60,7 +60,7 @@ class Simulator:
         self._end_time = composer.end_time
         self._simulation_dt = composer.freq
 
-        self._warn_on_error: bool = kwargs.pop("warn_on_error", True)  # type: ignore
+        self._warn_on_error = warn_on_error
 
         if not self._validate(composer, strategies):
             raise ValueError("Strategy uses AssetPair that composer does not")
