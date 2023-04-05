@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from math import ceil
 from random import Random
-from typing import List, Literal
+from typing import cast, List, Literal
 
 from arch import arch_model
 import numpy as np
@@ -337,9 +337,7 @@ class GARCHDatasetGenerator(DatasetGenerator):
             rescale=garch_settings.rescale,
         ).fit(disp="off")
 
-        params = res_garch_model.params
-
-        return params
+        return cast(pd.Series, res_garch_model.params)
 
     @staticmethod
     def sample_series(
