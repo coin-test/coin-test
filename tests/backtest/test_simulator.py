@@ -361,6 +361,18 @@ def test_warning_on_run_strategies(
 
     assert trade_requests == []
 
+    sim_err = Simulator(
+        mock_composer,
+        portfolio,
+        [],
+        mock_slippage_calculator,
+        mock_transaction_calculator,
+        warn_on_error=False,
+    )
+
+    with pytest.raises(ValueError):
+        sim_err.run_strategies(schedule, time, portfolio)
+
 
 def test_simulation_runs_correct_strategies(
     schedule: list[tuple[Strategy, croniter]], timestamp: dt.datetime

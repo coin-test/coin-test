@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from copy import copy
 import datetime as dt
 import logging
+from typing import Any
 
 from croniter import croniter
 import pandas as pd
@@ -31,6 +32,7 @@ class Simulator:
         strategies: Iterable[Strategy],
         slippage_calculator: SlippageCalculator,
         transaction_fee_calculator: TransactionFeeCalculator,
+        **kwargs: Any,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -41,6 +43,7 @@ class Simulator:
             strategies: User Defined strategies to run in the simulation
             slippage_calculator: Slippage Calculator implementation
             transaction_fee_calculator: Transaction Fee Calculator implementation
+            **kwargs: Extra options
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
@@ -56,6 +59,8 @@ class Simulator:
         self._start_time = composer.start_time
         self._end_time = composer.end_time
         self._simulation_dt = composer.freq
+
+        self._warn_on_error: bool = kwargs.pop("warn_on_error", True)  # type: ignore
 
         if not self._validate(composer, strategies):
             raise ValueError("Strategy uses AssetPair that composer does not")
@@ -206,6 +211,9 @@ class Simulator:
             time: Current timestamp used to determine which strategies should run
             portfolio: Current Portfolio at given timestamp
 
+        Raises:
+            ValueError: If a strategy raises an error and warn_on_error is False
+
         Returns:
             list of TradeRequests to handle
         """
@@ -217,9 +225,14 @@ class Simulator:
             try:
                 trade_requests.extend(strat(time, portfolio, lookback_data))
             except Exception as e:
-                logger.warning(f"Strategy {strat.name} caught an exception.")
-                logger.warning(e)
-                # or raise RuntimeError / other error here
+                if self._warn_on_error:
+                    logger.warning(f"Strategy {strat.name} raised an exception.")
+                    logger.warning(e)
+                else:
+                    raise ValueError(
+                        f"Strategy {strat.name} raised an exception."
+                    ) from e
+
         return trade_requests
 
     @staticmethod
