@@ -1,13 +1,15 @@
 """Define the SyntheticDatasets class and subclasses."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from math import ceil
 from random import Random
-
-import numpy as np
-import pandas as pd
+from typing import List, Literal
 
 from arch import arch_model
+import numpy as np
+from numpy.typing import NDArray
+import pandas as pd
 
 from .datasets import CustomDataset
 
@@ -214,12 +216,45 @@ class ReturnsDatasetGenerator(StitchedChunkDatasetGenerator):
         super().__init__(dataset, chunk_size=1)
 
 
+@dataclass
+class GarchSettings:
+    """Class for keeping track of settings to intialize a GARCH model.
+
+    Defaults initialize a GARCH(1,1) model with constant mean.
+    """
+
+    mean: Literal[
+        "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
+    ] = "Constant"
+    lags: int | NDArray | List[int] | None = 0
+    vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"] = "GARCH"
+    p: int | List[int] = 1
+    o: int = 0
+    q: int = 1
+    power: float = 2
+    dist: Literal[
+        "normal",
+        "gaussian",
+        "t",
+        "studentst",
+        "skewstudent",
+        "skewt",
+        "ged",
+        "generalized error",
+    ] = "normal"
+    hold_back: int | None = None
+    rescale: bool | None = None
+
+
 class GARCHDatasetGenerator(DatasetGenerator):
-    """Synthetic Dataset Generator with Generalized Autoregressive Conditional Heteroskedasticity (GARCH).
+    """Synthetic Dataset Generator with GARCH.
+
+    Using Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model.
 
     Close prices are simulated with univariate GARCH model.
     Open prices are set as previous day's close.
-    High and Low prices are randomly sampled percent changes relative to min/max Open/Close for given dataframe.
+    High and Low prices are randomly sampled chunks normalized as
+    percent changes relative to min/max Open/Close of given historical dataset.
     """
 
     DATASET_TYPE = CustomDataset
@@ -228,18 +263,29 @@ class GARCHDatasetGenerator(DatasetGenerator):
         self,
         dataset: "GARCHDatasetGenerator.DATASET_TYPE",
         chunk_size: int = 1,
-        mean: str = "Constant",
-        lags: int | list[int] | None = 0,
-        vol: str = "GARCH",
-        p: int | list[int] = 1,
+        mean: Literal[
+            "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
+        ] = "Constant",
+        lags: int | List[int] | NDArray | None = 0,
+        vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"] = "GARCH",
+        p: int | List[int] = 1,
         o: int = 0,
         q: int = 1,
         power: float = 2,
-        dist: str = "normal",
+        dist: Literal[
+            "normal",
+            "gaussian",
+            "t",
+            "studentst",
+            "skewstudent",
+            "skewt",
+            "ged",
+            "generalized error",
+        ] = "normal",
         hold_back: int | None = None,
         rescale: bool | None = None,
     ) -> None:
-        """Initialize a GARCHDatasetGenerator. Default parameters create a GARCH(1,1) model with constant mean."""
+        """Initialize a GARCHDatasetGenerator."""
         self.dataset = dataset
         self.start: pd.Period = dataset.df.index[0]  # type: ignore
         self.metadata = dataset.metadata
@@ -250,31 +296,32 @@ class GARCHDatasetGenerator(DatasetGenerator):
         elif len(self.dataset.df) < chunk_size:
             raise ValueError("Chunk size mustn't be larger than the dataset")
 
-        self.garch_settings = {
-            "mean": mean,
-            "lags": lags,
-            "vol": vol,
-            "p": p,
-            "o": o,
-            "q": q,
-            "power": power,
-            "dist": dist,
-            "hold_back": hold_back,
-            "rescale": rescale,
-        }
+        self.garch_settings = GarchSettings(
+            mean=mean,
+            lags=lags,
+            vol=vol,
+            p=p,
+            o=o,
+            q=q,
+            power=power,
+            dist=dist,
+            hold_back=hold_back,
+            rescale=rescale,
+        )
 
     @staticmethod
     def get_GARCH_model_parameters(
-        univariate_series: pd.Series, garch_settings: dict
-    ) -> dict:
-        """Estimate GARCH model parameters from given univariate series.
+        univariate_series: pd.Series, garch_settings: GarchSettings
+    ) -> pd.Series:
+        """Get GARCH model parameters estimated from given univariate series.
 
         Args:
             univariate_series: series of data
             garch_settings: settings to contruct the GARCH model with
 
         Returns:
-            dict: dictionary of model parameters estimated from fitting to univariate series.
+            res_garch_model.params: dictionary of model parameters
+                estimated from fitting to univariate series.
         """
         res_garch_model = arch_model(
             univariate_series,
@@ -290,7 +337,9 @@ class GARCHDatasetGenerator(DatasetGenerator):
             rescale=garch_settings.rescale,
         ).fit(disp="off")
 
-        return res_garch_model.params
+        params = res_garch_model.params
+
+        return params
 
     @staticmethod
     def sample_series(
@@ -318,8 +367,8 @@ class GARCHDatasetGenerator(DatasetGenerator):
 
         # Select data and concatenate chunks
         r = Random(rng.bytes(16))  # type: ignore
-        sampled_chunks: list[pd.DataFrame] = r.sample(chunks, num_chunks)
-        sampled_data: pd.DataFrame = pd.concat(sampled_chunks)
+        sampled_chunks: list[pd.Series] = r.sample(chunks, num_chunks)
+        sampled_data: pd.Series = pd.concat(sampled_chunks)
 
         # shrink to size of dataset
         sampled_data = sampled_data.head(num_rows).reset_index(drop=True)
@@ -331,7 +380,7 @@ class GARCHDatasetGenerator(DatasetGenerator):
         timedelta: pd.Timedelta | pd.DateOffset,
         seed: int | None = None,
         n: int = 1,
-    ) -> list["StitchedChunkDatasetGenerator.DATASET_TYPE"]:
+    ) -> list["GARCHDatasetGenerator.DATASET_TYPE"]:
         """Create chunk-based synthetic datasets from the given dataset.
 
         Args:
@@ -349,7 +398,9 @@ class GARCHDatasetGenerator(DatasetGenerator):
             ["Open", "Close"]
         ]
 
-        period_index = self.create_index(self.start, timedelta, self.metadata.freq)
+        period_index = StitchedChunkDatasetGenerator.create_index(
+            self.start, timedelta, self.metadata.freq
+        )
         num_rows = len(period_index)
 
         # Define univariate price trend to simulate with GARCH model.
@@ -385,12 +436,13 @@ class GARCHDatasetGenerator(DatasetGenerator):
         new_datasets = []
         for i in range(n):
             synthetic_series_close_pct_change = sim_garch_model.simulate(
-                garch_model_params, num_rows
+                garch_model_params, num_rows  # type: ignore
             )["data"]
 
-            # Transform from Close percent change to Close prices.
+            # Transform generated Close percent change values to Close prices.
             # Intialize Close_0 from starting value.
-            # Then for each row, set Close_j = Close_j-1 + Close_j-1 * pct_change_j-1 / 100.
+            # Then for each row,
+            # set Close_j = Close_j-1 + Close_j-1 * pct_change_j-1 / 100.
             synthetic_series_close = pd.Series(0, index=list(range(num_rows)))
             synthetic_series_close[0] = starting_prices["Close"][i]
             for j in range(1, num_rows):
@@ -406,7 +458,6 @@ class GARCHDatasetGenerator(DatasetGenerator):
             synthetic_series_open[0] = starting_prices["Open"][i]
 
             # Set High price as percent change on max between Open and Close.
-
             synthetic_series_high_pct_change = self.sample_series(
                 df["pct_diff_high"],
                 num_rows,
