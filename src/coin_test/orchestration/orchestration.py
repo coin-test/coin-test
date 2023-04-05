@@ -1,9 +1,10 @@
 """Define the orchestration function."""
+import logging
 import multiprocessing
 from multiprocessing import Queue
 import os
 import traceback
-from typing import cast, Iterator, Sequence
+from typing import cast, Iterator, List, Sequence
 
 import pandas as pd
 from tqdm import tqdm
@@ -22,10 +23,33 @@ from ..backtest import (
 from ..data import Composer, PriceDataset
 
 
+logger = logging.getLogger(__name__)
+
+
 def _save(result: BacktestResults, output_folder: str | None, i: int) -> None:
     if output_folder is not None:
         fn = os.path.join(output_folder, f"{i}_backtest_results.pkl")
         result.save(fn)
+
+
+def _load(
+    input_dir: str,
+) -> List[BacktestResults]:
+    """Wrapper to load list of backtest of results."""
+    results: List[BacktestResults] = []
+
+    if not os.path.isdir(input_dir):
+        raise ValueError(f"'{input_dir}', is not a directory")
+
+    for file in os.listdir(input_dir):
+        if file.endswith(".pkl"):
+            results.append(BacktestResults.load(os.path.join(input_dir, file)))
+
+    if len(results) == 0:
+        raise ValueError(f"No backtest results found in {input_dir}")
+
+    logger.info(f"Loaded {len(results)}BacktestResults from {input_dir}.")
+    return results
 
 
 def _run_backtest(
@@ -207,14 +231,15 @@ def _gen_results(
 
 
 def run(
-    all_datasets: Sequence[Sequence[PriceDataset]],
-    all_strategies: Sequence[Sequence[Strategy]],
-    starting_portfolio: Portfolio,
-    backtest_length: pd.Timedelta | pd.DateOffset,
+    all_datasets: Sequence[Sequence[PriceDataset]] | None = None,
+    all_strategies: Sequence[Sequence[Strategy]] | None = None,
+    starting_portfolio: Portfolio | None = None,
+    backtest_length: pd.Timedelta | None = None,
     n_parallel: int = 1,
     output_folder: str | None = None,
     slippage_calculator: SlippageCalculator | None = None,
     tx_calculator: TransactionFeeCalculator | None = None,
+    build_from_saved_results: None | str = None,
 ) -> list[BacktestResults]:
     """Run a full set of backtests.
 
@@ -231,25 +256,52 @@ def run(
             not saved to disk.
         slippage_calculator: Slippage calc to use in simulations. Defaults to Constant
         tx_calculator: Transaction calc to use in simulations. Defaults to Constant_tx
+        build_from_saved_results: Filepath to load saved results from.
 
     Returns:
         List: All results of backtests
-    """
-    if slippage_calculator is None:
-        slippage_calculator = ConstantSlippage()
-    if tx_calculator is None:
-        tx_calculator = ConstantTransactionFeeCalculator()
 
-    results = _gen_results(
-        all_datasets,
-        all_strategies,
-        slippage_calculator,
-        tx_calculator,
-        starting_portfolio,
-        backtest_length,
-        n_parallel,
-        output_folder,
-    )
+    Raises:
+        ValueError: If build_from_save_results isn't provided,
+            args must be provided to run a backtest
+    """
+    if build_from_saved_results is not None:
+        logger.info(
+            f"Building analysis from saved results from: {build_from_saved_results}"
+        )
+        results = _load(build_from_saved_results)
+
+    else:
+        if (
+            all_datasets is None
+            or all_strategies is None
+            or starting_portfolio is None
+            or backtest_length is None
+        ):
+            raise ValueError(
+                "Must specify 'build_from_save_results' or all of: 'all_datasets',\
+                    all_strategies', 'starting_portfolio', and 'backtest_length'"
+            )
+
+        if slippage_calculator is None:
+            slippage_calculator = ConstantSlippage()
+            logger.info("Backtesting with ConstantSlippage slippage.")
+        if tx_calculator is None:
+            tx_calculator = ConstantTransactionFeeCalculator()
+            logger.info("Backtesting with ConstantTransactionFeeCalculator tx fees.")
+
+        if output_folder is None:
+            logger.info("BacktestResults are not being saved.")
+        results = _gen_results(
+            all_datasets,
+            all_strategies,
+            slippage_calculator,
+            tx_calculator,
+            starting_portfolio,
+            backtest_length,
+            n_parallel,
+            output_folder,
+        )
 
     build_datapane(results)
 

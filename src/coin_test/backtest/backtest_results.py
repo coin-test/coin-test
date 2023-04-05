@@ -71,6 +71,7 @@ class BacktestResults:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "wb") as f:
             pickle.dump(self, f)
+        logger.debug(f"Saved pickled BacktestResults to: {path}")
 
     @staticmethod
     def create_date_price_df(sim_data: pd.DataFrame, composer: Composer) -> pd.Series:
@@ -104,3 +105,24 @@ class BacktestResults:
             total += conversion * money.qty
 
         return total
+
+    @staticmethod
+    def load(fp: str) -> "BacktestResults":
+        """Load BacktestResults from disk.
+
+        Args:
+            fp: filepath to pickle file to load from
+
+        Returns:
+            BacktestResults: BacktestResults stored at the location
+
+        Raises:
+            ValueError: raises ValueError if the specified file path is not a file
+        """
+        if not os.path.isfile(fp):
+            raise ValueError(f"'{fp}' is not a file.")
+
+        with open(fp, "rb") as f:
+            obj = pickle.load(f)
+            logger.debug(f"Loaded Backtest results from {fp}")
+            return obj
