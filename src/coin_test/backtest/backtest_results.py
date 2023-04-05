@@ -104,3 +104,22 @@ class BacktestResults:
             total += conversion * money.qty
 
         return total
+
+    @staticmethod
+    def load(fp: str) -> "BacktestResults":
+        """Load BacktestResults from disk.
+
+        Args:
+            fp: filepath to pickle file to load from
+
+        Returns:
+            BacktestResults: BacktestResults stored at the location
+
+        Raises:
+            ValueError: raises ValueError if the specified file path is not a file
+        """
+        if not os.path.isfile(fp):
+            raise ValueError(f"'{fp}' is not a file.")
+
+        with open(fp, "rb") as f:
+            return pickle.load(f)

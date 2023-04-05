@@ -50,6 +50,12 @@ class Datasaver:
 
         Returns:
             Datasaver: Datasaver stored at the location
+
+        Raises:
+            ValueError: raises ValueError if the specified file path is not a file
         """
+        if not os.path.isfile(fp):
+            raise ValueError(f"'{fp}' is not a file.")
+
         with open(fp, "rb") as f:
             return pickle.load(f)
