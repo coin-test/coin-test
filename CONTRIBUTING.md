@@ -56,26 +56,27 @@ activating the virtual environment with `poetry shell`.
 
 ## Logging
 
-Logs are generated via Python's `logging` package.
+Logs are generated via Python's
+[`logging` package](https://docs.python.org/3/howto/logging.html).
 
 ### When to Log
 
-The large majority of logs in this library are of two main types: info and debug.
+The large majority of logs in this library are of two main types: `info` and `debug`.
 These logs help inform the user of processes and guide developers debugging the library.
 
-Info logs are the most important logs, as these are displayed by default for the user.
+The `info` logs are the most important logs, as these are displayed by default for the user.
 These logs should be written with the user in mind and should only be used when the user
-would care about what the library is doing. More specifically, info logs should be used when
+would care about what the library is doing. More specifically, `info` logs should be used when
 an important process of interest to the user has an update. For example, when backtesting
-begins, analysis begins, or a report is generated, this should be logged with the info type.
-No objects should be dumped in an info log unless completely necessary.
+begins, analysis begins, or a report is generated, this should be logged with the `info` type.
+No objects should be dumped in an `info` log unless absolutely necessary.
 
-Debug logs assist in informing a developer of the status of the library at a finer
-granularity than info logs. As such, this can include the start and end of processes only
+The `debug` logs assist in informing a developer of the status of the library at a finer
+granularity than `info` logs. As such, this can include the start and end of processes only
 a developer would know or care about, like when analysis metrics are calculated. They can
-also be used to give more information about a process already documented with info logs.
+also be used to give more information about a process already documented with `info` logs.
 This can include, for example, logging information about strategies, synthetic data, and
-other parameters at the beginning of a backtest. Debug logs can further be used to flag
+other parameters at the beginning of a backtest. The `debug` logs can further be used to flag
 important parts of a larger process.
 
 More information on how logs should be created can be found in the official
