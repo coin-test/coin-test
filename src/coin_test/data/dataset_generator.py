@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from math import ceil
 from random import Random
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -110,7 +111,7 @@ class StitchedChunkDatasetGenerator(SamplingDatasetGenerator):
     ) -> None:
         """Initialize a chunk synthetic dataset generator."""
         self.dataset = dataset
-        self.start: pd.Period = dataset.df.index[0]  # type: ignore
+        self.start = cast(pd.Period, dataset.df.index[0])
         self.metadata = dataset.metadata
         self.chunk_size = chunk_size
 
@@ -214,7 +215,7 @@ class ReturnsDatasetGenerator(SamplingDatasetGenerator):
     def __init__(self, dataset: "ReturnsDatasetGenerator.DATASET_TYPE") -> None:
         """Initialize a ResultsDatasetGenerator object."""
         self.dataset = dataset
-        self.start: pd.Period = dataset.df.index[0]  # type: ignore
+        self.start = cast(pd.Period, dataset.df.index[0])
         self.metadata = dataset.metadata
 
     def generate(
