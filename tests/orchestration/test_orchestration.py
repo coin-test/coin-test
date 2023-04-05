@@ -337,6 +337,7 @@ def test_run(mocker: MockerFixture) -> None:
     mock_results = [Mock()]
     mocker.patch("coin_test.orchestration.orchestration._gen_results")
     orc._gen_results.return_value = mock_results
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
 
     results = orc.run(
         datasets,
@@ -383,6 +384,8 @@ def test_run_defaults(mocker: MockerFixture) -> None:
     tc = Mock()
     cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
 
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+
     results = orc.run(
         datasets,
         strategies,
@@ -404,3 +407,4 @@ def test_run_defaults(mocker: MockerFixture) -> None:
     )
 
     assert results == mock_results
+    orc.build_datapane.assert_called_once_with(mock_results)

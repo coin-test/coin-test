@@ -514,7 +514,7 @@ def test_run(
         ),
         columns=["Timestamp", "Portfolios", "Trades", "Pending Trades", "Price"],
     )
-    df.set_index("Timestamp")
+    df = df.set_index("Timestamp", drop=True)
 
     # TODO: BacktestResults should be mocked and just called with correct items
     pd.testing.assert_frame_equal(backtest_results.sim_data, df)

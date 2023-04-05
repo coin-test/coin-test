@@ -7,13 +7,34 @@ import pandas as pd
 import pytest
 from pytest_mock import MockerFixture
 
-from coin_test.data import ReturnsDatasetGenerator
+from coin_test.data import ReturnsDatasetGenerator, StitchedChunkDatasetGenerator
 from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
 
 
-def test_dataset_generator_initialized(hour_data_indexed_df: pd.DataFrame) -> None:
-    """Initialize the ResultDatasetGenerator."""
+def test_chunked_dataset_generator_initialized(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Initialize the StitchedChunkDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+    chunk_size = 5
+
+    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+
+    assert gen.dataset == mock_dataset
+    assert gen.metadata == metadata
+    assert gen.chunk_size == chunk_size
+    assert isinstance(gen.start, pd.Period)
+
+
+def test_returns_dataset_generator_initialized(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Initialize the ReturnsDatasetGenerator."""
     mock_dataset = Mock()
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     metadata = MetaData(pair, freq="H")
@@ -24,14 +45,32 @@ def test_dataset_generator_initialized(hour_data_indexed_df: pd.DataFrame) -> No
 
     assert gen.dataset == mock_dataset
     assert gen.metadata == metadata
+    assert gen.chunk_size == 1
     assert isinstance(gen.start, pd.Period)
+
+
+def test_chunked_dataset_generator_err_on_initialization(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Fail to initialize the StitchedChunkDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    with pytest.raises(ValueError):
+        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=-1)
+
+    with pytest.raises(ValueError):
+        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=1000000000000000)
 
 
 def test_normalize_dataset(
     hour_data_indexed_df: pd.DataFrame, hour_data_norm_df: pd.DataFrame
 ) -> None:
     """Normalize data with ResultsDatasetGenerator."""
-    norm_df = ReturnsDatasetGenerator.normalize_row_data(hour_data_indexed_df)
+    norm_df = StitchedChunkDatasetGenerator.normalize_row_data(hour_data_indexed_df)
 
     pd.testing.assert_frame_equal(norm_df, hour_data_norm_df)
 
@@ -39,16 +78,17 @@ def test_normalize_dataset(
     #     norm_df.to_csv(outfile, index=False)
 
 
-def test_dataset_select_data(
+def test_chunked_dataset_select_data(
     hour_data_norm_df: pd.DataFrame, hour_data_sel_df: pd.DataFrame
 ) -> None:
     """Select data with ResultsDatasetGenerator."""
     rng = np.random.default_rng(int("stonks", 36))
     starting_price = 7.48
-    num_rows = 4
+    num_rows = 5
+    chunk_size = 2
 
-    selected_df = ReturnsDatasetGenerator.select_data(
-        hour_data_norm_df, starting_price, num_rows, rng
+    selected_df = StitchedChunkDatasetGenerator.select_data(
+        hour_data_norm_df, starting_price, num_rows, chunk_size, rng
     )
 
     pd.testing.assert_frame_equal(selected_df, hour_data_sel_df)
@@ -63,7 +103,7 @@ def test_properly_index_data() -> None:
     start = pd.Period("2023-01-01 10:00", freq)
     timedelta = pd.Timedelta(days=1)
 
-    index = ReturnsDatasetGenerator.create_index(start, timedelta, freq)
+    index = StitchedChunkDatasetGenerator.create_index(start, timedelta, freq)
 
     assert isinstance(index, pd.PeriodIndex)
     assert len(index) == 25  # 24 hours between first and last point
@@ -71,7 +111,7 @@ def test_properly_index_data() -> None:
     assert index.freq == freq
 
 
-def test_dataset_generator_create_datasets(
+def test_returns_dataset_generator_create_datasets(
     hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
     """Create synthetic datasets with ResultsDatasetGenerator."""
@@ -102,6 +142,43 @@ def test_dataset_generator_create_datasets(
     assert s_pair == pair
     assert s_opts == {"synthetic": True}
     assert len(s_df) == 4  # 3 hours between first and last timestamps
+
+
+def test_chunk_dataset_generator_create_datasets(
+    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+) -> None:
+    """Create synthetic datasets with StitchedChunkDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    freq = "H"
+    chunk_size = 3  # 3 rows of data
+    metadata = MetaData(pair, freq)
+
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+    mock_dataset.name = f"{StitchedChunkDatasetGenerator.__name__}_0"
+
+    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+    timedelta = pd.Timedelta(hours=10)
+
+    mocker.patch("coin_test.data.StitchedChunkDatasetGenerator.DATASET_TYPE")
+
+    gen.generate(seed=int("chonks", 36), timedelta=timedelta, n=2)
+
+    dataset_params = (
+        StitchedChunkDatasetGenerator.DATASET_TYPE.call_args_list  # type: ignore
+    )
+
+    assert len(dataset_params) == 2
+
+    (s_name, s_df, s_freq, s_pair), s_opts = dataset_params[0]
+
+    assert isinstance(s_df.index, pd.PeriodIndex)
+    assert s_name == mock_dataset.name
+    assert s_freq == freq
+    assert s_pair == pair
+    assert s_opts == {"synthetic": True}
+    assert len(s_df) == 11  # 10 hours between first and last timestamps
 
 
 @pytest.fixture
