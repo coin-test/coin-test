@@ -1,5 +1,6 @@
 """Functions to build Datapane Locally."""
 
+import os
 from typing import Sequence
 
 import datapane as dp
@@ -125,13 +126,18 @@ def _build_data_page(
     return page
 
 
-def build_datapane(results: Sequence[BacktestResults]) -> None:
+def build_datapane(results: Sequence[BacktestResults], output_dir: str | None) -> None:
     """Build Datapane from large set of results.
 
     Args:
         results: List of BacktestResults.
+        output_dir: Directory to save report and assets to. Defaults to local directory.
     """
-    plot_params = PlotParameters()
+    if output_dir is None:
+        output_dir = ""
+    asset_dir = os.path.join(output_dir, "assets")
+    os.makedirs(asset_dir, exist_ok=True)
+    plot_params = PlotParameters(asset_dir)
 
     page_list = []
     page_list.append(_build_home_page(results, plot_params))
@@ -139,4 +145,4 @@ def build_datapane(results: Sequence[BacktestResults]) -> None:
     page_list.extend(_build_strategy_pages(results, plot_params))
     dashboard = dp.App(blocks=page_list)
 
-    dashboard.save(path="report.html")
+    dashboard.save(path=os.path.join(output_dir, "report.html"))

@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import math
+import os
 from typing import Sequence
 
 import datapane as dp
@@ -58,6 +59,7 @@ class PlotParameters:
 
     def __init__(
         self,
+        asset_dir: str,
         line_styles: tuple[str, ...] = ("solid", "dash", "dot", "dashdot"),
         line_colors: tuple[str, ...] = (
             "rgb(5, 200, 200)",
@@ -71,6 +73,8 @@ class PlotParameters:
         line_width: int = 2,
     ) -> None:
         """Initialize plot parameters."""
+        os.makedirs(asset_dir, exist_ok=True)
+        self.asset_dir = asset_dir
         self.line_styles = line_styles
         self.line_colors = line_colors
         self.line_width = line_width
@@ -99,8 +103,19 @@ class PlotParameters:
             legend_title={"text": legend_title, "font": plot_params.legend_font},
         )
 
+    def compress_fig(self, fig: go.Figure, name: str, f: str = "png") -> str:
+        """Compress figure."""
+        fig.update_layout()
+        path = os.path.join(self.asset_dir, f"{name}.{f}")
+        i = 0
+        while os.path.exists(path):
+            i += 1
+            path = os.path.join(self.asset_dir, f"{name}({i}).{f}")
+        fig.write_image(path, scale=2, width=1000, height=450)
+        return path
 
-PLOT_RETURN_TYPE = dp.Plot | dp.Select | dp.Group | dp.Toggle
+
+PLOT_RETURN_TYPE = dp.Plot | dp.Select | dp.Group | dp.Toggle | dp.Media
 
 
 class SinglePlotGenerator(ABC):
@@ -297,8 +312,14 @@ def _build_distributions_selection(
     lines_fig.update_yaxes(range=y_lims)
     return dp.Select(
         dp.Plot(band_fig, label="Percentiles"),
-        dp.Plot(ridge_fig, label="Ridge Plot"),
-        dp.Plot(lines_fig, label="Line Plot"),
+        dp.Media(
+            plot_params.compress_fig(ridge_fig, name + "_ridge_plot"),
+            label="Ridge Plot",
+        ),
+        dp.Media(
+            plot_params.compress_fig(lines_fig, name + "_line_plot"),
+            label="Line Plot",
+        ),
     )
 
 
@@ -511,6 +532,12 @@ class SignalPricePlot(DistributionalPlotGenerator):
             )
 
         return dp.Select(
-            dp.Plot(buy_fig, label="Buy Patterns"),
-            dp.Plot(sell_fig, label="Sell Patterns"),
+            dp.Media(
+                plot_params.compress_fig(buy_fig, name="buy_patterns"),
+                label="Buy Patterns",
+            ),
+            dp.Media(
+                plot_params.compress_fig(sell_fig, name="sell_patterns"),
+                label="Sell Patterns",
+            ),
         )
