@@ -1,5 +1,6 @@
 """Test the orchestration function."""
 
+import logging
 import os
 from typing import cast
 from unittest.mock import call, MagicMock, Mock
@@ -434,6 +435,57 @@ def test_run_from_save(mocker: MockerFixture) -> None:
     assert results == mock_results
     orc._load.assert_called_once_with(saved_results_folder)
     orc.build_datapane.assert_called_once_with(mock_results)
+
+
+def test_run_defaults_no_output_folder(
+    mocker: MockerFixture, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Run backtests with defulat slippage and tx calculators."""
+    caplog.set_level(logging.INFO)
+    strategies, datasets, _, _, portfolio, length = _build_backtest_arg_mocks()
+    n_parallel = 4
+
+    mock_results = [Mock()]
+    mocker.patch("coin_test.orchestration.orchestration._gen_results")
+    orc._gen_results.return_value = mock_results
+
+    mocker.patch("coin_test.orchestration.orchestration.ConstantSlippage")
+    sc = Mock()
+    cast(Mock, orc.ConstantSlippage).return_value = sc
+
+    mocker.patch(
+        "coin_test.orchestration.orchestration.ConstantTransactionFeeCalculator"
+    )
+    tc = Mock()
+    cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
+
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+
+    _ = orc.run(
+        datasets,
+        strategies,
+        portfolio,
+        length,
+        n_parallel,
+    )
+
+    assert caplog.record_tuples == [
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "Backtesting with ConstantSlippage slippage.",
+        ),
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "Backtesting with ConstantTransactionFeeCalculator tx fees.",
+        ),
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "BacktestResults are not being saved.",
+        ),
+    ]
 
 
 def test_run_defaults(mocker: MockerFixture) -> None:

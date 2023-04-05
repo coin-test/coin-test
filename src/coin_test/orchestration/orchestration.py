@@ -1,4 +1,5 @@
 """Define the orchestration function."""
+import logging
 import multiprocessing
 from multiprocessing import Queue
 import os
@@ -20,6 +21,9 @@ from ..backtest import (
     TransactionFeeCalculator,
 )
 from ..data import Composer, PriceDataset
+
+
+logger = logging.getLogger(__name__)
 
 
 def _save(result: BacktestResults, output_folder: str | None, i: int) -> None:
@@ -44,6 +48,7 @@ def _load(
     if len(results) == 0:
         raise ValueError(f"No backtest results found in {input_dir}")
 
+    logger.info(f"Loaded {len(results)}BacktestResults from {input_dir}.")
     return results
 
 
@@ -261,6 +266,9 @@ def run(
             args must be provided to run a backtest
     """
     if build_from_saved_results is not None:
+        logger.info(
+            f"Building analysis from saved results from: {build_from_saved_results}"
+        )
         results = _load(build_from_saved_results)
 
     else:
@@ -277,9 +285,13 @@ def run(
 
         if slippage_calculator is None:
             slippage_calculator = ConstantSlippage()
+            logger.info("Backtesting with ConstantSlippage slippage.")
         if tx_calculator is None:
             tx_calculator = ConstantTransactionFeeCalculator()
+            logger.info("Backtesting with ConstantTransactionFeeCalculator tx fees.")
 
+        if output_folder is None:
+            logger.info("BacktestResults are not being saved.")
         results = _gen_results(
             all_datasets,
             all_strategies,
