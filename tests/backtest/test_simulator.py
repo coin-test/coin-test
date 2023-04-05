@@ -275,8 +275,12 @@ def test_run_strategies(
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
-    type(mock_composer).start_time = PropertyMock(return_value=dt.datetime.now())
-    type(mock_composer).end_time = PropertyMock(return_value=dt.datetime.now())
+    type(mock_composer).start_time = PropertyMock(
+        return_value=dt.datetime.fromtimestamp(int("runrun", 36))
+    )
+    type(mock_composer).end_time = PropertyMock(
+        return_value=dt.datetime.fromtimestamp(int("runrun", 36))
+    )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=3))
 
     portfolio = Mock()
@@ -296,7 +300,7 @@ def test_run_strategies(
         mock_transaction_calculator,
     )
 
-    time = pd.Timestamp(dt.datetime.now())
+    time = pd.Timestamp(dt.datetime.fromtimestamp(int("runrun", 36)))
     schedule = [(strategy1, croniter("@yearly")), (strategy2, croniter("@yearly"))]
     trade_requests = sim.run_strategies(schedule, time, portfolio)
 
@@ -323,8 +327,12 @@ def test_warning_on_run_strategies(
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
-    type(mock_composer).start_time = PropertyMock(return_value=dt.datetime.now())
-    type(mock_composer).end_time = PropertyMock(return_value=dt.datetime.now())
+    type(mock_composer).start_time = PropertyMock(
+        return_value=dt.datetime.fromtimestamp(int("runrun", 36))
+    )
+    type(mock_composer).end_time = PropertyMock(
+        return_value=dt.datetime.fromtimestamp(int("runrun", 36))
+    )
     type(mock_composer).freq = PropertyMock(return_value=pd.DateOffset(days=3))
 
     portfolio = Mock()
@@ -344,7 +352,7 @@ def test_warning_on_run_strategies(
         mock_transaction_calculator,
     )
 
-    time = pd.Timestamp(dt.datetime.now())
+    time = pd.Timestamp(dt.datetime.fromtimestamp(int("runrun", 36)))
     schedule = [(strategy1, croniter("@yearly"))]
     trade_requests = sim.run_strategies(schedule, time, portfolio)
 
@@ -361,7 +369,7 @@ def test_warning_on_run_strategies(
 
     assert trade_requests == []
 
-    sim_err = Simulator(
+    sim_raise_blocking_err = Simulator(
         mock_composer,
         portfolio,
         [],
@@ -371,7 +379,7 @@ def test_warning_on_run_strategies(
     )
 
     with pytest.raises(ValueError):
-        sim_err.run_strategies(schedule, time, portfolio)
+        sim_raise_blocking_err.run_strategies(schedule, time, portfolio)
 
 
 def test_simulation_runs_correct_strategies(
@@ -540,7 +548,7 @@ def test_construct_simulator(asset_pair: AssetPair, mocker: MockerFixture) -> No
 
     mock_composer = Mock()
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
-    time = dt.datetime.now()
+    time = dt.datetime.fromtimestamp(int("runrun", 36))
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
         return_value=time + pd.Timedelta(days=2)
@@ -578,7 +586,7 @@ def test_construct_invalid_simulator(
     mock_transaction_calculator = Mock()
 
     mock_composer.get_range.return_value = dict.fromkeys([asset_pair], None)
-    time = dt.datetime.now()
+    time = dt.datetime.fromtimestamp(int("runrun", 36))
     type(mock_composer).start_time = PropertyMock(return_value=time)
     type(mock_composer).end_time = PropertyMock(
         return_value=time + pd.Timedelta(days=2)
