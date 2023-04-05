@@ -214,7 +214,12 @@ class Simulator:
             lookback_data = self._composer.get_range(
                 pd.Timestamp(time - strat.lookback), time, strat.asset_pairs
             )
-            trade_requests.extend(strat(time, portfolio, lookback_data))
+            try:
+                trade_requests.extend(strat(time, portfolio, lookback_data))
+            except Exception as e:
+                logger.warning(f"Strategy {strat.name} caught an exception.")
+                logger.warning(e)
+                # or raise RuntimeError / other error here
         return trade_requests
 
     @staticmethod
