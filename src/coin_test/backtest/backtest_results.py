@@ -1,5 +1,6 @@
 """Define the BacktestResults class."""
 
+import logging
 import os
 import pickle
 from typing import Iterable
@@ -12,6 +13,9 @@ from .trade import Trade
 from .trade_request import TradeRequest
 from ..data import Composer
 from ..util import AssetPair
+
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestResults:
@@ -41,6 +45,8 @@ class BacktestResults:
             slippage_calculator_type (type): Slippage Calculator used
             transaction_fee_calculator_type (type): Tx Fees used
         """
+        logger.debug("Generating Backtest Results")
+
         self.seed = None
         self.starting_portfolio = starting_portfolio
         self.slippage_type = slippage_calculator_type

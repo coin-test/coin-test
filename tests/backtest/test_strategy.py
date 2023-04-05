@@ -57,7 +57,9 @@ def test_strategy_valid(assets: dict, asset_pair: AssetPair) -> None:
 
     portfolio = Portfolio(asset_pair.currency, assets)
 
-    result = test_strategy(dt.datetime.now(), portfolio, pd.DataFrame())
+    result = test_strategy(
+        dt.datetime.fromtimestamp(int("runrun", 36)), portfolio, pd.DataFrame()
+    )
 
     assert result != []
 
