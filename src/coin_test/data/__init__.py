@@ -4,6 +4,8 @@ from .composer import Composer
 from .datasaver import Datasaver
 from .dataset_generator import (
     DatasetGenerator,
+    GarchDatasetGenerator,
+    GarchSettings,
     ReturnsDatasetGenerator,
     StitchedChunkDatasetGenerator,
 )
@@ -24,4 +26,6 @@ __all__ = [
     "Processor",
     "ReturnsDatasetGenerator",
     "StitchedChunkDatasetGenerator",
+    "GarchDatasetGenerator",
+    "GarchSettings",
 ]

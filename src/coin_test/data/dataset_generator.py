@@ -220,7 +220,7 @@ class ReturnsDatasetGenerator(StitchedChunkDatasetGenerator):
 class GarchSettings:
     """Class for keeping track of settings to intialize a GARCH model.
 
-    Defaults initialize a GARCH(1,1) model with constant mean.
+    Default values initialize a GARCH(1,1) model with constant mean.
     """
 
     mean: Literal[
@@ -246,22 +246,22 @@ class GarchSettings:
     rescale: bool | None = None
 
 
-class GARCHDatasetGenerator(DatasetGenerator):
+class GarchDatasetGenerator(DatasetGenerator):
     """Synthetic Dataset Generator with GARCH.
 
     Using Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model.
 
     Close prices are simulated with univariate GARCH model.
     Open prices are set as previous day's close.
-    High and Low prices are randomly sampled chunks normalized as
-    percent changes relative to min/max Open/Close of given historical dataset.
+    High and Low prices are randomly sampled chunks transformed into and reverted from
+    percent changes relative to min/max Open/Close of each period bar.
     """
 
     DATASET_TYPE = CustomDataset
 
     def __init__(
         self,
-        dataset: "GARCHDatasetGenerator.DATASET_TYPE",
+        dataset: "GarchDatasetGenerator.DATASET_TYPE",
         chunk_size: int = 1,
         mean: Literal[
             "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
@@ -285,7 +285,7 @@ class GARCHDatasetGenerator(DatasetGenerator):
         hold_back: int | None = None,
         rescale: bool | None = None,
     ) -> None:
-        """Initialize a GARCHDatasetGenerator."""
+        """Initializes a GARCHDatasetGenerator."""
         self.dataset = dataset
         self.start: pd.Period = dataset.df.index[0]  # type: ignore
         self.metadata = dataset.metadata
@@ -310,14 +310,15 @@ class GARCHDatasetGenerator(DatasetGenerator):
         )
 
     @staticmethod
-    def get_GARCH_model_parameters(
-        univariate_series: pd.Series, garch_settings: GarchSettings
+    def get_garch_model_parameters(
+        univariate_series: pd.Series,
+        garch_settings: GarchSettings,
     ) -> pd.Series:
-        """Get GARCH model parameters estimated from given univariate series.
+        """Gets GARCH model parameters estimated from given univariate series.
 
         Args:
             univariate_series: series of data
-            garch_settings: settings to contruct the GARCH model with
+            garch_settings: arguments to contruct the GARCH model with
 
         Returns:
             res_garch_model.params: dictionary of model parameters
@@ -346,40 +347,140 @@ class GARCHDatasetGenerator(DatasetGenerator):
         chunk_size: int,
         rng: np.random.Generator,
     ) -> pd.Series:
-        """Samples a new series from a pandas series.
+        """Randomly samples a new series from a given series.
 
         Args:
             series: series to sample from
-            num_rows: The number of rows in the series
+            num_rows: The number of rows in the new series
             chunk_size: The amount of rows to combine in each chunk
             rng: A numpy random number generator
 
         Returns:
             pd.Series: a new sampled series
         """
-        # Select Chunk Length Windows
+        # Select chunk length windows.
         chunks = tuple(series.rolling(chunk_size))[chunk_size - 1 :]
 
         rows_per_chunk = len(chunks[0])
         num_chunks = ceil(num_rows / rows_per_chunk)
 
-        # Select data and concatenate chunks
+        # Select data and concatenate chunks.
         r = Random(rng.bytes(16))  # type: ignore
         sampled_chunks: list[pd.Series] = r.sample(chunks, num_chunks)
-        sampled_data: pd.Series = pd.concat(sampled_chunks)
+        sampled_series: pd.Series = pd.concat(sampled_chunks)
 
-        # shrink to size of dataset
-        sampled_data = sampled_data.head(num_rows).reset_index(drop=True)
+        # Shrink to size of dataset
+        sampled_series = sampled_series.head(num_rows).reset_index(drop=True)
 
-        return sampled_data
+        # Remove series name.
+        sampled_series = sampled_series.rename(None)
+
+        return sampled_series
+
+    @staticmethod
+    def to_pct_change_based_on_extreme_bar_open_and_close(
+        series_to_pct_change: pd.Series,
+        extreme: Literal["max", "min"],
+        open_series: pd.Series,
+        close_series: pd.Series,
+    ) -> pd.Series:
+        """Calculates percent change relative to min/max of Open and Close.
+
+        Args:
+            series_to_pct_change: a series of values to turn into percent change
+            extreme: selects either min or max when calculating extreme series
+            open_series: series of open price values
+            close_series: series of close price values
+
+        Returns:
+            pct_change_series: difference of series_to_pct_change and extreme_series
+            as proportion of extreme_series.
+
+        """
+        if extreme == "max":
+            extreme_series = close_series.combine(open_series, max, fill_value=0)
+        else:
+            extreme_series = close_series.combine(open_series, min, fill_value=0)
+
+        # Remove all series index before calculation.
+        series_to_pct_change = series_to_pct_change.reset_index(drop=True)
+        extreme_series = extreme_series.reset_index(drop=True)
+
+        pct_change_series = (series_to_pct_change - extreme_series) / extreme_series
+
+        return pct_change_series
+
+    @staticmethod
+    def from_pct_change_based_on_extreme_bar_open_and_close(
+        pct_change_series: pd.Series,
+        extreme: Literal["max", "min"],
+        open_series: pd.Series,
+        close_series: pd.Series,
+    ) -> pd.Series:
+        """Calculates values from percent change and min/max of Open and Close.
+
+        Args:
+            pct_change_series: a series of percent change to turn into values
+            extreme: selects either min or max when calculating extreme series
+            open_series: series of open price values
+            close_series: series of close price values
+
+        Returns:
+            series: extreme_series + extreme_series * pct_change_series
+
+        Raises:
+            ValueError: open_series should be same length as close_series.
+            ValueError: pct_change_series should be same length as open_series.
+        """
+        if len(close_series) != len(open_series):
+            raise ValueError("open_series should be same length as close_series.")
+
+        if len(pct_change_series) != len(open_series):
+            raise ValueError("pct_change_series should be same length as open_series.")
+
+        if extreme == "max":
+            extreme_series = close_series.combine(open_series, max, fill_value=0)
+        else:
+            extreme_series = close_series.combine(open_series, min, fill_value=0)
+
+        # Remove all series index before calculation.
+        pct_change_series = pct_change_series.reset_index(drop=True)
+        extreme_series = extreme_series.reset_index(drop=True)
+
+        return extreme_series + extreme_series * pct_change_series
+
+    @staticmethod
+    def from_pct_change_based_on_starting_value(
+        pct_change_series: pd.Series,
+        starting_price: float,
+    ) -> pd.Series:
+        """Generate synthetic series from GARCH model fit to univariate data."""
+        # Values are one row longer than by-item percent changes.
+        num_rows = len(pct_change_series) + 1
+        # Remove all series index before calculation.
+        pct_change_series = pct_change_series.reset_index(drop=True)
+
+        # Transform generated percent change values to price values.
+        synthetic_series = pd.Series(0, index=list(range(num_rows)))
+        # Intialize series_0 from starting value.
+        synthetic_series[0] = starting_price
+        # set series_j = series_j-1 + series_j-1 * pct_change_j-1 / 100.
+        for j in range(1, num_rows):
+            synthetic_series[j] = (
+                synthetic_series[j - 1]
+                + synthetic_series[j - 1] * pct_change_series[j - 1] / 100
+            )
+
+        synthetic_series = synthetic_series.reset_index(drop=True).rename(None)
+        return synthetic_series
 
     def generate(
         self,
         timedelta: pd.Timedelta | pd.DateOffset,
         seed: int | None = None,
         n: int = 1,
-    ) -> list["GARCHDatasetGenerator.DATASET_TYPE"]:
-        """Create chunk-based synthetic datasets from the given dataset.
+    ) -> list["GarchDatasetGenerator.DATASET_TYPE"]:
+        """Create synthetic datasets from GARCH model fit to given dataset.
 
         Args:
             timedelta: A time range for the new datasets
@@ -390,6 +491,7 @@ class GARCHDatasetGenerator(DatasetGenerator):
             list[PriceDataset]: The synthetic datasets
         """
         rng = np.random.default_rng(seed)
+        np.random.RandomState(seed)
 
         df = self.dataset.df
         starting_prices = df.sample(n=n, random_state=rng, replace=True)[
@@ -401,109 +503,98 @@ class GARCHDatasetGenerator(DatasetGenerator):
         )
         num_rows = len(period_index)
 
-        # Define univariate price trend to simulate with GARCH model.
-        returns = 100 * df["Close"].pct_change().dropna()
-
-        # Normalize high prices
-        df["max_open_close"] = df[["Open", "Close"]].max(axis=1)
-        df["pct_diff_high"] = (df["High"] - df["max_open_close"]) / df["max_open_close"]
-
-        # Normalize low prices
-        df["min_open_close"] = df[["Open", "Close"]].min(axis=1)
-        df["pct_diff_low"] = (df["Low"] - df["min_open_close"]) / df["min_open_close"]
-
-        garch_model_params = self.get_GARCH_model_parameters(
-            returns, self.garch_settings
+        # Estimate GARCH model parameters from univariate percent change series.
+        pct_change_close_series = 100 * df["Close"].pct_change().dropna()
+        garch_model_params = GarchDatasetGenerator.get_garch_model_parameters(
+            univariate_series=pct_change_close_series,
+            garch_settings=self.garch_settings,
         )
 
-        # Construct an empty GARCH model for simulating data.
-        sim_garch_model = arch_model(
-            None,
-            mean=self.garch_settings.mean,
-            lags=self.garch_settings.lags,
-            vol=self.garch_settings.vol,
-            p=self.garch_settings.p,
-            o=self.garch_settings.o,
-            q=self.garch_settings.q,
-            power=self.garch_settings.power,
-            dist=self.garch_settings.dist,
-            hold_back=self.garch_settings.hold_back,
-            rescale=self.garch_settings.rescale,
+        pct_change_high_series = self.to_pct_change_based_on_extreme_bar_open_and_close(
+            series_to_pct_change=df["High"],
+            extreme="max",
+            open_series=df["Open"],
+            close_series=df["Close"],
+        )
+
+        pct_change_low_series = self.to_pct_change_based_on_extreme_bar_open_and_close(
+            series_to_pct_change=df["Low"],
+            extreme="min",
+            open_series=df["Open"],
+            close_series=df["Close"],
         )
 
         new_datasets = []
         for i in range(n):
-            synthetic_series_close_pct_change = sim_garch_model.simulate(
-                garch_model_params, num_rows  # type: ignore
-            )["data"]
-
-            # Transform generated Close percent change values to Close prices.
-            # Intialize Close_0 from starting value.
-            # Then for each row,
-            # set Close_j = Close_j-1 + Close_j-1 * pct_change_j-1 / 100.
-            synthetic_series_close = pd.Series(0, index=list(range(num_rows)))
-            synthetic_series_close[0] = starting_prices["Close"][i]
-            for j in range(1, num_rows):
-                synthetic_series_close[j] = (
-                    synthetic_series_close[j - 1]
-                    + synthetic_series_close[j - 1]
-                    * synthetic_series_close_pct_change[j - 1]
-                    / 100
+            # Initalize a GARCH model distribution and simulate Close data.
+            synthetic_pct_change_close_series = arch_model(
+                None,
+                mean=self.garch_settings.mean,
+                lags=self.garch_settings.lags,
+                vol=self.garch_settings.vol,
+                p=self.garch_settings.p,
+                o=self.garch_settings.o,
+                q=self.garch_settings.q,
+                power=self.garch_settings.power,
+                dist=self.garch_settings.dist,
+                hold_back=self.garch_settings.hold_back,
+                rescale=self.garch_settings.rescale,
+            ).simulate(
+                garch_model_params, num_rows - 1  # type: ignore
+            )[
+                "data"
+            ]
+            synthetic_close_series = (
+                GarchDatasetGenerator.from_pct_change_based_on_starting_value(
+                    pct_change_series=synthetic_pct_change_close_series,
+                    starting_price=starting_prices["Close"][i],
                 )
+            )
 
-            # Set Open price as previous Close price.
-            synthetic_series_open = synthetic_series_close.shift(periods=1)
-            synthetic_series_open[0] = starting_prices["Open"][i]
+            synthetic_open_series = synthetic_close_series.shift(periods=1)
+            synthetic_open_series[0] = starting_prices["Open"][i]
 
-            # Set High price as percent change on max between Open and Close.
-            synthetic_series_high_pct_change = self.sample_series(
-                df["pct_diff_high"],
-                num_rows,
+            pct_change_high_series_sampled = GarchDatasetGenerator.sample_series(
+                series=pct_change_high_series,
+                num_rows=num_rows,
                 chunk_size=self.chunk_size,
                 rng=rng,
             )
-
-            synthetic_series_max_open_close = synthetic_series_close.combine(
-                synthetic_series_open, max, fill_value=0
+            synthetic_high_series = (
+                self.from_pct_change_based_on_extreme_bar_open_and_close(
+                    pct_change_series=pct_change_high_series_sampled,
+                    extreme="max",
+                    close_series=synthetic_close_series,
+                    open_series=synthetic_open_series,
+                )
             )
 
-            synthetic_series_high = (
-                synthetic_series_max_open_close
-                + synthetic_series_max_open_close * synthetic_series_high_pct_change
-            )
-
-            # Set Low price as percent change on min between Open and Close.
-            synthetic_series_low_pct_change = self.sample_series(
-                df["pct_diff_close"],
-                num_rows,
+            pct_change_low_series_sampled = GarchDatasetGenerator.sample_series(
+                series=pct_change_low_series,
+                num_rows=num_rows,
                 chunk_size=self.chunk_size,
                 rng=rng,
             )
-
-            synthetic_series_min_open_close = synthetic_series_close.combine(
-                synthetic_series_open, min, fill_value=0
+            synthetic_low_series = (
+                self.from_pct_change_based_on_extreme_bar_open_and_close(
+                    pct_change_series=pct_change_low_series_sampled,
+                    extreme="min",
+                    close_series=synthetic_close_series,
+                    open_series=synthetic_open_series,
+                )
             )
 
-            synthetic_series_low = (
-                synthetic_series_min_open_close
-                + synthetic_series_min_open_close * synthetic_series_low_pct_change
-            )
-
-            # Build dataframe.
-            synthetic_index_labels = period_index.copy()
-            synthetic_series_open.index = synthetic_index_labels
-            synthetic_series_high.index = synthetic_index_labels
-            synthetic_series_low.index = synthetic_index_labels
-            synthetic_series_close.index = synthetic_index_labels
             synthetic_df = pd.concat(
                 {
-                    "Open": synthetic_series_open,
-                    "High": synthetic_series_high,
-                    "Low": synthetic_series_low,
-                    "Close": synthetic_series_close,
+                    "Open": synthetic_open_series,
+                    "High": synthetic_high_series,
+                    "Low": synthetic_low_series,
+                    "Close": synthetic_close_series,
+                    "Volume": pd.Series(0, index=list(range(num_rows))),
                 },
                 axis=1,
             )
+            synthetic_df.index = period_index.copy()
 
             new_datasets.append(
                 self.DATASET_TYPE(
