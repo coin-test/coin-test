@@ -1,6 +1,7 @@
 """Define the SyntheticDatasets class and subclasses."""
 
 from abc import ABC, abstractmethod
+import logging
 from math import ceil
 from random import Random
 from typing import cast
@@ -9,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from .datasets import CustomDataset
+
+logger = logging.getLogger(__name__)
 
 
 class DatasetGenerator(ABC):
@@ -26,8 +29,122 @@ class DatasetGenerator(ABC):
             n: The number of datasets to generate
 
         Returns:
-            list[PriceDataset]: The synthetic datasets
+            list[DATASET_TYPE]: The synthetic datasets
         """
+
+
+class WindowStepDatasetGenerator(DatasetGenerator):
+    """Windows of data as separate datasets."""
+
+    DATASET_TYPE = CustomDataset
+
+    def __init__(self, dataset: "WindowStepDatasetGenerator.DATASET_TYPE") -> None:
+        """Create a window step dataset generator."""
+        self.dataset = dataset
+        self.metadata = dataset.metadata
+
+    def generate(
+        self,
+        timedelta: pd.Timedelta,
+        seed: int | None = None,
+        n: int = 1,
+    ) -> list["WindowStepDatasetGenerator.DATASET_TYPE"]:
+        """Create uniformly distributed window+step datasets.
+
+        Given a length of time for each dataset, along with a number of
+        datasets to create, make new datasets of a given length that are
+        equally spaced from each other, creating overlapping datasets
+        if necessary.
+
+        Args:
+            timedelta: A time range for the new datasets
+            seed: Irrelevant for this implementation
+            n: The number of datasets to generate
+
+        Returns:
+            list[DATASET_TYPE]: The synthetic datasets
+        """
+        del seed
+
+        chunks = self.extract_windows(
+            self.dataset.df,
+            self.metadata.freq,
+            timedelta,
+            n,
+        )
+
+        datasets = []
+
+        for i, chunk in enumerate(chunks):
+            datasets.append(
+                self.DATASET_TYPE(
+                    f"{type(self).__name__}_{i}",
+                    chunk,
+                    self.metadata.freq,
+                    self.metadata.pair,
+                    synthetic=False,
+                )
+            )
+
+        return datasets
+
+    @staticmethod
+    def extract_windows(
+        df_total: pd.DataFrame,
+        freq: str,
+        timedelta: pd.Timedelta,
+        n: int,
+    ) -> list[pd.DataFrame]:
+        """Take a DataFrame and create windows from it.
+
+        Args:
+            df_total: Entire original DataFrame
+            freq: The frequency of the DataFrame PeriodIndex
+            timedelta: The length in time per window
+            n: The number of windows
+
+        Returns:
+            list[pd.DataFrame]: The windows
+        """
+        window_length = WindowStepDatasetGenerator.calc_window_length(freq, timedelta)
+
+        slices = WindowStepDatasetGenerator.make_slices(len(df_total), window_length, n)
+
+        return [cast(pd.DataFrame, df_total.iloc[s]) for s in slices]
+
+    @staticmethod
+    def make_slices(total_length: int, window_length: int, n: int) -> list[slice]:
+        """Given the total dataset length and window length, make slices for the df."""
+        last_sliceable = total_length - window_length
+        if last_sliceable < 0:
+            raise ValueError("Windows are larger than original dataset")
+
+        # calculate the num of intervals between each chunk's start
+        window_sep = last_sliceable / n
+        window_overlap_perc = (window_length - window_sep) / window_length
+
+        # check valid chunk sizes
+        if window_sep < 1:
+            raise ValueError(f"Impossible to make {n} windows from the given dataset.")
+        if window_overlap_perc > 0.5:
+            logger.warning(f"Windows overlap by {window_overlap_perc*100:.0f}%")
+
+        start_indices = (
+            np.linspace(start=0, stop=last_sliceable, num=n).round().astype(int)
+        )
+
+        return list(map(slice, start_indices, start_indices + window_length))
+
+    @staticmethod
+    def calc_window_length(freq: str, timedelta: pd.Timedelta) -> int:
+        """Calculate the number of rows in each window of length timedelta."""
+        temp_start = pd.Period("1970-1-1", freq=freq)
+        temp_idx = pd.period_range(
+            start=temp_start,
+            end=temp_start + timedelta,
+            freq=freq,
+        )
+        return len(temp_idx)
 
 
 class SamplingDatasetGenerator(DatasetGenerator):
@@ -35,7 +152,7 @@ class SamplingDatasetGenerator(DatasetGenerator):
 
     @staticmethod
     def create_index(
-        start: pd.Period, timedelta: pd.Timedelta | pd.DateOffset, freq: str
+        start: pd.Period, timedelta: pd.Timedelta, freq: str
     ) -> pd.PeriodIndex:
         """Create a PeriodIndex given a start time, timedelta, and frequency."""
         return pd.period_range(start=start, end=start + timedelta, freq=freq)
@@ -122,7 +239,7 @@ class StitchedChunkDatasetGenerator(SamplingDatasetGenerator):
 
     def generate(
         self,
-        timedelta: pd.Timedelta | pd.DateOffset,
+        timedelta: pd.Timedelta,
         seed: int | None = None,
         n: int = 1,
     ) -> list["StitchedChunkDatasetGenerator.DATASET_TYPE"]:
@@ -134,7 +251,7 @@ class StitchedChunkDatasetGenerator(SamplingDatasetGenerator):
             n: The number of datasets to generate
 
         Returns:
-            list[PriceDataset]: The synthetic datasets
+            list[DATASET_TYPE]: The synthetic datasets
         """
         rng = np.random.default_rng(seed)
 
@@ -220,7 +337,7 @@ class ReturnsDatasetGenerator(SamplingDatasetGenerator):
 
     def generate(
         self,
-        timedelta: pd.Timedelta | pd.DateOffset,
+        timedelta: pd.Timedelta,
         seed: int | None = None,
         n: int = 1,
     ) -> list["ReturnsDatasetGenerator.DATASET_TYPE"]:
@@ -232,7 +349,7 @@ class ReturnsDatasetGenerator(SamplingDatasetGenerator):
             n: The number of datasets to generate
 
         Returns:
-            list[PriceDataset]: The synthetic datasets
+            list[DATASET_TYPE]: The synthetic datasets
         """
         rng = np.random.default_rng(seed)
 

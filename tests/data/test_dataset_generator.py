@@ -1,5 +1,7 @@
 """Test the DatasetGenerator classes."""
 
+import logging
+from typing import cast
 from unittest.mock import Mock
 
 import numpy as np
@@ -8,12 +10,139 @@ import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.data import (
+    CustomDataset,
+    MetaData,
     ReturnsDatasetGenerator,
     SamplingDatasetGenerator,
     StitchedChunkDatasetGenerator,
+    WindowStepDatasetGenerator,
 )
-from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
+
+
+def test_window_dataset_generator_initialized(dataset: CustomDataset) -> None:
+    """Properly initialize a window step dataset generator."""
+    metadata = dataset.metadata
+
+    gen = WindowStepDatasetGenerator(dataset)
+
+    assert gen.dataset == dataset
+    assert gen.metadata == metadata
+
+
+def test_make_slices() -> None:
+    """Properly make slices of windows."""
+    slices = WindowStepDatasetGenerator.make_slices(10, 4, 3)
+    assert slices == [
+        slice(0, 4),
+        slice(3, 7),
+        slice(6, 10),
+    ]
+
+
+def test_warn_make_overlapping_slices(caplog: pytest.LogCaptureFixture) -> None:
+    """Warn when making slices of overlapping windows."""
+    caplog.set_level(logging.WARN)
+
+    slices = WindowStepDatasetGenerator.make_slices(10, 4, 5)
+
+    assert slices == [
+        slice(0, 4),
+        slice(2, 6),
+        slice(3, 7),
+        slice(4, 8),
+        slice(6, 10),
+    ]
+
+    assert caplog.record_tuples == [
+        ("coin_test.data.dataset_generator", logging.WARN, "Windows overlap by 70%")
+    ]
+
+
+def test_err_too_many_slices() -> None:
+    """Error when making too many slices."""
+    with pytest.raises(ValueError):
+        WindowStepDatasetGenerator.make_slices(10, 1, 11)
+
+
+def test_err_too_big_slices() -> None:
+    """Error when making too big slices."""
+    with pytest.raises(ValueError):
+        WindowStepDatasetGenerator.make_slices(10, 11, 1)
+
+
+def test_calc_window_length() -> None:
+    """Properly calculate the length of a window."""
+    freq_1 = "min"
+    timedelta_1 = pd.Timedelta(minutes=30)
+
+    freq_2 = "H"
+    timedelta_2 = pd.Timedelta(days=40)
+
+    assert WindowStepDatasetGenerator.calc_window_length(freq_1, timedelta_1) == 31
+    assert WindowStepDatasetGenerator.calc_window_length(freq_2, timedelta_2) == 961
+
+
+def test_extract_windows(hour_data_indexed_df: pd.DataFrame) -> None:
+    """Properly extract windows from a DataFrame."""
+    freq = "H"
+    timedelta = pd.Timedelta(hours=4)
+    n = 3
+
+    windows = WindowStepDatasetGenerator.extract_windows(
+        hour_data_indexed_df, freq, timedelta, n
+    )
+
+    assert len(windows) == n
+    pd.testing.assert_frame_equal(
+        windows[0], cast(pd.DataFrame, hour_data_indexed_df.iloc[:5])
+    )
+    pd.testing.assert_frame_equal(
+        windows[-1], cast(pd.DataFrame, hour_data_indexed_df.iloc[-5:])
+    )
+
+
+def test_create_window_steps(
+    dataset: CustomDataset, hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+) -> None:
+    """Create window + step datasets."""
+    metadata = dataset.metadata
+    freq = metadata.freq
+    pair = metadata.pair
+    dataset.name = f"{WindowStepDatasetGenerator.__name__}_0"
+
+    timedelta = pd.Timedelta(hours=3)
+    n = 2
+
+    mocker.patch("coin_test.data.WindowStepDatasetGenerator.DATASET_TYPE")
+
+    gen = WindowStepDatasetGenerator(dataset)
+
+    mocker.patch("coin_test.data.WindowStepDatasetGenerator.extract_windows")
+    WindowStepDatasetGenerator.extract_windows.return_value = dfs = [
+        cast(pd.DataFrame, hour_data_indexed_df.iloc[:10]),
+        cast(pd.DataFrame, hour_data_indexed_df.iloc[-10:]),
+    ]
+
+    gen.generate(timedelta=timedelta, seed=None, n=n)
+
+    WindowStepDatasetGenerator.extract_windows.assert_called_with(
+        dataset.df, freq, timedelta, n
+    )
+
+    dataset_params = (
+        WindowStepDatasetGenerator.DATASET_TYPE.call_args_list  # type: ignore
+    )
+
+    assert len(dataset_params) == 2
+
+    (s_name, s_df, s_freq, s_pair), s_opts = dataset_params[0]
+
+    assert s_name == dataset.name
+    assert s_freq == freq
+    assert s_pair == pair
+    assert s_opts == {"synthetic": False}
+    pd.testing.assert_frame_equal(s_df, dfs[0])
 
 
 def test_normalize_dataset(
@@ -54,18 +183,14 @@ def test_properly_index_data() -> None:
 
 
 def test_returns_dataset_generator_initialized(
-    hour_data_indexed_df: pd.DataFrame,
+    dataset: CustomDataset,
 ) -> None:
     """Initialize the ReturnsDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    metadata = MetaData(pair, freq="H")
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
+    metadata = dataset.metadata
 
-    gen = ReturnsDatasetGenerator(mock_dataset)
+    gen = ReturnsDatasetGenerator(dataset)
 
-    assert gen.dataset == mock_dataset
+    assert gen.dataset == dataset
     assert gen.metadata == metadata
     assert isinstance(gen.start, pd.Period)
 
@@ -91,18 +216,15 @@ def test_returns_dataset_select_data(
 
 
 def test_returns_dataset_generator_create_datasets(
-    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+    dataset: CustomDataset, mocker: MockerFixture
 ) -> None:
     """Create synthetic datasets with ReturnsDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    freq = "H"
-    metadata = MetaData(pair, freq)
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
-    mock_dataset.name = f"{ReturnsDatasetGenerator.__name__}_0"
+    metadata = dataset.metadata
+    freq = metadata.freq
+    pair = metadata.pair
+    dataset.name = f"{ReturnsDatasetGenerator.__name__}_0"
 
-    gen = ReturnsDatasetGenerator(mock_dataset)
+    gen = ReturnsDatasetGenerator(dataset)
     timedelta = pd.Timedelta(hours=3)
 
     mocker.patch("coin_test.data.ReturnsDatasetGenerator.DATASET_TYPE")
@@ -116,7 +238,7 @@ def test_returns_dataset_generator_create_datasets(
     (s_name, s_df, s_freq, s_pair), s_opts = dataset_params[0]
 
     assert isinstance(s_df.index, pd.PeriodIndex)
-    assert s_name == mock_dataset.name
+    assert s_name == dataset.name
     assert s_freq == freq
     assert s_pair == pair
     assert s_opts == {"synthetic": True}
@@ -124,39 +246,29 @@ def test_returns_dataset_generator_create_datasets(
 
 
 def test_chunked_dataset_generator_initialized(
-    hour_data_indexed_df: pd.DataFrame,
+    dataset: CustomDataset,
 ) -> None:
     """Initialize the StitchedChunkDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    metadata = MetaData(pair, freq="H")
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
+    metadata = dataset.metadata
     chunk_size = 5
 
-    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+    gen = StitchedChunkDatasetGenerator(dataset, chunk_size)
 
-    assert gen.dataset == mock_dataset
+    assert gen.dataset == dataset
     assert gen.metadata == metadata
     assert gen.chunk_size == chunk_size
     assert isinstance(gen.start, pd.Period)
 
 
 def test_chunked_dataset_generator_err_on_initialization(
-    hour_data_indexed_df: pd.DataFrame,
+    dataset: CustomDataset,
 ) -> None:
     """Fail to initialize the StitchedChunkDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    metadata = MetaData(pair, freq="H")
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
+    with pytest.raises(ValueError):
+        StitchedChunkDatasetGenerator(dataset, chunk_size=-1)
 
     with pytest.raises(ValueError):
-        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=-1)
-
-    with pytest.raises(ValueError):
-        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=2**32)
+        StitchedChunkDatasetGenerator(dataset, chunk_size=2**32)
 
 
 def test_chunked_dataset_select_data(
@@ -179,20 +291,16 @@ def test_chunked_dataset_select_data(
 
 
 def test_chunk_dataset_generator_create_datasets(
-    hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
+    dataset: CustomDataset, mocker: MockerFixture
 ) -> None:
     """Create synthetic datasets with StitchedChunkDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    freq = "H"
+    metadata = dataset.metadata
+    freq = metadata.freq
+    pair = metadata.pair
+    dataset.name = f"{StitchedChunkDatasetGenerator.__name__}_0"
+
     chunk_size = 3  # 3 rows of data
-    metadata = MetaData(pair, freq)
-
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
-    mock_dataset.name = f"{StitchedChunkDatasetGenerator.__name__}_0"
-
-    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+    gen = StitchedChunkDatasetGenerator(dataset, chunk_size)
     timedelta = pd.Timedelta(hours=10)
 
     mocker.patch("coin_test.data.StitchedChunkDatasetGenerator.DATASET_TYPE")
@@ -208,7 +316,7 @@ def test_chunk_dataset_generator_create_datasets(
     (s_name, s_df, s_freq, s_pair), s_opts = dataset_params[0]
 
     assert isinstance(s_df.index, pd.PeriodIndex)
-    assert s_name == mock_dataset.name
+    assert s_name == dataset.name
     assert s_freq == freq
     assert s_pair == pair
     assert s_opts == {"synthetic": True}
@@ -236,6 +344,19 @@ def hour_data_norm_df(hour_data_norm: str) -> pd.DataFrame:
         dtype=dtypes,  # type: ignore
     )
     return df
+
+
+@pytest.fixture
+def dataset(hour_data_indexed_df: pd.DataFrame) -> CustomDataset:
+    """A mock dataset with data and metadata."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    freq = "H"
+    metadata = MetaData(pair, freq)
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    return mock_dataset
 
 
 @pytest.fixture
