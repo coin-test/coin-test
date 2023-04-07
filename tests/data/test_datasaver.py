@@ -4,6 +4,7 @@ import os
 import pickle
 from unittest.mock import Mock, mock_open, patch
 
+import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.data import Datasaver, Dataset
@@ -77,10 +78,21 @@ def test_datasaver_load(mocker: MockerFixture) -> None:
     datasaver = Mock()
     valid_local_path = "a_valid_path/test.pkl"
 
+    mocker.patch("os.path.isfile")
+    os.path.isfile.return_value = True
+
     mocker.patch("pickle.load")
     pickle.load.return_value = datasaver
 
     with patch("builtins.open", mock_open(read_data="data")):
         test = Datasaver.load(valid_local_path)
+        open.assert_called_with(valid_local_path, "rb")
         pickle.load.assert_called()
         assert test == datasaver
+
+
+def test_datasaver_load_bad_file() -> None:
+    """Error on invalid file."""
+    valid_local_path = "a_valid_path/test.pkl"
+    with pytest.raises(ValueError):
+        _ = Datasaver.load(valid_local_path)

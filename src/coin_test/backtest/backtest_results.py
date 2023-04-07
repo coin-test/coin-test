@@ -1,5 +1,6 @@
 """Define the BacktestResults class."""
 
+import logging
 import os
 import pickle
 from typing import Iterable
@@ -12,6 +13,9 @@ from .trade import Trade
 from .trade_request import TradeRequest
 from ..data import Composer
 from ..util import AssetPair
+
+
+logger = logging.getLogger(__name__)
 
 
 class BacktestResults:
@@ -41,6 +45,8 @@ class BacktestResults:
             slippage_calculator_type (type): Slippage Calculator used
             transaction_fee_calculator_type (type): Tx Fees used
         """
+        logger.debug("Generating Backtest Results")
+
         self.seed = None
         self.starting_portfolio = starting_portfolio
         self.slippage_type = slippage_calculator_type
@@ -65,6 +71,7 @@ class BacktestResults:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "wb") as f:
             pickle.dump(self, f)
+        logger.debug(f"Saved pickled BacktestResults to: {path}")
 
     @staticmethod
     def create_date_price_df(sim_data: pd.DataFrame, composer: Composer) -> pd.Series:
@@ -98,3 +105,24 @@ class BacktestResults:
             total += conversion * money.qty
 
         return total
+
+    @staticmethod
+    def load(fp: str) -> "BacktestResults":
+        """Load BacktestResults from disk.
+
+        Args:
+            fp: filepath to pickle file to load from
+
+        Returns:
+            BacktestResults: BacktestResults stored at the location
+
+        Raises:
+            ValueError: raises ValueError if the specified file path is not a file
+        """
+        if not os.path.isfile(fp):
+            raise ValueError(f"'{fp}' is not a file.")
+
+        with open(fp, "rb") as f:
+            obj = pickle.load(f)
+            logger.debug(f"Loaded Backtest results from {fp}")
+            return obj
