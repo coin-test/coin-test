@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 from copy import copy
 import datetime as dt
+import logging
 
 from croniter import croniter
 import pandas as pd
@@ -17,6 +18,9 @@ from ..data import Composer
 from ..util import AssetPair
 
 
+logger = logging.getLogger(__name__)
+
+
 class Simulator:
     """Manage the simulation of a backtest."""
 
@@ -27,6 +31,7 @@ class Simulator:
         strategies: Iterable[Strategy],
         slippage_calculator: SlippageCalculator,
         transaction_fee_calculator: TransactionFeeCalculator,
+        warn_on_error: bool = True,
     ) -> None:
         """Initialize a Simulator object.
 
@@ -37,10 +42,14 @@ class Simulator:
             strategies: User Defined strategies to run in the simulation
             slippage_calculator: Slippage Calculator implementation
             transaction_fee_calculator: Transaction Fee Calculator implementation
+            warn_on_error: Log a warning instead of throwing an error when a strategy
+                raises an exception
 
         Raises:
             ValueError: If stategy AssetPairs do not align with Composer
         """
+        logger.debug("Creating simulator")
+
         self._portfolio = starting_portfolio
         self._composer = composer
         self._strategies = strategies
@@ -50,6 +59,8 @@ class Simulator:
         self._start_time = composer.start_time
         self._end_time = composer.end_time
         self._simulation_dt = composer.freq
+
+        self._warn_on_error = warn_on_error
 
         if not self._validate(composer, strategies):
             raise ValueError("Strategy uses AssetPair that composer does not")
@@ -200,6 +211,9 @@ class Simulator:
             time: Current timestamp used to determine which strategies should run
             portfolio: Current Portfolio at given timestamp
 
+        Raises:
+            ValueError: If a strategy raises an error and warn_on_error is False
+
         Returns:
             list of TradeRequests to handle
         """
@@ -208,7 +222,17 @@ class Simulator:
             lookback_data = self._composer.get_range(
                 pd.Timestamp(time - strat.lookback), time, strat.asset_pairs
             )
-            trade_requests.extend(strat(time, portfolio, lookback_data))
+            try:
+                trade_requests.extend(strat(time, portfolio, lookback_data))
+            except Exception as e:
+                if self._warn_on_error:
+                    logger.warning(f"Strategy {strat.name} raised an exception.")
+                    logger.warning(e)
+                else:
+                    raise ValueError(
+                        f"Strategy {strat.name} raised an exception."
+                    ) from e
+
         return trade_requests
 
     @staticmethod
@@ -237,6 +261,8 @@ class Simulator:
         self,
     ) -> BacktestResults:
         """Run a simulation."""
+        logger.debug("Starting a simulation")
+
         schedule = self._build_croniter_schedule(self._start_time, self._strategies)
 
         historical_portfolios = [self._portfolio]

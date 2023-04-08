@@ -7,6 +7,7 @@ from .dataset_generator import (
     GarchDatasetGenerator,
     GarchSettings,
     ReturnsDatasetGenerator,
+    SamplingDatasetGenerator,
     StitchedChunkDatasetGenerator,
 )
 from .datasets import CustomDataset, Dataset, PriceDataset
@@ -25,6 +26,7 @@ __all__ = [
     "IdentityProcessor",
     "Processor",
     "ReturnsDatasetGenerator",
+    "SamplingDatasetGenerator",
     "StitchedChunkDatasetGenerator",
     "GarchDatasetGenerator",
     "GarchSettings",

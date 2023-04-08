@@ -1,8 +1,12 @@
 """Define the Datasaver class."""
+import logging
 import os
 import pickle
 
 from .datasets import Dataset
+
+
+logger = logging.getLogger(__name__)
 
 
 class Datasaver:
@@ -39,6 +43,7 @@ class Datasaver:
         path = os.path.join(directory, self.name + ".pkl")
         with open(path, "wb") as outp:
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+        logger.debug(f"Saved pickled Datasaver to: {path}")
         return path
 
     @staticmethod
@@ -50,6 +55,14 @@ class Datasaver:
 
         Returns:
             Datasaver: Datasaver stored at the location
+
+        Raises:
+            ValueError: raises ValueError if the specified file path is not a file
         """
+        if not os.path.isfile(fp):
+            raise ValueError(f"'{fp}' is not a file.")
+
         with open(fp, "rb") as f:
-            return pickle.load(f)
+            obj = pickle.load(f)
+            logger.debug(f"Loaded Datasaver from {fp}")
+            return obj

@@ -1,5 +1,6 @@
 """Test the orchestration function."""
 
+import logging
 import os
 from typing import cast
 from unittest.mock import call, MagicMock, Mock
@@ -7,6 +8,7 @@ from unittest.mock import call, MagicMock, Mock
 import pytest
 from pytest_mock import MockerFixture
 
+from coin_test.backtest.backtest_results import BacktestResults
 import coin_test.orchestration.orchestration as orc
 
 
@@ -47,6 +49,55 @@ def test_dont_save() -> None:
     i = 0
     orc._save(result, output_folder, i)
     result.save.not_called()
+
+
+def test_load_good_folder_path(mocker: MockerFixture) -> None:
+    """Results loaded correctly."""
+    folder_path = "folder/"
+
+    mocker.patch("os.path.isdir")
+    os.path.isdir.return_value = True
+
+    pkl_files = ["a.pkl", "b.pkl"]
+    non_pkl_files = ["test.txt"]
+    mocker.patch("os.listdir")
+    os.listdir.return_value = pkl_files + non_pkl_files
+
+    mocker.patch("coin_test.backtest.BacktestResults.load")
+    mock_load = Mock()
+    BacktestResults.load.return_value = mock_load
+
+    results = orc._load(folder_path)
+
+    assert results == [mock_load, mock_load]
+    BacktestResults.load.assert_any_call(os.path.join(folder_path, pkl_files[0]))
+    BacktestResults.load.assert_any_call(os.path.join(folder_path, pkl_files[1]))
+
+
+def test_load_empty_folder(mocker: MockerFixture) -> None:
+    """Results loaded correctly."""
+    folder_path = "empty_folder/"
+
+    mocker.patch("os.path.isdir")
+    os.path.isdir.return_value = True
+
+    pkl_files = []
+    mocker.patch("os.listdir")
+    os.listdir.return_value = pkl_files
+
+    mocker.patch("coin_test.backtest.BacktestResults.load")
+    with pytest.raises(ValueError):
+        _ = orc._load(folder_path)
+
+
+def test_load_bad_folder_path(mocker: MockerFixture) -> None:
+    """Results not loaded when given bad folder."""
+    folder_path = "notafolder"
+
+    mocker.patch("os.path.isdir")
+    os.path.isdir.return_value = False
+    with pytest.raises(ValueError):
+        _ = orc._load(folder_path)
 
 
 def test_run_backtest(mocker: MockerFixture) -> None:
@@ -337,6 +388,7 @@ def test_run(mocker: MockerFixture) -> None:
     mock_results = [Mock()]
     mocker.patch("coin_test.orchestration.orchestration._gen_results")
     orc._gen_results.return_value = mock_results
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
 
     results = orc.run(
         datasets,
@@ -361,6 +413,79 @@ def test_run(mocker: MockerFixture) -> None:
     )
 
     assert results == mock_results
+
+
+def test_run_no_args() -> None:
+    """Backtest Errors without sufficient args."""
+    with pytest.raises(ValueError):
+        _ = orc.run()
+
+
+def test_run_from_save(mocker: MockerFixture) -> None:
+    """Backtest Builds from saved folder."""
+    saved_results_folder = "old_results"
+
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+    mock_results = [Mock(), Mock()]
+    mocker.patch("coin_test.orchestration.orchestration._load")
+    orc._load.return_value = mock_results
+
+    results = orc.run(build_from_saved_results=saved_results_folder)
+
+    assert results == mock_results
+    orc._load.assert_called_once_with(saved_results_folder)
+    orc.build_datapane.assert_called_once_with(mock_results)
+
+
+def test_run_defaults_no_output_folder(
+    mocker: MockerFixture, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Run backtests with defulat slippage and tx calculators."""
+    caplog.set_level(logging.INFO)
+    strategies, datasets, _, _, portfolio, length = _build_backtest_arg_mocks()
+    n_parallel = 4
+
+    mock_results = [Mock()]
+    mocker.patch("coin_test.orchestration.orchestration._gen_results")
+    orc._gen_results.return_value = mock_results
+
+    mocker.patch("coin_test.orchestration.orchestration.ConstantSlippage")
+    sc = Mock()
+    cast(Mock, orc.ConstantSlippage).return_value = sc
+
+    mocker.patch(
+        "coin_test.orchestration.orchestration.ConstantTransactionFeeCalculator"
+    )
+    tc = Mock()
+    cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
+
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+
+    _ = orc.run(
+        datasets,
+        strategies,
+        portfolio,
+        length,
+        n_parallel,
+    )
+
+    assert caplog.record_tuples == [
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "Backtesting with ConstantSlippage slippage.",
+        ),
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "Backtesting with ConstantTransactionFeeCalculator tx fees.",
+        ),
+        (
+            "coin_test.orchestration.orchestration",
+            logging.INFO,
+            "BacktestResults are not being saved.",
+        ),
+    ]
 
 
 def test_run_defaults(mocker: MockerFixture) -> None:
@@ -383,6 +508,8 @@ def test_run_defaults(mocker: MockerFixture) -> None:
     tc = Mock()
     cast(Mock, orc.ConstantTransactionFeeCalculator).return_value = tc
 
+    mocker.patch("coin_test.orchestration.orchestration.build_datapane")
+
     results = orc.run(
         datasets,
         strategies,
@@ -404,3 +531,4 @@ def test_run_defaults(mocker: MockerFixture) -> None:
     )
 
     assert results == mock_results
+    orc.build_datapane.assert_called_once_with(mock_results)

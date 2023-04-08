@@ -2,9 +2,10 @@
 
 import os
 import pickle
-from unittest.mock import MagicMock, Mock, mock_open
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pandas as pd
+import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.backtest import BacktestResults
@@ -61,7 +62,7 @@ def test_create_results_correctly(mocker: MockerFixture) -> None:
         ),
         columns=["Timestamp", "Portfolios", "Trades", "Pending Trades", "Price"],
     )
-    sim_results.set_index("Timestamp")
+    sim_results = sim_results.set_index("Timestamp", drop=True)
 
     slip = ConstantSlippage
     tx = ConstantTransactionFeeCalculator
@@ -87,12 +88,12 @@ def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:
     composer = MagicMock()
 
     prices_right_now = {
-        AssetPair(Ticker("USDT"), Ticker("BTC")): pd.DataFrame(
+        AssetPair(Ticker("BTC"), Ticker("USDT")): pd.DataFrame(
             columns=["Open"], data=[20000.0]
         ),
-        AssetPair(Ticker("USDT"), Ticker("ETH")): pd.DataFrame(
-            columns=["Open"], data=[1000.0]
-        ),
+        AssetPair(Ticker("ETH"), Ticker("USDT")): pd.DataFrame(
+            columns=["Open"], data=[]
+        ),  # Ensure missing data doesn't raise error
     }
     mock_get_timestep = MagicMock()
 
@@ -109,10 +110,12 @@ def test_calculate_price_from_portfolio(mock_portfolio: Portfolio) -> None:
         list(zip(sim_data[0], sim_data[1], sim_data[2], sim_data[3], strict=True)),
         columns=["Timestamp", "Portfolios", "Trades", "Pending Trades"],
     )
-    sim_results.set_index("Timestamp")
+    sim_results = sim_results.set_index("Timestamp", drop=True)
 
     price_series = BacktestResults.create_date_price_df(sim_results, composer)
-    pd.testing.assert_series_equal(price_series, pd.Series(data=[3756.0, 3756.0]))
+    pd.testing.assert_series_equal(
+        price_series, pd.Series(data=[3381.0, 3381.0], index=index)
+    )
 
 
 def test_results_save(mocker: MockerFixture) -> None:
@@ -141,3 +144,28 @@ def test_results_save(mocker: MockerFixture) -> None:
     results.save(test_file_name)
     os.makedirs.assert_called_once_with("test_dir", exist_ok=True)
     pickle.dump.assert_called()
+
+
+def test_backtestresults_load_good_file(mocker: MockerFixture) -> None:
+    """Load Pickled Backtest Results Load properly."""
+    datasaver = Mock()
+    valid_local_path = "a_valid_path/test.pkl"
+
+    mocker.patch("os.path.isfile")
+    os.path.isfile.return_value = True
+
+    mocker.patch("pickle.load")
+    pickle.load.return_value = datasaver
+
+    with patch("builtins.open", mock_open(read_data="data")):
+        test = BacktestResults.load(valid_local_path)
+        open.assert_called_with(valid_local_path, "rb")
+        pickle.load.assert_called()
+        assert test == datasaver
+
+
+def test_backtestresults_load_bad_file() -> None:
+    """Error on invalid file."""
+    valid_local_path = "a_valid_path/test.pkl"
+    with pytest.raises(ValueError):
+        _ = BacktestResults.load(valid_local_path)

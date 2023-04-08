@@ -11,29 +11,48 @@ from coin_test.data import (
     GarchDatasetGenerator,
     GarchSettings,
     ReturnsDatasetGenerator,
+    SamplingDatasetGenerator,
     StitchedChunkDatasetGenerator,
 )
 from coin_test.data.metadata import MetaData
 from coin_test.util import AssetPair, Ticker
 
 
-def test_chunked_dataset_generator_initialized(
-    hour_data_indexed_df: pd.DataFrame,
+def test_normalize_dataset(
+    hour_data_indexed_df: pd.DataFrame, hour_data_norm_df: pd.DataFrame
 ) -> None:
-    """Initialize the StitchedChunkDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    metadata = MetaData(pair, freq="H")
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
-    chunk_size = 5
+    """Normalize data with SamplingDatasetGenerator."""
+    norm_df = SamplingDatasetGenerator.normalize_row_data(hour_data_indexed_df)
 
-    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+    pd.testing.assert_frame_equal(norm_df, hour_data_norm_df)
 
-    assert gen.dataset == mock_dataset
-    assert gen.metadata == metadata
-    assert gen.chunk_size == chunk_size
-    assert isinstance(gen.start, pd.Period)
+    # with open("tests/data/assets/norm_eth_usdc_1h_9_28.csv", "w") as outfile:
+    #     norm_df.to_csv(outfile, index=False)
+
+
+def test_unnormalize_dataset(
+    hour_data_df: pd.DataFrame, hour_data_norm_df: pd.DataFrame
+) -> None:
+    """Unnormalize data with SamplingDatasetGenerator."""
+    del hour_data_df["Open Time"]
+    hour_data_norm_df.iloc[0, 0] = hour_data_df.iloc[0, 0]  # type: ignore
+    unnorm_df = SamplingDatasetGenerator.unnormalize(hour_data_norm_df)
+
+    pd.testing.assert_frame_equal(unnorm_df, hour_data_df, check_like=True)
+
+
+def test_properly_index_data() -> None:
+    """Create a proper PeriodIndex for generated data."""
+    freq = "H"
+    start = pd.Period("2023-01-01 10:00", freq)
+    timedelta = pd.Timedelta(days=1)
+
+    index = SamplingDatasetGenerator.create_index(start, timedelta, freq)
+
+    assert isinstance(index, pd.PeriodIndex)
+    assert len(index) == 25  # 24 hours between first and last point
+    assert index[0] == start
+    assert index.freq == freq
 
 
 def test_returns_dataset_generator_initialized(
@@ -50,50 +69,19 @@ def test_returns_dataset_generator_initialized(
 
     assert gen.dataset == mock_dataset
     assert gen.metadata == metadata
-    assert gen.chunk_size == 1
     assert isinstance(gen.start, pd.Period)
 
 
-def test_chunked_dataset_generator_err_on_initialization(
-    hour_data_indexed_df: pd.DataFrame,
-) -> None:
-    """Fail to initialize the StitchedChunkDatasetGenerator."""
-    mock_dataset = Mock()
-    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
-    metadata = MetaData(pair, freq="H")
-    mock_dataset.metadata = metadata
-    mock_dataset.df = hour_data_indexed_df
-
-    with pytest.raises(ValueError):
-        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=-1)
-
-    with pytest.raises(ValueError):
-        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=1000000000000000)
-
-
-def test_normalize_dataset(
-    hour_data_indexed_df: pd.DataFrame, hour_data_norm_df: pd.DataFrame
-) -> None:
-    """Normalize data with ResultsDatasetGenerator."""
-    norm_df = StitchedChunkDatasetGenerator.normalize_row_data(hour_data_indexed_df)
-
-    pd.testing.assert_frame_equal(norm_df, hour_data_norm_df)
-
-    # with open("tests/data/assets/norm_eth_usdc_1h_9_28.csv", "w") as outfile:
-    #     norm_df.to_csv(outfile, index=False)
-
-
-def test_chunked_dataset_select_data(
+def test_returns_dataset_select_data(
     hour_data_norm_df: pd.DataFrame, hour_data_sel_df: pd.DataFrame
 ) -> None:
-    """Select data with ResultsDatasetGenerator."""
+    """Select data with ReturnsDatasetGenerator."""
     rng = np.random.default_rng(int("stonks", 36))
     starting_price = 7.48
-    num_rows = 5
-    chunk_size = 2
+    num_rows = 4
 
-    selected_df = StitchedChunkDatasetGenerator.select_data(
-        hour_data_norm_df, starting_price, num_rows, chunk_size, rng
+    selected_df = ReturnsDatasetGenerator.select_data(
+        hour_data_norm_df, starting_price, num_rows, rng
     )
 
     pd.testing.assert_frame_equal(selected_df, hour_data_sel_df)
@@ -102,24 +90,10 @@ def test_chunked_dataset_select_data(
     #     selected_df.to_csv(outfile, index=False)
 
 
-def test_properly_index_data() -> None:
-    """Create a proper PeriodIndex for generated data."""
-    freq = "H"
-    start = pd.Period("2023-01-01 10:00", freq)
-    timedelta = pd.Timedelta(days=1)
-
-    index = StitchedChunkDatasetGenerator.create_index(start, timedelta, freq)
-
-    assert isinstance(index, pd.PeriodIndex)
-    assert len(index) == 25  # 24 hours between first and last point
-    assert index[0] == start
-    assert index.freq == freq
-
-
 def test_returns_dataset_generator_create_datasets(
     hour_data_indexed_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
-    """Create synthetic datasets with ResultsDatasetGenerator."""
+    """Create synthetic datasets with ReturnsDatasetGenerator."""
     mock_dataset = Mock()
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
@@ -147,6 +121,61 @@ def test_returns_dataset_generator_create_datasets(
     assert s_pair == pair
     assert s_opts == {"synthetic": True}
     assert len(s_df) == 4  # 3 hours between first and last timestamps
+
+
+def test_chunked_dataset_generator_initialized(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Initialize the StitchedChunkDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+    chunk_size = 5
+
+    gen = StitchedChunkDatasetGenerator(mock_dataset, chunk_size)
+
+    assert gen.dataset == mock_dataset
+    assert gen.metadata == metadata
+    assert gen.chunk_size == chunk_size
+    assert isinstance(gen.start, pd.Period)
+
+
+def test_chunked_dataset_generator_err_on_initialization(
+    hour_data_indexed_df: pd.DataFrame,
+) -> None:
+    """Fail to initialize the StitchedChunkDatasetGenerator."""
+    mock_dataset = Mock()
+    pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
+    metadata = MetaData(pair, freq="H")
+    mock_dataset.metadata = metadata
+    mock_dataset.df = hour_data_indexed_df
+
+    with pytest.raises(ValueError):
+        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=-1)
+
+    with pytest.raises(ValueError):
+        StitchedChunkDatasetGenerator(mock_dataset, chunk_size=2**32)
+
+
+def test_chunked_dataset_select_data(
+    hour_data_norm_df: pd.DataFrame, hour_data_sel_chunk_df: pd.DataFrame
+) -> None:
+    """Select data with StitchedChunkDatasetGenerator."""
+    rng = np.random.default_rng(int("stonks", 36))
+    starting_price = 7.48
+    num_rows = 5
+    chunk_size = 2
+
+    selected_df = StitchedChunkDatasetGenerator.select_data(
+        hour_data_norm_df, starting_price, num_rows, chunk_size, rng
+    )
+
+    pd.testing.assert_frame_equal(selected_df, hour_data_sel_chunk_df)
+
+    # with open("tests/data/assets/sel_chunk_eth_usdc_1h_9_28.csv", "w") as outfile:
+    #     selected_df.to_csv(outfile, index=False)
 
 
 def test_chunk_dataset_generator_create_datasets(
@@ -464,14 +493,8 @@ def hour_data_norm() -> str:
 
 
 @pytest.fixture
-def hour_data_sel() -> str:
-    """Hourly normalized data CSV filepath."""
-    return "tests/data/assets/sel_eth_usdc_1h_9_28.csv"
-
-
-@pytest.fixture
 def hour_data_norm_df(hour_data_norm: str) -> pd.DataFrame:
-    """Hourly data contents with period index."""
+    """Hourly normalized data contents with period index."""
     dtypes = {
         "Open": float,
         "High": float,
@@ -487,8 +510,14 @@ def hour_data_norm_df(hour_data_norm: str) -> pd.DataFrame:
 
 
 @pytest.fixture
+def hour_data_sel() -> str:
+    """Hourly selected data CSV filepath."""
+    return "tests/data/assets/sel_eth_usdc_1h_9_28.csv"
+
+
+@pytest.fixture
 def hour_data_sel_df(hour_data_sel: str) -> pd.DataFrame:
-    """Hourly data contents with period index."""
+    """Hourly selected data contents with period index."""
     dtypes = {
         "Open": float,
         "High": float,
@@ -507,6 +536,29 @@ def hour_data_sel_df(hour_data_sel: str) -> pd.DataFrame:
 def hour_data_sampled_series() -> pd.Series:
     """Hourly data High series randomly sampled contents."""
     return pd.Series([1293.11, 1286.32, 1288.3, 1289.02, 1286.32])
+
+
+@pytest.fixture
+def hour_data_sel_chunk() -> str:
+    """Hourly selected (by chunk) data CSV filepath."""
+    return "tests/data/assets/sel_chunk_eth_usdc_1h_9_28.csv"
+
+
+@pytest.fixture
+def hour_data_sel_chunk_df(hour_data_sel_chunk: str) -> pd.DataFrame:
+    """Hourly selected (by chunk) data contents with period index."""
+    dtypes = {
+        "Open": float,
+        "High": float,
+        "Low": float,
+        "Volume": float,
+        "Close": float,
+    }
+    df = pd.read_csv(
+        hour_data_sel_chunk,
+        dtype=dtypes,  # type: ignore
+    )
+    return df
 
 
 @pytest.fixture

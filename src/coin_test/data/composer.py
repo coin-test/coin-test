@@ -157,7 +157,7 @@ class Composer:
             if key not in self.datasets:
                 continue
             ds_data = self.datasets[key].df[start_time:end_time]
-            if mask:
+            if mask and len(ds_data) != 0:
                 ds_data = ds_data.copy()
                 ds_data.loc[ds_data.index[-1], ds_data.columns != "Open"] = np.nan
             data[key] = ds_data
