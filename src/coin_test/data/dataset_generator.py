@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from math import ceil
 from random import Random
-from typing import cast, List, Literal
+from typing import cast, Literal
 
 from arch import arch_model
 import numpy as np
@@ -226,9 +226,9 @@ class GarchSettings:
     mean: Literal[
         "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
     ] = "Constant"
-    lags: int | NDArray | List[int] | None = 0
+    lags: int | NDArray | list[int] | None = 0
     vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"] = "GARCH"
-    p: int | List[int] = 1
+    p: int | list[int] = 1
     o: int = 0
     q: int = 1
     power: float = 2
@@ -266,9 +266,9 @@ class GarchDatasetGenerator(DatasetGenerator):
         mean: Literal[
             "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
         ] = "Constant",
-        lags: int | List[int] | NDArray | None = 0,
+        lags: int | list[int] | NDArray | None = 0,
         vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"] = "GARCH",
-        p: int | List[int] = 1,
+        p: int | list[int] = 1,
         o: int = 0,
         q: int = 1,
         power: float = 2,
