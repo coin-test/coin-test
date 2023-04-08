@@ -196,7 +196,18 @@ def test_garch_dataset_generator_initialized(
     mock_dataset.metadata = metadata
     mock_dataset.df = hour_data_indexed_df
     chunk_size = 5
-    garch_settings = GarchSettings()
+    garch_settings = GarchSettings(
+        mean="Constant",
+        lags=0,
+        vol="GARCH",
+        p=1,
+        o=0,
+        q=1,
+        power=2,
+        dist="normal",
+        hold_back=None,
+        rescale=None,
+    )
 
     gen = GarchDatasetGenerator(mock_dataset, chunk_size)
 
@@ -238,7 +249,18 @@ def test_garch_get_model_parameters(
 ) -> None:
     """Test getting GARCH model parameters estimated from fitting to series."""
     univariate_series = 100 * hour_data_indexed_df["Close"].pct_change().dropna()
-    garch_settings = GarchSettings()
+    garch_settings = GarchSettings(
+        mean="Constant",
+        lags=0,
+        vol="GARCH",
+        p=1,
+        o=0,
+        q=1,
+        power=2,
+        dist="normal",
+        hold_back=None,
+        rescale=None,
+    )
 
     np.random.RandomState(int("stonks", 36))
     test_garch_model_params = GarchDatasetGenerator.get_garch_model_parameters(

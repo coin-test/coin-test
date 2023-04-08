@@ -218,20 +218,17 @@ class ReturnsDatasetGenerator(StitchedChunkDatasetGenerator):
 
 @dataclass
 class GarchSettings:
-    """Class for keeping track of settings to intialize a GARCH model.
-
-    Default values initialize a GARCH(1,1) model with constant mean.
-    """
+    """Class for keeping track of settings to intialize a GARCH model."""
 
     mean: Literal[
         "Constant", "Zero", "LS", "AR", "ARX", "HAR", "HARX", "constant", "zero"
-    ] = "Constant"
-    lags: int | NDArray | list[int] | None = 0
-    vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"] = "GARCH"
-    p: int | list[int] = 1
-    o: int = 0
-    q: int = 1
-    power: float = 2
+    ]
+    lags: int | NDArray | list[int] | None
+    vol: Literal["GARCH", "ARCH", "EGARCH", "FIGARCH", "APARCH", "HARCH"]
+    p: int | list[int]
+    o: int
+    q: int
+    power: float
     dist: Literal[
         "normal",
         "gaussian",
@@ -241,15 +238,16 @@ class GarchSettings:
         "skewt",
         "ged",
         "generalized error",
-    ] = "normal"
-    hold_back: int | None = None
-    rescale: bool | None = None
+    ]
+    hold_back: int | None
+    rescale: bool | None
 
 
 class GarchDatasetGenerator(DatasetGenerator):
     """Synthetic Dataset Generator with GARCH.
 
-    Using Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model.
+    Use Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model.
+    Default values initialize a GARCH(1,1) model with constant mean.
 
     Close prices are simulated with univariate GARCH model.
     Open prices are set as previous day's close.
