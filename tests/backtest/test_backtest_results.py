@@ -2,9 +2,10 @@
 
 import os
 import pickle
-from unittest.mock import MagicMock, Mock, mock_open
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pandas as pd
+import pytest
 from pytest_mock import MockerFixture
 
 from coin_test.backtest import BacktestResults
@@ -143,3 +144,28 @@ def test_results_save(mocker: MockerFixture) -> None:
     results.save(test_file_name)
     os.makedirs.assert_called_once_with("test_dir", exist_ok=True)
     pickle.dump.assert_called()
+
+
+def test_backtestresults_load_good_file(mocker: MockerFixture) -> None:
+    """Load Pickled Backtest Results Load properly."""
+    datasaver = Mock()
+    valid_local_path = "a_valid_path/test.pkl"
+
+    mocker.patch("os.path.isfile")
+    os.path.isfile.return_value = True
+
+    mocker.patch("pickle.load")
+    pickle.load.return_value = datasaver
+
+    with patch("builtins.open", mock_open(read_data="data")):
+        test = BacktestResults.load(valid_local_path)
+        open.assert_called_with(valid_local_path, "rb")
+        pickle.load.assert_called()
+        assert test == datasaver
+
+
+def test_backtestresults_load_bad_file() -> None:
+    """Error on invalid file."""
+    valid_local_path = "a_valid_path/test.pkl"
+    with pytest.raises(ValueError):
+        _ = BacktestResults.load(valid_local_path)
