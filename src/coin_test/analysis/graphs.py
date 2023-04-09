@@ -15,6 +15,10 @@ from coin_test.backtest.backtest_results import BacktestResults
 from coin_test.util import Side
 
 
+def _clamp(x: float, min_: float, max_: float) -> float:
+    return min(max(x, min_), max_)
+
+
 def _get_lims(figs: Sequence[go.Figure], x: bool = True) -> list[tuple[float, float]]:
     x_vals, y_vals = [], []
     for fig in figs:
@@ -201,14 +205,20 @@ def _build_ridgeline(
     name: str,
     df: pd.DataFrame,
     plot_params: PlotParameters,
+    max_ridges: int = 80,
 ) -> go.Figure:
+    df = df.copy()
+
+    if len(df) > max_ridges:
+        scale_factor = len(df) // max_ridges
+        df = df[::scale_factor]
+
     colors = n_colors(
         plot_params.line_colors[0],
         plot_params.line_colors[1],
         len(df),
         colortype="rgb",
     )
-    df = df.copy()
     df["colors"] = colors
     index = df.index
     df = df.reset_index(drop=True)
@@ -272,8 +282,7 @@ def _build_lines(
     df: pd.DataFrame,
     plot_params: PlotParameters,
 ) -> go.Figure:
-    opacity = 1 / len(df.columns) * 5
-    opacity = min(opacity, 0.1)
+    opacity = _clamp(1 / len(df.columns) * 2, 0.05, 0.5)
 
     def _make_lines(series: pd.Series) -> go.Scatter:
         return go.Scatter(
@@ -395,7 +404,7 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
             portfolio_value = result.sim_data["Price"]
             portfolio_change = portfolio_value.iloc[-1] / portfolio_value.iloc[0]
             y.append(portfolio_change)
-            trading_start = portfolio_value.index[0]
+            trading_start = portfolio_value.index[1]
             trading_end = portfolio_value.index[-1]
             asset_value = list(result.data_dict.values())[0]["Open"]
             asset_change = (
@@ -449,17 +458,36 @@ def _build_signal_traces(
     trades: pd.Series,
     lookback: pd.Timedelta,
     plot_params: PlotParameters,
-    opacity: float,
 ) -> list[go.Scatter]:
     num_trades = trades.apply(len)
     trade_times = backtest_results.sim_data.index[num_trades >= 1]
-    df = list(backtest_results.data_dict.values())[0]
+    if len(trade_times) == 0:
+        return []
+    price = list(backtest_results.data_dict.values())[0]["Open"]
 
-    def _slice_data(timestamp: pd.Timestamp, df: pd.DataFrame = df) -> pd.Series:
+    price_start, price_end = min(price.index), max(price.index)
+    trades_start, trades_end = min(trade_times), max(trade_times)
+    graph_start, graph_end = trades_start - lookback, trades_end + lookback
+    before, after = None, None
+
+    if graph_start < price_start.start_time:
+        before_idx = pd.period_range(
+            start=graph_start, end=price_start, freq=price.index.freq  # type: ignore
+        )[:-1]
+        before = pd.Series(index=before_idx, dtype=price.dtype)
+    if graph_end > price_end.end_time:
+        after_idx = pd.period_range(
+            start=price_end, end=graph_end, freq=price.index.freq  # type: ignore
+        )[1:]
+        after = pd.Series(index=after_idx, dtype=price.dtype)
+    price: pd.Series = pd.concat((before, price, after))  # type: ignore
+
+    def _slice_data(timestamp: pd.Timestamp, price: pd.Series = price) -> pd.Series:
         ret = pd.Series(dtype=object)
-        y = df[timestamp - lookback : timestamp + lookback]
-        y = y["Open"].reset_index(drop=True)
-        ret["y"] = y / y[0]
+        y = price[timestamp - lookback : timestamp + lookback]
+        norm = y[timestamp:timestamp].iloc[0]
+        y = y.reset_index(drop=True)
+        ret["y"] = y / norm
         return ret
 
     sliced_data = pd.Series(trade_times).apply(_slice_data)
@@ -467,7 +495,6 @@ def _build_signal_traces(
     def _build_traces(sliced_data: pd.Series) -> go.Scatter:
         return go.Scatter(
             y=sliced_data.y,
-            opacity=opacity,
             mode="lines",
             marker=dict(color=plot_params.line_colors[0]),
             showlegend=False,
@@ -489,8 +516,6 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
         buy_traces, sell_traces = [], []
         lookback = max(backtest_results[0].strategy_lookbacks)
-        opacity = 1 / len(backtest_results)
-        opacity = min(opacity, 0.1)
         for results in backtest_results:
             trades = results.sim_data["Trades"]
 
@@ -499,7 +524,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
             buys = trades.apply(_get_buy)
             buy_traces.extend(
-                _build_signal_traces(results, buys, lookback, plot_params, opacity)
+                _build_signal_traces(results, buys, lookback, plot_params)
             )
 
             def _get_sell(trades: list[TradeRequest]) -> list[TradeRequest]:
@@ -507,20 +532,23 @@ class SignalPricePlot(DistributionalPlotGenerator):
 
             sells = trades.apply(_get_sell)
             sell_traces.extend(
-                _build_signal_traces(results, sells, lookback, plot_params, opacity)
+                _build_signal_traces(results, sells, lookback, plot_params)
             )
 
         buy_fig = go.Figure(buy_traces)
         sell_fig = go.Figure(sell_traces)
         x_lims, y_lims = _get_lims((buy_fig, sell_fig))
         mid = (x_lims[1] - x_lims[0]) // 2
+        buy_opacity = _clamp(1 / len(buy_traces) * 2, 0.05, 0.5) if buy_traces else 1
+        sell_opacity = _clamp(1 / len(sell_traces) * 2, 0.05, 0.5) if sell_traces else 1
+        opacity = min(buy_opacity, sell_opacity)
 
         for fig, name in ((buy_fig, "Buy"), (sell_fig, "Sell")):
             PlotParameters.update_plotly_fig(
                 plot_params,
                 fig,
                 name + " Patterns",
-                "Time",
+                "Timesteps",
                 "Normalized Asset Value",
             )
             fig.update_yaxes(range=y_lims)
@@ -530,6 +558,7 @@ class SignalPricePlot(DistributionalPlotGenerator):
                 annotation_text=name + " Signal",
                 annotation_position="bottom right",
             )
+            fig.update_traces(opacity=opacity)
 
         return dp.Select(
             dp.Media(
