@@ -7,6 +7,7 @@ import datapane as dp
 
 from .graphs import (
     _get_strategy_results,
+    BuySellPricePlot,
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
@@ -38,7 +39,8 @@ def _build_strategy_page(
     confidence_price = ConfidencePricePlot.create(results, plot_params)
     confidence_returns = ConfidenceReturnsPlot.create(results, plot_params)
     returns_heatmap = ReturnsHeatmapPlot.create(results, plot_params)
-    signal_price = SignalPricePlot.create(results, plot_params)
+    signal_window_price = SignalPricePlot.create(results, plot_params)
+    buy_sell_price_plot = BuySellPricePlot.create(results, plot_params)
 
     blocks = [
         "# " + strategy_name,
@@ -52,8 +54,10 @@ def _build_strategy_page(
         confidence_returns,
         "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
-        "### Signal Plot",
-        signal_price,
+        "### Signal Window Plot",
+        signal_window_price,
+        "### All Signals",
+        buy_sell_price_plot,
     ]
     page = dp.Page(
         title=strategy_name,

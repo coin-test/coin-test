@@ -453,6 +453,20 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
         return dp.Plot(fig)
 
 
+def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
+    return [trade for trade in trades if trade.side is Side.BUY]
+
+
+def _get_sell(trades: list[TradeRequest]) -> list[TradeRequest]:
+    return [trade for trade in trades if trade.side is Side.SELL]
+
+
+def _categorize_trades(trades: pd.Series) -> tuple[pd.Series, pd.Series]:
+    buys = trades.apply(_get_buy)
+    sells = trades.apply(_get_sell)
+    return buys, sells
+
+
 def _build_signal_traces(
     backtest_results: BacktestResults,
     trades: pd.Series,
@@ -517,20 +531,10 @@ class SignalPricePlot(DistributionalPlotGenerator):
         buy_traces, sell_traces = [], []
         lookback = max(backtest_results[0].strategy_lookbacks)
         for results in backtest_results:
-            trades = results.sim_data["Trades"]
-
-            def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
-                return [trade for trade in trades if trade.side is Side.BUY]
-
-            buys = trades.apply(_get_buy)
+            buys, sells = _categorize_trades(results.sim_data["Trades"])
             buy_traces.extend(
                 _build_signal_traces(results, buys, lookback, plot_params)
             )
-
-            def _get_sell(trades: list[TradeRequest]) -> list[TradeRequest]:
-                return [trade for trade in trades if trade.side is Side.SELL]
-
-            sells = trades.apply(_get_sell)
             sell_traces.extend(
                 _build_signal_traces(results, sells, lookback, plot_params)
             )
@@ -569,4 +573,85 @@ class SignalPricePlot(DistributionalPlotGenerator):
                 plot_params.compress_fig(sell_fig, name="sell_patterns"),
                 label="Sell Patterns",
             ),
+        )
+
+
+def _build_buy_sell_overlay_price(
+    backtest_results: BacktestResults, plot_params: PlotParameters
+) -> go.Figure:
+    start_time = backtest_results.sim_data.index[1]
+    price = list(backtest_results.data_dict.values())[0]["Open"][start_time:]
+    index = price.index.map(lambda t: t.start_time)
+    fig = go.Figure(
+        go.Scatter(
+            y=price,
+            x=index,
+            mode="lines",
+            marker=dict(color=plot_params.line_colors[0]),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+    buys, sells = _categorize_trades(backtest_results.sim_data["Trades"])
+
+    def _build_vlines(trades: pd.Series, name: str, color: str) -> None:
+        num_trades = trades.apply(len)
+        trade_times = backtest_results.sim_data.index[num_trades >= 1]
+        for trade_time in trade_times:
+            fig.add_vline(
+                x=trade_time,
+                line_dash="dot",
+                line_color=color,
+            )
+        # Dummy line to generate legend
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="lines",
+                showlegend=True,
+                hoverinfo="skip",
+                marker=dict(color=color),
+                name=name,
+            )
+        )
+
+    _build_vlines(buys, "Buy", "green")
+    _build_vlines(sells, "Sell", "red")
+
+    return fig
+
+
+class BuySellPricePlot(DistributionalPlotGenerator):
+    """Create Price plot around trade signals."""
+
+    @staticmethod
+    def create(
+        backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
+    ) -> PLOT_RETURN_TYPE:
+        """Create plot object."""
+        _is_single_strategy(backtest_results)
+        figures = [
+            _build_buy_sell_overlay_price(results, plot_params)
+            for results in backtest_results
+        ]
+
+        for i, fig in enumerate(figures):
+            PlotParameters.update_plotly_fig(
+                plot_params,
+                fig,
+                f"Dataset {i}",
+                "Time",
+                "Asset Price",
+            )
+
+        return dp.Select(
+            *[
+                dp.Media(
+                    plot_params.compress_fig(fig, name="buy_sell_price"),
+                    label=f"Dataset {i}",
+                )
+                for i, fig in enumerate(figures)
+            ]
         )
