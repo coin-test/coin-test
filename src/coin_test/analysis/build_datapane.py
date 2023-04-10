@@ -6,7 +6,6 @@ from typing import Sequence
 import datapane as dp
 
 from .graphs import (
-    _get_strategy_results,
     BuySellPricePlot,
     ConfidenceDataPlot,
     ConfidencePricePlot,
@@ -16,6 +15,7 @@ from .graphs import (
     SignalPricePlot,
 )
 from .tables import SummaryTearSheet, TearSheet
+from .utils import get_strategy_results
 from ..backtest import BacktestResults
 
 
@@ -78,7 +78,7 @@ def _build_strategy_pages(
     Returns:
         list[dp.Page]: List of all strategy pages.
     """
-    strategy_results = _get_strategy_results(results)
+    strategy_results = get_strategy_results(results)
     return [
         _build_strategy_page(strategy, result, plot_params)
         for strategy, result in strategy_results.items()

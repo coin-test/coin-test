@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 from coin_test.backtest import TradeRequest
 from coin_test.backtest.backtest_results import BacktestResults
 from coin_test.util import Side
+from .utils import get_strategies, get_strategy_results
 
 
 def _clamp(x: float, min_: float, max_: float) -> float:
@@ -32,29 +33,8 @@ def _get_lims(figs: Sequence[go.Figure], x: bool = True) -> list[tuple[float, fl
     return ret
 
 
-def _flatten_strategies(results: BacktestResults) -> str:
-    return "-".join(results.strategy_names)
-
-
-def _get_strategies(results: Sequence[BacktestResults]) -> list[str]:
-    return sorted(list(set(_flatten_strategies(r) for r in results)))
-
-
-def _get_strategy_results(
-    results: Sequence[BacktestResults],
-) -> dict[str, list[BacktestResults]]:
-    strategies = _get_strategies(results)
-    strategy_results = {}
-    for strategy in strategies:
-        strategy_results[strategy] = []
-    for result in results:
-        strategy = _flatten_strategies(result)
-        strategy_results[strategy].append(result)
-    return strategy_results
-
-
 def _is_single_strategy(results: Sequence[BacktestResults]) -> None:
-    if len(_get_strategies(results)) != 1:
+    if len(get_strategies(results)) != 1:
         raise ValueError("Multiple strategies passed to single strategy plot!")
 
 
@@ -371,7 +351,7 @@ class ConfidenceDataPlot(DistributionalPlotGenerator):
         backtest_results: Sequence[BacktestResults], plot_params: PlotParameters
     ) -> PLOT_RETURN_TYPE:
         """Create plot object."""
-        strategy_results = _get_strategy_results(backtest_results)
+        strategy_results = get_strategy_results(backtest_results)
         backtest_results = list(strategy_results.values())[0]
         dfs = []
         base_index = None
