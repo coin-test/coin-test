@@ -6,13 +6,13 @@ from typing import Sequence
 import datapane as dp
 
 from .graphs import (
-    BuySellPricePlot,
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
     PlotParameters,
     ReturnsHeatmapPlot,
-    SignalPricePlot,
+    SignalTotalPlot,
+    SignalWindowPlot,
 )
 from .tables import SummaryTearSheet, TearSheet
 from .utils import get_strategy_results
@@ -39,8 +39,8 @@ def _build_strategy_page(
     confidence_price = ConfidencePricePlot.create(results, plot_params)
     confidence_returns = ConfidenceReturnsPlot.create(results, plot_params)
     returns_heatmap = ReturnsHeatmapPlot.create(results, plot_params)
-    signal_window_price = SignalPricePlot.create(results, plot_params)
-    buy_sell_price_plot = BuySellPricePlot.create(results, plot_params)
+    signal_window = SignalWindowPlot.create(results, plot_params)
+    signal_total = SignalTotalPlot.create(results, plot_params)
 
     blocks = [
         "# " + strategy_name,
@@ -55,9 +55,9 @@ def _build_strategy_page(
         "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
         "### Signal Window Plot",
-        signal_window_price,
+        signal_window,
         "### All Signals",
-        buy_sell_price_plot,
+        signal_total,
     ]
     page = dp.Page(
         title=strategy_name,
