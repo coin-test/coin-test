@@ -1,5 +1,6 @@
 """Functions to build Datapane Locally."""
 
+import logging
 import os
 from typing import Sequence
 
@@ -19,6 +20,9 @@ from .utils import get_strategy_results
 from ..backtest import BacktestResults
 
 
+logger = logging.getLogger(__name__)
+
+
 def _build_strategy_page(
     strategy_name: str,
     results: Sequence[BacktestResults],
@@ -34,6 +38,7 @@ def _build_strategy_page(
     Returns:
         dp.Page: Strategy page.
     """
+    logger.info(f"Building {strategy_name} page...")
     tear_sheet = TearSheet.create(results)
 
     confidence_price = ConfidencePricePlot.create(results, plot_params)
@@ -137,6 +142,7 @@ def build_datapane(results: Sequence[BacktestResults], output_dir: str | None) -
         results: List of BacktestResults.
         output_dir: Directory to save report and assets to. Defaults to local directory.
     """
+    print("Starting report construction...")
     if output_dir is None:
         output_dir = ""
     asset_dir = os.path.join(output_dir, "assets")
