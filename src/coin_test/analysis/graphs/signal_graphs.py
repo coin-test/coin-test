@@ -195,10 +195,10 @@ class SignalTotalPlot(DistributionalPlotGenerator):
         is_single_strategy(backtest_results)
         figures = [
             _build_buy_sell_overlay_price(results, plot_params)
-            for results in backtest_results
+            for results in backtest_results[:10]
         ]
 
-        for i, fig in enumerate(figures):
+        for i, fig in enumerate(figures[:10]):
             PlotParameters.update_plotly_fig(
                 plot_params,
                 fig,
