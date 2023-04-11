@@ -686,7 +686,7 @@ class GarchDatasetGenerator(DatasetGenerator):
                     "High": synthetic_high_series,
                     "Low": synthetic_low_series,
                     "Close": synthetic_close_series,
-                    "Volume": pd.Series(0, index=list(range(num_rows))),
+                    "Volume": pd.Series(0, index=list(range(num_rows)), dtype=float),
                 },
                 axis=1,
             )
