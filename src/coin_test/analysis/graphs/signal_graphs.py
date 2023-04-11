@@ -178,8 +178,8 @@ def _build_buy_sell_overlay_price(
             )
         )
 
-    _build_vlines(buys, "Buy", "green")
-    _build_vlines(sells, "Sell", "red")
+    _build_vlines(buys, "Buy", plot_params.line_colors[2])
+    _build_vlines(sells, "Sell", plot_params.line_colors[1])
 
     return fig
 
