@@ -29,21 +29,21 @@ def _build_percentiles(
             x=df.index,
             y=mean,
             mode="lines",
-            line=dict(color=plot_params.line_colors[0]),
+            line=dict(color=plot_params.line_colors[1]),
         ),
         go.Scatter(
             name="Median " + name,
             x=df.index,
             y=mid,
             mode="lines",
-            line=dict(color=plot_params.line_colors[1]),
+            line=dict(color=plot_params.line_colors[2]),
         ),
         go.Scatter(
             name="75th Percentile",
             x=df.index,
             y=upper,
             mode="lines",
-            marker=dict(color=plot_params.line_colors[2]),
+            marker=dict(color=plot_params.line_colors[0]),
             line=dict(width=0),
             showlegend=False,
         ),
@@ -51,7 +51,7 @@ def _build_percentiles(
             name="25th Percentile",
             x=df.index,
             y=lower,
-            marker=dict(color=plot_params.line_colors[2]),
+            marker=dict(color=plot_params.line_colors[0]),
             line=dict(width=0),
             mode="lines",
             fillcolor="rgba(68, 68, 68, 0.3)",
@@ -84,8 +84,8 @@ def _build_ridgeline(
         df = df[::scale_factor]
 
     colors = n_colors(
-        plot_params.line_colors[0],
         plot_params.line_colors[1],
+        plot_params.line_colors[2],
         len(df),
         colortype="rgb",
     )
