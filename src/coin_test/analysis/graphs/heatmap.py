@@ -38,7 +38,7 @@ class ReturnsHeatmapPlot(DistributionalPlotGenerator):
 
         lb = math.floor(min(min(x), min(y)) * 10) / 10
         ub = math.ceil(max(max(x), max(y)) * 10) / 10
-        step = 0.05
+        step = 0.25
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(
