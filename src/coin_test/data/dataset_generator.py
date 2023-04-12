@@ -123,7 +123,7 @@ class WindowStepDatasetGenerator(DatasetGenerator):
             raise ValueError("Windows are larger than original dataset")
 
         # calculate the num of intervals between each chunk's start
-        window_sep = last_sliceable / n
+        window_sep = last_sliceable / (n - 1)
         window_overlap_perc = (window_length - window_sep) / window_length
 
         # check valid chunk sizes

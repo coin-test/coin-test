@@ -57,7 +57,7 @@ def test_warn_make_overlapping_slices(caplog: pytest.LogCaptureFixture) -> None:
     ]
 
     assert caplog.record_tuples == [
-        ("coin_test.data.dataset_generator", logging.WARN, "Windows overlap by 70%")
+        ("coin_test.data.dataset_generator", logging.WARN, "Windows overlap by 62%")
     ]
 
 
