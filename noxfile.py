@@ -70,7 +70,7 @@ def tests(session: Session) -> None:
 @session(python=python_versions)
 def coverage(session: Session) -> None:
     """Generate the coverage data."""
-    session.install("coverage[toml]", "codecov")
+    session.install("coverage[toml]")
     session.run("coverage", "xml", "--fail-under=0")
 
 

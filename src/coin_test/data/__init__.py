@@ -9,6 +9,7 @@ from .dataset_generator import (
     ReturnsDatasetGenerator,
     SamplingDatasetGenerator,
     StitchedChunkDatasetGenerator,
+    WindowStepDatasetGenerator,
 )
 from .datasets import CustomDataset, Dataset, PriceDataset
 from .metadata import MetaData
@@ -30,4 +31,5 @@ __all__ = [
     "StitchedChunkDatasetGenerator",
     "GarchDatasetGenerator",
     "GarchSettings",
+    "WindowStepDatasetGenerator",
 ]
