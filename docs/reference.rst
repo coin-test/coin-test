@@ -25,3 +25,9 @@ coin_test.util
 
 .. automodule:: coin_test.util
    :members:
+
+coin_test.analysis
+----------------------------
+
+.. automodule:: coin_test.analysis
+   :members:
