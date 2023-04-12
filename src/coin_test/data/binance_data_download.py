@@ -78,6 +78,8 @@ class BinanceDataset(PriceDataset):
                 logger.debug(f"Failed request to {url}")
             except Exception as e:
                 raise ValueError(f"Error downloading data from {url}") from e
+            if num_failed_requests >= 3:
+                break
 
     @staticmethod
     def _get_download_urls(
@@ -85,23 +87,19 @@ class BinanceDataset(PriceDataset):
         start: dt.datetime,
         end: dt.datetime,
         freq: str,
-    ) -> list[str]:
+    ) -> Generator[str, None, None]:
         """Get the download urls."""
         exchange_name = BinanceDataset._asset_pair_to_name(asset_pair)
 
         if not any(char.isdigit() for char in freq):
             freq = "1" + freq
 
-        urls = [
-            (
+        for month in BinanceDataset._get_date_ranges(start, end):
+            yield (
                 f"https://data.binance.vision/data/spot/monthly/"
                 f"/klines/{exchange_name}/{freq}/"
                 f"{exchange_name}-{freq}-{month}.zip"
             )
-            for month in BinanceDataset._get_date_ranges(start, end)
-        ]
-
-        return urls
 
     @staticmethod
     def _get_date_ranges(
