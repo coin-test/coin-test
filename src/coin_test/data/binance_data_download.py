@@ -7,8 +7,11 @@ from typing import Generator
 from urllib.error import HTTPError
 
 import pandas as pd
+import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .datasets import PriceDataset
+from .metadata import MetaData
 from ..util import AssetPair
 
 logger = logging.getLogger(__name__)
@@ -35,69 +38,104 @@ class BinanceDataset(PriceDataset):
         "1w",
         "1mo",
     )
-    DAILY_INTERVALS = (
-        "1s",
-        "1m",
-        "3m",
-        "5m",
-        "15m",
-        "30m",
-        "1h",
-        "2h",
-        "4h",
-        "6h",
-        "8h",
-        "12h",
-        "1d",
-    )
-    MONTHS = tuple(range(1, 13))
-    PERIOD_START_DATE = "2020-01-01"
     BASE_URL = "https://data.binance.vision/data/"
-    START_DATE = dt.date(year=2017, month=1, day=1)
-    END_DATE = dt.datetime.now()
 
     def __init__(
-        self, asset_pair: AssetPair, start: dt.datetime, end: dt.datetime, freq: str
+        self,
+        name: str,
+        asset_pair: AssetPair,
+        freq: str = "d",
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> None:
-        """Download a Binance dataset."""
-        self.df = None
+        """Download historical cryptocurrency datasets from Binance.
+
+        Args:
+            name: The name of the dataset
+            asset_pair: The asset pair to trade on
+            freq: The frequency of the data, default daily
+                    's' for second data
+                    'm' for minute data
+                    'h' for hourly data
+                    'd' for daily data
+                    'w' for week data
+                    'mo' for month data
+            start: The start date of the dataset. If no start date is provided,
+                    download all historical data
+            end: The end date of the dataset. If no end date is provided, download
+                    until the present day
+
+        Raises:
+            ValueError: If the generated URL does not successfully access the
+                    Binance dataset
+        """
+        build_df = pd.DataFrame()
+        self._metadata = MetaData(pair=asset_pair, freq=freq)
+        self.name = name
 
         num_failed_requests = 0
         num_successful_requests = 0
 
-        for url in BinanceDataset._get_download_urls(asset_pair, start, end, freq):
-            try:
-                temp_csv = pd.read_csv(url, compression="zip", header=None, names=[])
-                if self.df is not None:
-                    self.df = pd.concat([temp_csv, self.df])
-                else:
-                    self.df = temp_csv
-                num_successful_requests += 1
-            except HTTPError:
-                num_failed_requests += 1
-                logger.debug(f"Failed request to {url}")
-            except Exception as e:
-                raise ValueError(f"Error downloading data from {url}") from e
-            if num_failed_requests >= 3:
-                break
+        logger.info("Downloading data from Binance")
+        with logging_redirect_tqdm():
+            for url in tqdm.tqdm(
+                BinanceDataset._get_download_urls(asset_pair, freq, start, end)
+            ):
+                logger.debug(f"Downloading {url}")
+
+                try:
+                    temp_csv = pd.read_csv(
+                        url,
+                        compression="zip",
+                        header=None,
+                        names=["Open Time", "Open", "High", "Low", "Close", "Volume"],
+                        usecols=[0, 1, 2, 3, 4, 5],
+                    )
+                    build_df = pd.concat([temp_csv, build_df])
+                    num_successful_requests += 1
+
+                except HTTPError:
+                    num_failed_requests += 1
+                    logger.debug(f"Failed request to {url}")
+
+                if num_failed_requests >= 3:
+                    logger.debug("Three endpoint requests failed")
+                    break
+
+        if build_df.empty:
+            raise ValueError(
+                "Failed to download Binance data with the given arguments."
+            )
+
+        build_df["Open Time"] //= 1000
+
+        self.df = self._add_period_index(build_df, freq)
+        logger.info(f"Successfully downloaded {num_successful_requests} datasets")
+        logger.debug(f"Downloaded data:\n{self.df.head()}\n...\n{self.df.tail()}")
+
+    @property
+    def metadata(self) -> MetaData:
+        """Get metadata."""
+        return self._metadata
 
     @staticmethod
     def _get_download_urls(
         asset_pair: AssetPair,
-        start: dt.datetime,
-        end: dt.datetime,
         freq: str,
+        start: dt.datetime | None = None,
+        end: dt.datetime | None = None,
     ) -> Generator[str, None, None]:
         """Get the download urls."""
         exchange_name = BinanceDataset._asset_pair_to_name(asset_pair)
 
         if not any(char.isdigit() for char in freq):
             freq = "1" + freq
+        freq = freq.lower()
 
         for month in BinanceDataset._get_date_ranges(start, end):
             yield (
                 f"https://data.binance.vision/data/spot/monthly/"
-                f"/klines/{exchange_name}/{freq}/"
+                f"klines/{exchange_name}/{freq}/"
                 f"{exchange_name}-{freq}-{month}.zip"
             )
 
