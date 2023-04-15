@@ -3,6 +3,7 @@
 import pytest
 
 from coin_test.util import Ticker
+from coin_test.util.ticker import AssetPair
 
 
 def test_ticker() -> None:
@@ -62,3 +63,25 @@ def test_ticker_repr() -> None:
     symbol = "BTC"
     ticker = Ticker(symbol)
     assert repr(ticker) == f'Ticker("{symbol.lower()}")'
+
+
+def test_asset_pair_from_string() -> None:
+    """Creates an AssetPair from string."""
+    btc = Ticker("BTC")
+    usdt = Ticker("USDT")
+    ticker_impl = AssetPair(btc, usdt)
+
+    str_btc, str_usdt = str_impl = AssetPair.from_string("BTC USDT")
+
+    assert str_btc == btc
+    assert str_usdt == usdt
+    assert str_impl == ticker_impl
+
+
+def test_asset_pair_invalid_parse() -> None:
+    """Errors on bad string for AssetPair."""
+    bad_strings = ("BTCUSDT", "BTC ETH USDT", "BTC/USDT")
+
+    for bs in bad_strings:
+        with pytest.raises(ValueError):
+            AssetPair.from_string(bs)
