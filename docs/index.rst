@@ -7,15 +7,28 @@ Welcome to coin-test's documentation!
 =====================================
 
 .. toctree::
+   :caption: Getting Started
    :hidden:
-   :maxdepth: 1
+   :maxdepth: 3
+
+   installing
+   gettingstarted
+
+.. toctree::
+   :maxdepth: 3
+   :numbered:
+   :caption: User Guides
+   :hidden:
+
+   userguide/data
+   userguide/datagen
+   userguide/strategies
+   userguide/backtest
+   userguide/report
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API Reference
+   :hidden:
 
    reference
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

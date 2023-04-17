@@ -1,0 +1,4 @@
+Installing
+==========
+
+Lorem ipsum xxx.
