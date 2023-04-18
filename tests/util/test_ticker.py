@@ -71,7 +71,7 @@ def test_asset_pair_from_string() -> None:
     usdt = Ticker("USDT")
     ticker_impl = AssetPair(btc, usdt)
 
-    str_btc, str_usdt = str_impl = AssetPair.from_string("BTC USDT")
+    str_btc, str_usdt = str_impl = AssetPair.from_str("BTC USDT")
 
     assert str_btc == btc
     assert str_usdt == usdt
@@ -84,4 +84,4 @@ def test_asset_pair_invalid_parse() -> None:
 
     for bs in bad_strings:
         with pytest.raises(ValueError):
-            AssetPair.from_string(bs)
+            AssetPair.from_str(bs)

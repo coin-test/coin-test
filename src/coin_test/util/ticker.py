@@ -44,8 +44,8 @@ class AssetPair(NamedTuple):
     asset: Ticker
     currency: Ticker
 
-    @classmethod
-    def from_string(cls, tickers: str) -> "AssetPair":
+    @staticmethod
+    def from_str(tickers: str) -> "AssetPair":
         """Create an AssetPair from a string with tickers.
 
         For example, for a BTC to USDT AssetPair, run
@@ -65,4 +65,4 @@ class AssetPair(NamedTuple):
         except ValueError as e:
             raise ValueError("Invalid string of tickers") from e
 
-        return cls(Ticker(asset_str), Ticker(currency_str))
+        return AssetPair(Ticker(asset_str), Ticker(currency_str))
