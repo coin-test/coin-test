@@ -43,9 +43,7 @@ df["Open Time"] //= 1000  # To seconds
 df = df.sort_values(by=["Open Time"])
 
 # define dataset metadata
-usdt = Ticker("USDT")
-btc = Ticker("BTC")
-asset_pair = AssetPair(btc, usdt)
+btc, usdt = asset_pair = AssetPair.from_str("BTC USDT")
 freq = "H"
 
 dataset = CustomDataset(df, freq, asset_pair)
