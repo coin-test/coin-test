@@ -25,3 +25,8 @@ coin_test.util
 
 .. automodule:: coin_test.util
    :members:
+
+Indices and tables
+------------------
+* :ref:`genindex`
+* :ref:`modindex`
