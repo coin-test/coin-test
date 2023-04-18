@@ -71,17 +71,8 @@ def test_asset_pair_from_string() -> None:
     usdt = Ticker("USDT")
     ticker_impl = AssetPair(btc, usdt)
 
-    str_btc, str_usdt = str_impl = AssetPair.from_str("BTC USDT")
+    str_btc, str_usdt = str_impl = AssetPair.from_str("BTC", "USDT")
 
     assert str_btc == btc
     assert str_usdt == usdt
     assert str_impl == ticker_impl
-
-
-def test_asset_pair_invalid_parse() -> None:
-    """Errors on bad string for AssetPair."""
-    bad_strings = ("BTCUSDT", "BTC ETH USDT", "BTC/USDT")
-
-    for bs in bad_strings:
-        with pytest.raises(ValueError):
-            AssetPair.from_str(bs)
