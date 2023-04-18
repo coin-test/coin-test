@@ -24,19 +24,16 @@ import os
 import pandas as pd
 
 from coin_test.backtest import Portfolio, Strategy, MarketTradeRequest
-from coin_test.data import CustomDataset
-from coin_test.util import AssetPair, Ticker, Money, Side
+from coin_test.data import BinanceDataset
+from coin_test.util import AssetPair, Money, Side
 ```
 Then, import data from Binance or a CSV to load
 into the backtest.
 ```python
-# choose dataset metadata
-name = "Bitcoin Data"
-usdt = Ticker("USDT")
-btc = Ticker("BTC")
-asset_pair = AssetPair(btc, usdt)
+# define dataset metadata
+btc, usdt = btc_usdt = AssetPair.from_str("BTC", "USDT")
 
-dataset = BinanceDataset(name, asset_pair)  # default daily data over all time
+dataset = BinanceDataset("BTC/USDT Daily Data", btc_usdt)  # default daily data over all time
 ```
 Strategies are stored in classes as shown below. Each strategy
 should have a schedule, which is a cron string representing
