@@ -1,4 +1,4 @@
-"""Class for downloading data from Binance."""
+"""Binance Data Download Class."""
 
 import datetime as dt
 import itertools
