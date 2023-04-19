@@ -156,30 +156,26 @@ def _build_buy_sell_overlay_price(
 
     buys, sells = _categorize_trades(backtest_results.sim_data["Trades"])
 
-    def _build_vlines(trades: pd.Series, name: str, color: str) -> None:
+    def _build_scatter(trades: pd.Series, name: str, color: str, shape: str) -> None:
         num_trades = trades.apply(len)
         trade_times = backtest_results.sim_data.index[num_trades >= 1]
-        for trade_time in trade_times:
-            fig.add_vline(
-                x=trade_time,
-                line_dash="dot",
-                line_color=color,
-            )
-        # Dummy line to generate legend
+        asset_value = [
+            price[trade_time:trade_time].iloc[0] for trade_time in trade_times
+        ]
         fig.add_trace(
             go.Scatter(
-                x=[None],
-                y=[None],
-                mode="lines",
+                x=trade_times,
+                y=asset_value,
+                mode="markers",
                 showlegend=True,
                 hoverinfo="skip",
-                marker=dict(color=color),
+                marker=dict(color=color, symbol=shape, size=15),
                 name=name,
             )
         )
 
-    _build_vlines(buys, "Buy", plot_params.line_colors[2])
-    _build_vlines(sells, "Sell", plot_params.line_colors[1])
+    _build_scatter(buys, "Buy", plot_params.line_colors[2], "triangle-up")
+    _build_scatter(sells, "Sell", plot_params.line_colors[1], "triangle-down")
 
     return fig
 
