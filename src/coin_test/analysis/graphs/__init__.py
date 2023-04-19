@@ -7,7 +7,7 @@ from .distribution_graphs import (
 )
 from .heatmap import ReturnsHeatmapPlot
 from .plot_parameters import PlotParameters
-from .signal_graphs import SignalTotalPlot, SignalWindowPlot
+from .signal_graphs import SignalHeatmapPlot, SignalTotalPlot
 
 __all__ = [
     "ConfidenceDataPlot",
@@ -15,6 +15,6 @@ __all__ = [
     "ConfidenceReturnsPlot",
     "ReturnsHeatmapPlot",
     "PlotParameters",
+    "SignalHeatmapPlot",
     "SignalTotalPlot",
-    "SignalWindowPlot",
 ]

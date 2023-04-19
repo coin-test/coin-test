@@ -12,8 +12,8 @@ from .graphs import (
     ConfidenceReturnsPlot,
     PlotParameters,
     ReturnsHeatmapPlot,
+    SignalHeatmapPlot,
     SignalTotalPlot,
-    SignalWindowPlot,
 )
 from .tables import SummaryTearSheet, TearSheet
 from .utils import get_strategy_results
@@ -44,7 +44,7 @@ def _build_strategy_page(
     confidence_price = ConfidencePricePlot.create(results, plot_params)
     confidence_returns = ConfidenceReturnsPlot.create(results, plot_params)
     returns_heatmap = ReturnsHeatmapPlot.create(results, plot_params)
-    signal_window = SignalWindowPlot.create(results, plot_params)
+    signal_window = SignalHeatmapPlot.create(results, plot_params)
     signal_total = SignalTotalPlot.create(results, plot_params)
 
     blocks = [
@@ -59,7 +59,7 @@ def _build_strategy_page(
         confidence_returns,
         "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
-        "### Signal Window Plot",
+        "### Signal Heatmap Plot",
         signal_window,
         "### All Signals",
         signal_total,

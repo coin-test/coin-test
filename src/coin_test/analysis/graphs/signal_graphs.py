@@ -3,7 +3,9 @@
 from typing import Sequence
 
 import datapane as dp
+import numpy as np
 import pandas as pd
+from plotly.colors import n_colors
 import plotly.graph_objects as go
 
 from coin_test.backtest import TradeRequest
@@ -11,7 +13,7 @@ from coin_test.backtest.backtest_results import BacktestResults
 from coin_test.util import Side
 from .base_classes import DistributionalPlotGenerator, PLOT_RETURN_TYPE
 from .plot_parameters import PlotParameters
-from .utils import clamp, get_lims, is_single_strategy
+from .utils import is_single_strategy
 
 
 def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
@@ -33,11 +35,11 @@ def _build_window_traces(
     trades: pd.Series,
     lookback: pd.Timedelta,
     plot_params: PlotParameters,
-) -> list[go.Scatter]:
+) -> tuple[list[int], np.ndarray] | None:
     num_trades = trades.apply(len)
     trade_times = backtest_results.sim_data.index[num_trades >= 1]
     if len(trade_times) == 0:
-        return []
+        return
     price = list(backtest_results.data_dict.values())[0]["Open"]
 
     price_start, price_end = min(price.index), max(price.index)
@@ -55,31 +57,22 @@ def _build_window_traces(
             start=price_end, end=graph_end, freq=price.index.freq  # type: ignore
         )[1:]
         after = pd.Series(index=after_idx, dtype=price.dtype)
-    price: pd.Series = pd.concat((before, price, after))  # type: ignore
+    price: pd.Series = pd.Series, pd.concat((before, price, after))  # type: ignore
 
     def _slice_data(timestamp: pd.Timestamp, price: pd.Series = price) -> pd.Series:
-        ret = pd.Series(dtype=object)
         y = price[timestamp - lookback : timestamp + lookback]
         norm = y[timestamp:timestamp].iloc[0]
         y = y.reset_index(drop=True)
-        ret["y"] = y / norm
-        return ret
+        return y / norm
 
     sliced_data = pd.Series(trade_times).apply(_slice_data)
-
-    def _build_traces(sliced_data: pd.Series) -> go.Scatter:
-        return go.Scatter(
-            y=sliced_data.y,
-            mode="lines",
-            marker=dict(color=plot_params.line_colors[0]),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-
-    return sliced_data.apply(_build_traces, axis=1).tolist()
+    y = sliced_data.to_numpy().flatten()
+    shift = max(sliced_data.columns) // 2
+    x = [v - shift for v in sliced_data.columns.to_list() * len(sliced_data)]
+    return x, y
 
 
-class SignalWindowPlot(DistributionalPlotGenerator):
+class SignalHeatmapPlot(DistributionalPlotGenerator):
     """Create Price plot around trade signals."""
 
     @staticmethod
@@ -89,49 +82,61 @@ class SignalWindowPlot(DistributionalPlotGenerator):
         """Create plot object."""
         is_single_strategy(backtest_results)
 
-        buy_traces, sell_traces = [], []
+        buy_data = {"x": [], "y": [], "name": "Buy"}
+        sell_data = {"x": [], "y": [], "name": "Sell"}
         lookback = max(backtest_results[0].strategy_lookbacks)
         for results in backtest_results:
             buys, sells = _categorize_trades(results.sim_data["Trades"])
-            buy_traces.extend(
-                _build_window_traces(results, buys, lookback, plot_params)
-            )
-            sell_traces.extend(
-                _build_window_traces(results, sells, lookback, plot_params)
-            )
+            for trades, data in ((buys, buy_data), (sells, sell_data)):
+                points = _build_window_traces(results, trades, lookback, plot_params)
+                if points is not None:
+                    data["x"].extend(points[0])
+                    data["y"].extend(points[1])
 
-        buy_fig = go.Figure(buy_traces)
-        sell_fig = go.Figure(sell_traces)
-        x_lims, y_lims = get_lims((buy_fig, sell_fig))
-        mid = (x_lims[1] - x_lims[0]) // 2
-        buy_opacity = clamp(1 / len(buy_traces) * 2, 0.05, 0.5) if buy_traces else 1
-        sell_opacity = clamp(1 / len(sell_traces) * 2, 0.05, 0.5) if sell_traces else 1
-        opacity = min(buy_opacity, sell_opacity)
+        # Build log colorscale
+        color_len = 5
+        colors = n_colors(
+            "rgb(200, 200, 200)",
+            "rgb(0, 0, 0)",
+            color_len,
+            colortype="rgb",
+        )
+        colorscale = [[0, "rgba(255, 255, 255, 0)"]]
+        for i, color in enumerate(colors):
+            colorscale.append([1 / (5 ** (color_len - i - 1)), color])
 
-        for fig, name in ((buy_fig, "Buy"), (sell_fig, "Sell")):
+        for data in (buy_data, sell_data):
+            fig = go.Figure(
+                go.Histogram2d(
+                    x=data["x"],
+                    y=data["y"],
+                    xbins=dict(size=1),
+                    nbinsy=50,
+                    colorscale=colorscale,
+                )
+            )
             PlotParameters.update_plotly_fig(
                 plot_params,
                 fig,
-                name + " Patterns",
+                data["name"] + " Patterns",
                 "Timesteps",
                 "Normalized Asset Value",
             )
-            fig.update_yaxes(range=y_lims)
             fig.add_vline(
-                x=mid,
+                x=0,
                 line_dash="dot",
-                annotation_text=name + " Signal",
+                annotation_text=data["name"] + " Signal",
                 annotation_position="bottom right",
             )
-            fig.update_traces(opacity=opacity)
+            data["fig"] = fig
 
         return dp.Select(
             dp.Media(
-                plot_params.compress_fig(buy_fig, name="buy_patterns"),
+                plot_params.compress_fig(buy_data["fig"], name="buy_patterns"),
                 label="Buy Patterns",
             ),
             dp.Media(
-                plot_params.compress_fig(sell_fig, name="sell_patterns"),
+                plot_params.compress_fig(sell_data["fig"], name="sell_patterns"),
                 label="Sell Patterns",
             ),
         )
