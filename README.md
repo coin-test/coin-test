@@ -24,31 +24,17 @@ import os
 import pandas as pd
 
 from coin_test.backtest import Portfolio, Strategy, MarketTradeRequest
-from coin_test.data import CustomDataset
-from coin_test.util import AssetPair, Ticker, Money, Side
+from coin_test.data import BinanceDataset
+from coin_test.util import AssetPair, Money, Side
 ```
-Then, import data from a CSV or another source to load
+Then, import data from Binance or a CSV to load
 into the backtest.
 ```python
-dataset_file = "data/ETHUSDT-1h-monthly/BTCUSDT-1h-2017-08.csv"
-header = ["Open Time", "Open", "High", "Low", "Close", "Volume", "Close Time",
-    "Quote asset volume", "Number of trades", "Taker buy base asset volume",
-    "Taker buy quote asset volume", "Ignore"
-]
-df = pd.read_csv(dataset_file, names=header)
-df = df.drop(columns=["Close Time", "Quote asset volume", "Number of trades",
-                      "Taker buy base asset volume",
-                      "Taker buy quote asset volume", "Ignore"])
-df["Open Time"] //= 1000  # To seconds
-df = df.sort_values(by=["Open Time"])
-
 # define dataset metadata
-btc, usdt = asset_pair = AssetPair.from_str("BTC USDT")
-freq = "H"
+btc, usdt = btc_usdt = AssetPair.from_str("BTC", "USDT")
 
-dataset = CustomDataset(df, freq, asset_pair)
+dataset = BinanceDataset("BTC/USDT Daily Data", btc_usdt)  # default daily data over all time
 ```
-
 Strategies are stored in classes as shown below. Each strategy
 should have a schedule, which is a cron string representing
 when this strategy is run, a lookback, which is how much
@@ -90,20 +76,17 @@ class MACD(Strategy):
             )]
         return []
 ```
-
 This package supports multiple strategies, train-test splits
 for historical data, synthetic data, and further customization.
-To run the backtest, define the datasets
+To run the backtest, create a portfolio with starting values of
+assets and call the `run` method.
 
 ```python
-from coin_test.backtest import ConstantSlippage, ConstantTransactionFeeCalculator
-sc = ConstantSlippage(50)
-tc = ConstantTransactionFeeCalculator(50)
-
+portfolio = Portfolio(base_currency=usdt, assets={usdt: Money(100000, usdt)})
 datasets = [dataset]
 strategies = [MACD]
 
-results = coin_test.run(datasets, strategies, sc, tc,
-                        portfolio, pd.Timedelta(days=90),
+results = coin_test.run(datasets, strategies, portfolio,
+                        backtest_length=pd.Timedelta(days=90),
                         n_parallel=8)
 ```

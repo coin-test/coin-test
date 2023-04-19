@@ -197,50 +197,6 @@ class PriceDataset(Dataset, metaclass=PriceDatasetMetaclass):
     def metadata(self) -> MetaData:
         """The dataframe metadata."""
 
-    @staticmethod
-    def _dataset_from_split(
-        name: str, df: pd.DataFrame, dataset: "PriceDataset"
-    ) -> "PriceDataset":
-        """Create Dataset from Dataframe and a corresponding PriceDataset.
-
-        Args:
-            name: Name to be assigned to the new dataset
-            df: pd.DataFrame To create a new dataset around
-            dataset: Dataset to use for metadata
-
-        Returns:
-            Dataset: Datasets of the same type as the original dataset with the new df
-        """
-        return CustomDataset(name, df, dataset.metadata.freq, dataset.metadata.pair)
-
-
-class CustomDataset(PriceDataset):
-    """Load a DataFrame in the expected format of price data."""
-
-    def __init__(
-        self,
-        name: str,
-        df: pd.DataFrame,
-        freq: str,
-        pair: AssetPair,
-        synthetic: bool = False,
-    ) -> None:
-        """Initialize a PriceDataLoader.
-
-        Validate DataFrame format correctness and infer timestep interval.
-
-        Args:
-            name: Name to be assigned to the new dataset
-            df: DataFrame to load
-            freq: Pandas period string representing price data interval
-            pair: AssetPair represented in datal
-            synthetic: Boolean indicating if this data is synthetic
-        """
-        self.name = name
-        self.df = self._add_period_index(df, freq)
-        self._metadata = MetaData(pair, freq)
-        self.synthetic = synthetic
-
     @classmethod
     def _add_period_index(cls, df: pd.DataFrame, freq: str) -> pd.DataFrame:
         """Add a Period index to passed Dataframe.
@@ -292,6 +248,50 @@ class CustomDataset(PriceDataset):
             )
         df = df.drop(columns=[cls.OPEN_TIME_NAME])
         return df.set_index(index, verify_integrity=True)
+
+    @staticmethod
+    def _dataset_from_split(
+        name: str, df: pd.DataFrame, dataset: "PriceDataset"
+    ) -> "PriceDataset":
+        """Create Dataset from Dataframe and a corresponding PriceDataset.
+
+        Args:
+            name: Name to be assigned to the new dataset
+            df: pd.DataFrame To create a new dataset around
+            dataset: Dataset to use for metadata
+
+        Returns:
+            Dataset: Datasets of the same type as the original dataset with the new df
+        """
+        return CustomDataset(name, df, dataset.metadata.freq, dataset.metadata.pair)
+
+
+class CustomDataset(PriceDataset):
+    """Load a DataFrame in the expected format of price data."""
+
+    def __init__(
+        self,
+        name: str,
+        df: pd.DataFrame,
+        freq: str,
+        pair: AssetPair,
+        synthetic: bool = False,
+    ) -> None:
+        """Initialize a PriceDataLoader.
+
+        Validate DataFrame format correctness and infer timestep interval.
+
+        Args:
+            name: Name to be assigned to the new dataset
+            df: DataFrame to load
+            freq: Pandas period string representing price data interval
+            pair: AssetPair represented in datal
+            synthetic: Boolean indicating if this data is synthetic
+        """
+        self.name = name
+        self.df = self._add_period_index(df, freq)
+        self._metadata = MetaData(pair, freq)
+        self.synthetic = synthetic
 
     @property
     def metadata(self) -> MetaData:
