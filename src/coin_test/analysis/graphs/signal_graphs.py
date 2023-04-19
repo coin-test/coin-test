@@ -57,7 +57,7 @@ def _build_window_traces(
             start=price_end, end=graph_end, freq=price.index.freq  # type: ignore
         )[1:]
         after = pd.Series(index=after_idx, dtype=price.dtype)
-    price: pd.Series = pd.Series, pd.concat((before, price, after))  # type: ignore
+    price: pd.Series = pd.concat((before, price, after))  # type: ignore
 
     def _slice_data(timestamp: pd.Timestamp, price: pd.Series = price) -> pd.Series:
         y = price[timestamp - lookback : timestamp + lookback]
@@ -199,13 +199,13 @@ class SignalTotalPlot(DistributionalPlotGenerator):
             for results in backtest_results[:10]
         ]
 
-        for i, fig in enumerate(figures[:10]):
+        for i, fig in enumerate(figures):
             PlotParameters.update_plotly_fig(
                 plot_params,
                 fig,
                 f"Dataset {i}",
                 "Time",
-                "Asset Price",
+                "Asset Value",
             )
 
         return dp.Select(

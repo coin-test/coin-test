@@ -7,6 +7,7 @@ from typing import Sequence
 import datapane as dp
 
 from .graphs import (
+    CandlestickPlot,
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
@@ -126,10 +127,13 @@ def _build_data_page(
         dp.Page: Data page.
     """
     confidence_graph = ConfidenceDataPlot.create(results, plot_params)
+    candlestick = CandlestickPlot.create(results, plot_params)
     blocks = [
         "# Data",
         "### Asset Value Over Time",
         confidence_graph,
+        "### Datasets",
+        candlestick,
     ]
     page = dp.Page(title="Data", blocks=blocks)
     return page
