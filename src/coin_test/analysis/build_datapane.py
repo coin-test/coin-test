@@ -60,7 +60,7 @@ def _build_strategy_page(
         confidence_returns,
         "### Portfolio Returns vs Dataset Returns",
         returns_heatmap,
-        "### Signal Heatmap Plot",
+        "### Signal Windows",
         signal_window,
         "### All Signals",
         signal_total,
@@ -130,9 +130,9 @@ def _build_data_page(
     candlestick = CandlestickPlot.create(results, plot_params)
     blocks = [
         "# Data",
-        "### Asset Value Over Time",
+        "### Distributional Asset Value Over Time",
         confidence_graph,
-        "### Datasets",
+        "### Individual Datasets",
         candlestick,
     ]
     page = dp.Page(title="Data", blocks=blocks)
