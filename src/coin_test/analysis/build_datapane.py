@@ -11,6 +11,7 @@ from .graphs import (
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
+    MetricsGraph,
     PlotParameters,
     ReturnsHeatmapPlot,
     SignalHeatmapPlot,
@@ -104,11 +105,14 @@ def _build_home_page(
         dp.Page: Home page.
     """
     tear_sheet = SummaryTearSheet.create(results)
+    graphs = MetricsGraph.create(results, plot_params)
     blocks = [
         "# Home",
         "## Strategy Metrics",
         "### Tear Sheet",
         tear_sheet,
+        "### Distributions",
+        graphs,
     ]
     page = dp.Page(title="Home", blocks=blocks)
     return page
