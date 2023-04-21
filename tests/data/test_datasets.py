@@ -74,21 +74,21 @@ def test_add_period_index_existing_index(hour_data_df: pd.DataFrame) -> None:
     years = ["20" + str(i) for i in range(10, len(hour_data_df) + 10)]
     index = pd.PeriodIndex(years, freq="Y")  # type: ignore
     hour_data_df.set_index(index, inplace=True)
-    with_index = CustomDataset._add_period_index(hour_data_df, "Y")
+    with_index = PriceDataset._add_period_index(hour_data_df, "Y")
     pd.testing.assert_frame_equal(hour_data_df, with_index)
 
 
 def test_add_period_index_missing_col(simple_df: pd.DataFrame) -> None:
     """Error on missing Open Time column."""
     with pytest.raises(ValueError):
-        CustomDataset._add_period_index(simple_df, "Y")
+        PriceDataset._add_period_index(simple_df, "Y")
 
 
 def test_add_period_index_wrong_type(hour_data_df: pd.DataFrame) -> None:
     """Error on wrong column type."""
     hour_data_df["Open Time"] = hour_data_df["Open Time"].astype(float)
     with pytest.raises(ValueError):
-        CustomDataset._add_period_index(hour_data_df, "H")
+        PriceDataset._add_period_index(hour_data_df, "H")
 
 
 _dates = [datetime(2000, 1, 1), datetime(2001, 1, 1), datetime(2002, 1, 1)]
@@ -112,7 +112,7 @@ def test_add_period_index(
     """Build index from various data types."""
     hour_data_df = hour_data_df[: len(data)].copy()
     hour_data_df["Open Time"] = pd.Series(data)
-    df = CustomDataset._add_period_index(hour_data_df, freq)
+    df = PriceDataset._add_period_index(hour_data_df, freq)
     assert isinstance(df.index, pd.PeriodIndex)
     assert len(df.index) == len(_dates)
     for p, d in zip(df.index, _dates, strict=True):
@@ -124,7 +124,7 @@ def test_add_period_index_validation(hour_data_df: pd.DataFrame) -> None:
     dates = [datetime(2000, 1, 1), datetime(2001, 1, 1), datetime(2002, 1, 1)]
     hour_data_df = hour_data_df[: len(dates)].copy()
     hour_data_df["Open Time"] = pd.Series(dates)
-    df = CustomDataset._add_period_index(hour_data_df, "Y")
+    df = PriceDataset._add_period_index(hour_data_df, "Y")
     assert CustomDataset._validate_df(df)
 
 
@@ -133,10 +133,10 @@ def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) 
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
     name = "dataset_name"
-    mocker.patch("coin_test.data.CustomDataset._add_period_index")
+    mocker.patch("coin_test.data.PriceDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
 
-    CustomDataset._add_period_index.return_value = hour_data_df
+    PriceDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
 
     dataset = CustomDataset(name, hour_data_df, freq, pair)
@@ -146,7 +146,7 @@ def test_init_custom_dataset(hour_data_df: pd.DataFrame, mocker: MockerFixture) 
     assert dataset.metadata.pair == pair
     assert dataset.metadata.freq == freq
 
-    CustomDataset._add_period_index.assert_called_once_with(hour_data_df, freq)
+    PriceDataset._add_period_index.assert_called_once_with(hour_data_df, freq)
     CustomDataset._validate_df.assert_called_once_with(hour_data_df)
 
 
@@ -154,9 +154,9 @@ def test_init_custom_dataset_invalid_df(
     simple_df: pd.DataFrame, mocker: MockerFixture
 ) -> None:
     """Error on invalid df."""
-    mocker.patch("coin_test.data.CustomDataset._add_period_index")
+    mocker.patch("coin_test.data.PriceDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
-    CustomDataset._add_period_index.return_value = simple_df
+    PriceDataset._add_period_index.return_value = simple_df
     CustomDataset._validate_df.return_value = False
 
     with pytest.raises(ValueError):
@@ -168,11 +168,11 @@ def test_process(hour_data_df: pd.DataFrame, mocker: MockerFixture) -> None:
     pair = AssetPair(Ticker("BTC"), Ticker("USDT"))
     freq = "H"
 
-    mocker.patch("coin_test.data.CustomDataset._add_period_index")
+    mocker.patch("coin_test.data.PriceDataset._add_period_index")
     mocker.patch("coin_test.data.CustomDataset._validate_df")
     processor = Mock()
 
-    CustomDataset._add_period_index.return_value = hour_data_df
+    PriceDataset._add_period_index.return_value = hour_data_df
     CustomDataset._validate_df.return_value = True
     processor.return_value = hour_data_df
 

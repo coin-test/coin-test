@@ -43,3 +43,8 @@ class AssetPair(NamedTuple):
 
     asset: Ticker
     currency: Ticker
+
+    @staticmethod
+    def from_str(asset_str: str, currency_str: str) -> "AssetPair":
+        """Create an AssetPair from strings that represent tickers."""
+        return AssetPair(Ticker(asset_str), Ticker(currency_str))
