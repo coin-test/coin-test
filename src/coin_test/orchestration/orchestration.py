@@ -270,7 +270,6 @@ def run(
             f"Building analysis from saved results from: {build_from_saved_results}"
         )
         results = _load(build_from_saved_results)
-
     else:
         if (
             all_datasets is None
@@ -306,6 +305,6 @@ def run(
             results_output_dir,
         )
 
-    build_datapane(results, output_dir)
+    build_datapane(results)
 
     return results

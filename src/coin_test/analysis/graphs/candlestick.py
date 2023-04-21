@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from coin_test.backtest.backtest_results import BacktestResults
 from .base_classes import DistributionalPlotGenerator, PLOT_RETURN_TYPE
 from .plot_parameters import PlotParameters
+from .utils import make_select
 from ..utils import get_strategy_results
 
 
@@ -57,8 +58,8 @@ class CandlestickPlot(DistributionalPlotGenerator):
                 "Asset Value",
             )
 
-        return dp.Select(
-            *[
+        return make_select(
+            [
                 dp.Media(
                     plot_params.compress_fig(fig, name="candlestick"),
                     label=f"Dataset {i}",

@@ -79,9 +79,8 @@ def _build_ridgeline(
 ) -> go.Figure:
     df = df.copy()
 
-    if len(df) > max_ridges:
-        scale_factor = len(df) // max_ridges
-        df = df[::scale_factor]
+    scale_factor = len(df) // max_ridges
+    df = df[:: max(scale_factor, 1)]
 
     colors = n_colors(
         plot_params.line_colors[1],
@@ -185,7 +184,7 @@ def _build_distributions_selection(
     band_fig = _build_percentiles(name, df, plot_params)
     ridge_fig = _build_ridgeline(name, df, plot_params)
     lines_fig = _build_lines(name, df, plot_params)
-    y_lims = get_lims((band_fig, ridge_fig, lines_fig), x=False)[0]
+    y_lims = get_lims((band_fig, ridge_fig, lines_fig))
     band_fig.update_yaxes(range=y_lims)
     ridge_fig.update_yaxes(range=y_lims)
     lines_fig.update_yaxes(range=y_lims)

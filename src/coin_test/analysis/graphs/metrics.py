@@ -14,7 +14,7 @@ from ..tables import MetricsGenerator
 from ..utils import get_strategy_results
 
 
-class MetricsGraph(DistributionalPlotGenerator):
+class MetricsPlot(DistributionalPlotGenerator):
     """Create strategy vs dataset returns heatmap."""
 
     @staticmethod

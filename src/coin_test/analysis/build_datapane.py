@@ -11,7 +11,7 @@ from .graphs import (
     ConfidenceDataPlot,
     ConfidencePricePlot,
     ConfidenceReturnsPlot,
-    MetricsGraph,
+    MetricsPlot,
     PlotParameters,
     ReturnsHeatmapPlot,
     SignalHeatmapPlot,
@@ -105,7 +105,7 @@ def _build_home_page(
         dp.Page: Home page.
     """
     tear_sheet = SummaryTearSheet.create(results)
-    graphs = MetricsGraph.create(results, plot_params)
+    graphs = MetricsPlot.create(results, plot_params)
     blocks = [
         "# Home",
         "## Strategy Metrics",
@@ -143,7 +143,7 @@ def _build_data_page(
     return page
 
 
-def build_datapane(results: Sequence[BacktestResults], output_dir: str | None) -> None:
+def build_datapane(results: Sequence[BacktestResults], output_dir: str = "") -> None:
     """Build Datapane from large set of results.
 
     Args:
@@ -151,8 +151,6 @@ def build_datapane(results: Sequence[BacktestResults], output_dir: str | None) -
         output_dir: Directory to save report and assets to. Defaults to local directory.
     """
     print("Starting report construction...")
-    if output_dir is None:
-        output_dir = ""
     asset_dir = os.path.join(output_dir, "assets")
     os.makedirs(asset_dir, exist_ok=True)
     plot_params = PlotParameters(asset_dir)

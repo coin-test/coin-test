@@ -300,7 +300,6 @@ class Simulator:
                 self._transaction_fee_calculator,
             )
 
-            # TODO: DO these objects need to be copied
             trades.extend(executed_trades)
             pending_orders.extend(remaining_tr)
             historical_trades.append(trades)

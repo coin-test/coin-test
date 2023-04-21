@@ -13,7 +13,7 @@ from coin_test.backtest.backtest_results import BacktestResults
 from coin_test.util import Side
 from .base_classes import DistributionalPlotGenerator, PLOT_RETURN_TYPE
 from .plot_parameters import PlotParameters
-from .utils import is_single_strategy
+from .utils import is_single_strategy, make_select
 
 
 def _get_buy(trades: list[TradeRequest]) -> list[TradeRequest]:
@@ -145,7 +145,8 @@ class SignalHeatmapPlot(DistributionalPlotGenerator):
 def _build_buy_sell_overlay_price(
     backtest_results: BacktestResults, plot_params: PlotParameters
 ) -> go.Figure:
-    start_time = backtest_results.sim_data.index[1]
+    sim_data = backtest_results.sim_data[1:]
+    start_time = sim_data.index[0]
     price = list(backtest_results.data_dict.values())[0]["Open"][start_time:]
     index = price.index.map(lambda t: t.start_time)
     fig = go.Figure(
@@ -159,11 +160,11 @@ def _build_buy_sell_overlay_price(
         )
     )
 
-    buys, sells = _categorize_trades(backtest_results.sim_data["Trades"])
+    buys, sells = _categorize_trades(sim_data["Trades"])
 
     def _build_scatter(trades: pd.Series, name: str, color: str, shape: str) -> None:
         num_trades = trades.apply(len)
-        trade_times = backtest_results.sim_data.index[num_trades >= 1]
+        trade_times = sim_data.index[num_trades >= 1]
         asset_value = [
             price[trade_time:trade_time].iloc[0] for trade_time in trade_times
         ]
@@ -208,8 +209,8 @@ class SignalTotalPlot(DistributionalPlotGenerator):
                 "Asset Value",
             )
 
-        return dp.Select(
-            *[
+        return make_select(
+            [
                 dp.Media(
                     plot_params.compress_fig(fig, name="buy_sell_price"),
                     label=f"Dataset {i}",
