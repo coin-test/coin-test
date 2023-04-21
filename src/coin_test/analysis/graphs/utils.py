@@ -36,7 +36,7 @@ def is_single_strategy(results: Sequence[BacktestResults]) -> None:
         raise ValueError("Multiple strategies passed to single strategy plot!")
 
 
-def make_select(options: list[dp.Plot | dp.Media]) -> dp.Select:
+def make_select(options: list[dp.Plot | dp.Media]) -> dp.Select | dp.Media:
     """Build a DataPane select without erroring when only using a single element."""
     if len(options) == 1:
         return options[0]
