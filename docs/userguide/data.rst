@@ -3,7 +3,7 @@ Data
 
 Data is the backbone of Coin-Test.
 
-Data refers to a specific format of time series price data that a backtest uses to run. Internally this is a Pandas DataFrame with consistency checks and additional tooling. Inherently, Datasets are tied to the Strategies that are executed because a strategy is designed to run on a certain frequency or type of data.
+Data refers to a specific format of time series price data that a backtest uses to run. Internally this is a Pandas DataFrame with consistency checks and additional tooling. Inherently, Datasets are tied to the :doc:`strategies` that are executed because a strategy is designed to run on a certain frequency or type of data.
 
 .. contents:: Table of Contents
     :backlinks: none

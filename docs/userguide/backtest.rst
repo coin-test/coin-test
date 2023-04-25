@@ -7,7 +7,7 @@ Backtest
     :depth: 1
 
 How To Run A Backtest (Parallel vs. Series)
-------------------------------------------
+-------------------------------------------
 
 Backtesting Under The Hood
 --------------------------
