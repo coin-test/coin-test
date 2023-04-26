@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. Data &mdash; coin-test 0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2. Strategies" href="strategies.html" />
+    <link rel="prev" title="Installing" href="../installing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/coin-test-logo-sphinx.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#historic-data">1.1. Historic Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-downloader">1.1.1. Automatic Downloader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#manual-data-loading">1.1.2. Manual Data Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#synthetic-data">1.2. Synthetic Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#standard-usage">1.2.1. Standard Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#available-generators">1.2.2. Available Generators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-datasetgenerator">1.2.3. Custom DatasetGenerator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-features">1.3. Additional Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cleaning">1.3.1. Cleaning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#splitting">1.3.2. Splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#saving-loading">1.3.3. Saving / Loading</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="strategies.html">2. Strategies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backtest.html">3. Backtest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">4. Report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coin-test</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>Data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data">
+<h1><span class="section-number">1. </span>Data<a class="headerlink" href="#data" title="Permalink to this heading"></a></h1>
+<p>Data is the backbone of Coin-Test.</p>
+<p>Before running any kind of backtest, we must first prepare good data. And, when running a distributional analysis, we must be able to prepare many diverse datasets. Coin-Test enables this by allowing for easy downloading of historic cryptocurrency OHLCV data, as well as providing several statistical techniques for generating synthetic data.</p>
+<p>Several convenience functions are also provided for cleaning, splitting and saving data. Data refers to a specific format of time series price data that a backtest uses to run. Internally this is a Pandas DataFrame with consistency checks and additional tooling. Inherently, Datasets are tied to the Strategies that are executed because a strategy is designed to run on a certain frequency or type of data.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#historic-data" id="id1">Historic Data</a></p>
+<ul>
+<li><p><a class="reference internal" href="#automatic-downloader" id="id2">Automatic Downloader</a></p></li>
+<li><p><a class="reference internal" href="#manual-data-loading" id="id3">Manual Data Loading</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#synthetic-data" id="id4">Synthetic Data</a></p>
+<ul>
+<li><p><a class="reference internal" href="#standard-usage" id="id5">Standard Usage</a></p></li>
+<li><p><a class="reference internal" href="#available-generators" id="id6">Available Generators</a></p></li>
+<li><p><a class="reference internal" href="#custom-datasetgenerator" id="id7">Custom DatasetGenerator</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#additional-features" id="id8">Additional Features</a></p>
+<ul>
+<li><p><a class="reference internal" href="#cleaning" id="id9">Cleaning</a></p></li>
+<li><p><a class="reference internal" href="#splitting" id="id10">Splitting</a></p></li>
+<li><p><a class="reference internal" href="#saving-loading" id="id11">Saving / Loading</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="historic-data">
+<h2><span class="section-number">1.1. </span>Historic Data<a class="headerlink" href="#historic-data" title="Permalink to this heading"></a></h2>
+<section id="automatic-downloader">
+<h3><span class="section-number">1.1.1. </span>Automatic Downloader<a class="headerlink" href="#automatic-downloader" title="Permalink to this heading"></a></h3>
+<p>To automatically load historic data, we use the <code class="docutils literal notranslate"><span class="pre">BinanceDataset</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">BinanceDataset</span></code> takes an asset pair, a frequency and a time range, then queries the Binance API for the desired data. By default, it will download all available data at the day frequency.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">btc</span><span class="p">,</span> <span class="n">usdt</span> <span class="o">=</span> <span class="n">btc_usdt</span> <span class="o">=</span> <span class="n">AssetPair</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="s2">&quot;BTC&quot;</span><span class="p">,</span> <span class="s2">&quot;USDT&quot;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">BinanceDataset</span><span class="p">(</span><span class="s2">&quot;BTC/USDT Daily Data&quot;</span><span class="p">,</span> <span class="n">btc_usdt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To specify a frequency or range of time, you may also pass the optional <cite>freq</cite>, <cite>start</cite> or <cite>end</cite> arguments:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">BinanceDataset</span><span class="p">(</span>
+    <span class="s2">&quot;BTC/USDT Daily Data&quot;</span><span class="p">,</span>
+    <span class="n">btc_usdt</span><span class="p">,</span>
+    <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;mo&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Datetime</span><span class="p">(</span><span class="s2">&quot;2021&quot;</span><span class="p">),</span>
+    <span class="n">end</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Datetime</span><span class="p">(</span><span class="s2">&quot;2022&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">freq</span></code> parameter is a frequency string, any one of:</p>
+<ul class="simple">
+<li><p>&quot;s&quot; for second data</p></li>
+<li><p>&quot;m&quot; for minute data</p></li>
+<li><p>&quot;h&quot; for hour data</p></li>
+<li><p>&quot;d&quot; for daily data</p></li>
+<li><p>&quot;w&quot; for week data</p></li>
+<li><p>&quot;mo&quot; for month data</p></li>
+</ul>
+</section>
+<section id="manual-data-loading">
+<h3><span class="section-number">1.1.2. </span>Manual Data Loading<a class="headerlink" href="#manual-data-loading" title="Permalink to this heading"></a></h3>
+<p>To manually load historic data, we use the <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code> takes a pandas dataframe and a frequency, then processes it to fit the expected coin-test format. The frequency string is the <a class="reference external" href="https://pandas.pydata.org/docs/user_guide/timeseries.html#dateoffset-objects">pandas frequency string format</a>.</p>
+<p>The dataframe must meet the following conditions:</p>
+<ul class="simple">
+<li><p>Must have an &quot;Open&quot; column containing the timestamp or each row or must have a pandas <code class="docutils literal notranslate"><span class="pre">PeriodIndex</span></code>. If an &quot;Open&quot; column is included, the timestamps must be in seconds, in a string format, or in any datetime type.</p></li>
+<li><p>Must have &quot;High&quot;, &quot;Low&quot;, &quot;Close&quot; and &quot;Volume&quot; columns, where each column has a dtype of <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="synthetic-data">
+<h2><span class="section-number">1.2. </span>Synthetic Data<a class="headerlink" href="#synthetic-data" title="Permalink to this heading"></a></h2>
+<section id="standard-usage">
+<h3><span class="section-number">1.2.1. </span>Standard Usage<a class="headerlink" href="#standard-usage" title="Permalink to this heading"></a></h3>
+<p>To generate synthetic data, first initialize the generator with the desired seed dataset, then call <code class="docutils literal notranslate"><span class="pre">generator.generate()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">generator</span> <span class="o">=</span> <span class="n">GarchDatasetGenerator</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">)</span>
+<span class="n">datasets</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">timedelta</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">25</span><span class="p">),</span> <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">generate()</span></code> method takes three arguments regardless of the type of generator:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">timedelta</span></code>: The length each synthetic dataset should be.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code>: Optional. The number of synthetic datasets to generate. Defaults to 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>:  Optional. The random seed to use as basis for the generation.</p></li>
+</ul>
+</section>
+<section id="available-generators">
+<h3><span class="section-number">1.2.2. </span>Available Generators<a class="headerlink" href="#available-generators" title="Permalink to this heading"></a></h3>
+<p>Currently, several different generators are implemented:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator</span></code> utilizes a GARCH model to produce new synthetic data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator</span></code> chunks the historic data into smaller pieces instead of generating new synthetic data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">StitchedChunkDatasetGenerator</span></code> randomly samples chunks of the historic data, and stiches them together into new synthetic data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator</span></code> randomly samples returns from the historic data, and stiches them together into new synthetic data.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator</span></code> is an extremely naïve method, and other generators should be favored.</p>
+</div>
+</section>
+<section id="custom-datasetgenerator">
+<h3><span class="section-number">1.2.3. </span>Custom DatasetGenerator<a class="headerlink" href="#custom-datasetgenerator" title="Permalink to this heading"></a></h3>
+<p>New generators can be implemented as children of the <code class="docutils literal notranslate"><span class="pre">DatasetGenerator</span></code> class.
+Children must implement the <code class="docutils literal notranslate"><span class="pre">generate</span></code> method with the <code class="docutils literal notranslate"><span class="pre">timedelta</span></code>, <code class="docutils literal notranslate"><span class="pre">seed</span></code> and <code class="docutils literal notranslate"><span class="pre">n</span></code> arguments. Additionally, they must return a list of <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code>. See the historic data section for more details on creating <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code>.</p>
+</section>
+</section>
+<section id="additional-features">
+<h2><span class="section-number">1.3. </span>Additional Features<a class="headerlink" href="#additional-features" title="Permalink to this heading"></a></h2>
+<section id="cleaning">
+<h3><span class="section-number">1.3.1. </span>Cleaning<a class="headerlink" href="#cleaning" title="Permalink to this heading"></a></h3>
+<p>To clean datasets, we can use <code class="docutils literal notranslate"><span class="pre">Processor</span></code> objects. Processors are passed in a list to the <code class="docutils literal notranslate"><span class="pre">dataset.process()</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">processor</span> <span class="o">=</span> <span class="n">FillProcessor</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="n">processor</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Currently coin-test only implements the <code class="docutils literal notranslate"><span class="pre">FillProcessor</span></code>, which cleans NaN values out of datasets. Custom processors can be implemented by extending the <code class="docutils literal notranslate"><span class="pre">Processor</span></code> class. All children must implement a <code class="docutils literal notranslate"><span class="pre">__call__</span></code> method that is passed the dataframe to process.</p>
+</section>
+<section id="splitting">
+<h3><span class="section-number">1.3.2. </span>Splitting<a class="headerlink" href="#splitting" title="Permalink to this heading"></a></h3>
+<p>It is critical to create splits when optimizing a strategy, as failing to do so will cause you to overfit to your data and skew your evaluation results. To split datasets, we can use the <code class="docutils literal notranslate"><span class="pre">dataset.split()</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">percent</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">split()</span></code> method can split the dataset with different methods, selected by specifying one of the optional arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">timestamp</span></code>: Split the dataset at the timestamp.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">length</span></code>: Split such that the train set has the specified length.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">percent</span></code>: Split such that the train set is the specified percent of the full dataset.</p></li>
+</ul>
+</section>
+<section id="saving-loading">
+<h3><span class="section-number">1.3.3. </span>Saving / Loading<a class="headerlink" href="#saving-loading" title="Permalink to this heading"></a></h3>
+<p>Saving or loading data is important when sharing data, or avoiding costly operations involved in generating the data. For example, saving the results of a <cite>BinanceDataset</cite> download or the output of a large synthetic data generation set might save a large amount of time.</p>
+<p>Arbitrary datasets can be saved with the <code class="docutils literal notranslate"><span class="pre">Datasaver</span></code> class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">datasaver</span> <span class="o">=</span> <span class="n">Datasaver</span><span class="p">([</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">d3</span><span class="p">])</span>
+<span class="n">datasaver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;datasets&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or loaded:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">datasaver</span> <span class="o">=</span> <span class="n">Datasaver</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;datasets.pkl&quot;</span><span class="p">)</span>
+<span class="n">datasets</span> <span class="o">=</span> <span class="n">datasaver</span><span class="o">.</span><span class="n">dataset_lists</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../installing.html" class="btn btn-neutral float-left" title="Installing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="strategies.html" class="btn btn-neutral float-right" title="2. Strategies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Olin SCOPE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

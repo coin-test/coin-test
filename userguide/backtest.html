@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3. Backtest &mdash; coin-test 0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="4. Report" href="report.html" />
+    <link rel="prev" title="2. Strategies" href="strategies.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/coin-test-logo-sphinx.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">1. Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="strategies.html">2. Strategies</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Backtest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-backtest">3.1. Running Backtest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-and-loading">3.2. Saving and Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">4. Report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coin-test</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">3. </span>Backtest</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/backtest.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="backtest">
+<h1><span class="section-number">3. </span>Backtest<a class="headerlink" href="#backtest" title="Permalink to this heading"></a></h1>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#running-backtest" id="id1">Running Backtest</a></p></li>
+<li><p><a class="reference internal" href="#saving-and-loading" id="id2">Saving and Loading</a></p></li>
+</ul>
+</nav>
+<p>Once the data and strategy have both been defined, the backtests can be run. Coin-test allows for running many backtests in parallel with a variety of parameters to modify the simulation.</p>
+<section id="running-backtest">
+<h2><span class="section-number">3.1. </span>Running Backtest<a class="headerlink" href="#running-backtest" title="Permalink to this heading"></a></h2>
+<p>Backtests can be run using the <code class="docutils literal notranslate"><span class="pre">coin_test.run</span></code> function. This function takes in all of the following arguments for backtesting:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">all_datasets</span></code>: A list of list of datasets, where each list of datasets is all price data for one backtest. For example, one list can include a <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> for BTC/USDT data, and another can have ETH/USDT data. Each list of datasets is used to create a different backtest for the user.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">all_strategies</span></code>: A list of list of strategies, where each list of strategies is a group of strategies that runs together, and multiple lists of strategies can be run alongside each other to compare different strategies in the same backtesting conditions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">starting_portfolio</span></code>: A <code class="docutils literal notranslate"><span class="pre">Portfolio</span></code> with the starting monetary value of all assets.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backtest_length</span></code>: A pandas <code class="docutils literal notranslate"><span class="pre">Timedelta</span></code> object which represents how long a backtest should take.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_parallel</span></code>: The number of parallel backtests to run. When <code class="docutils literal notranslate"><span class="pre">1</span></code>, backtests are run in sequence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_folder</span></code>: Where the report and saved backtest results should be saved. The report will be at <code class="docutils literal notranslate"><span class="pre">output_folder/report.html</span></code> and the results will be at <code class="docutils literal notranslate"><span class="pre">output_folder/backtest_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slippage_calculator</span></code>: A <code class="docutils literal notranslate"><span class="pre">SlippageCalculator</span></code> to compute slippage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tx_calculator</span></code>: A <code class="docutils literal notranslate"><span class="pre">TransactionFeeCalculator</span></code> to compute transaction fees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">build_from_save_results</span></code>: A path to load the backtest results from. If specified, backtests are not run, and analysis is built from the specified save data.</p></li>
+</ul>
+<p>To use default values, consider the following example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coin_test</span> <span class="kn">import</span> <span class="n">run</span>
+<span class="n">datasets</span> <span class="o">=</span> <span class="n">Datasaver</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;datasets.pkl&quot;</span><span class="p">)</span>
+<span class="n">strategies</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="n">strategy1</span><span class="p">,</span> <span class="n">strategy2</span><span class="p">,</span> <span class="n">strategy3</span><span class="p">],</span>  <span class="c1"># first test these three strategies working together</span>
+    <span class="p">[</span><span class="n">strategy4</span><span class="p">],</span>  <span class="c1"># then test this strategy all by itself</span>
+<span class="p">]</span>
+
+<span class="n">btc</span><span class="p">,</span> <span class="n">usdt</span> <span class="o">=</span> <span class="n">btc_usdt</span> <span class="o">=</span> <span class="n">AssetPair</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="s2">&quot;BTC&quot;</span><span class="p">,</span> <span class="s2">&quot;USDT&quot;</span><span class="p">)</span>
+<span class="n">starting_portfolio</span> <span class="o">=</span> <span class="n">Portfolio</span><span class="p">(</span><span class="n">base_currency</span><span class="o">=</span><span class="n">usdt</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">{</span><span class="n">usdt</span><span class="p">:</span> <span class="n">Money</span><span class="p">(</span><span class="mi">100000</span><span class="p">,</span> <span class="n">usdt</span><span class="p">)})</span>
+<span class="n">backtest_length</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>  <span class="c1"># 90 day backtests</span>
+<span class="n">run</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">strategies</span><span class="p">,</span> <span class="n">starting_portfolio</span><span class="p">,</span> <span class="n">backtest_length</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To add slippage or transaction fees, consider the following example, where custom functions can add this flexibility. Currently, <code class="docutils literal notranslate"><span class="pre">ConstantTransactionFeeCalculator</span></code>, <code class="docutils literal notranslate"><span class="pre">ConstantSlippage</span></code>, and <code class="docutils literal notranslate"><span class="pre">GaussianSlippage</span></code> are implemented.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coin_test.backtest</span> <span class="kn">import</span> <span class="n">ConstantTransactionFeeCalculator</span><span class="p">,</span> <span class="n">ConstantSlippage</span>
+<span class="n">transaction_fee</span> <span class="o">=</span> <span class="n">ConstantTransactionFeeCalculator</span><span class="p">(</span><span class="n">basis_points</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">slippage</span> <span class="o">=</span> <span class="n">ConstantSlippage</span><span class="p">(</span><span class="n">basis_points</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="n">run</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">strategies</span><span class="p">,</span> <span class="n">starting_portfolio</span><span class="p">,</span> <span class="n">backtest_length</span><span class="p">,</span>
+    <span class="n">slippage_calculator</span><span class="o">=</span><span class="n">slippage</span><span class="p">,</span>
+    <span class="n">tx_calculator</span><span class="o">=</span><span class="n">transaction_fee</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To allocate more cores to process simultaneous backtests and run the process faster, consider using the <code class="docutils literal notranslate"><span class="pre">n_parallel</span></code> argument.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">strategies</span><span class="p">,</span> <span class="n">starting_portfolio</span><span class="p">,</span> <span class="n">backtest_length</span><span class="p">,</span> <span class="n">n_parallel</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="saving-and-loading">
+<h2><span class="section-number">3.2. </span>Saving and Loading<a class="headerlink" href="#saving-and-loading" title="Permalink to this heading"></a></h2>
+<p>It is also possible to save and load backtest results. When an <code class="docutils literal notranslate"><span class="pre">output_folder</span></code> is specified, the <code class="docutils literal notranslate"><span class="pre">output_folder/backtest_results</span></code> folder will be generated. Analysis can be re-generated from this folder using the <code class="docutils literal notranslate"><span class="pre">build_from_save_results</span></code> argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">build_from_save_results</span><span class="o">=</span><span class="s2">&quot;out_folder/backtest_results&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Doing so will generate the analysis from the saved results and will not run any backtests. Any other arguments passed to <code class="docutils literal notranslate"><span class="pre">run</span></code> will be ignored.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="strategies.html" class="btn btn-neutral float-left" title="2. Strategies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="report.html" class="btn btn-neutral float-right" title="4. Report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Olin SCOPE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

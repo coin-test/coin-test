@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2. Strategies &mdash; coin-test 0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3. Backtest" href="backtest.html" />
+    <link rel="prev" title="1. Data" href="data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/coin-test-logo-sphinx.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installing.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">1. Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Strategies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#implementing-a-strategy">2.1. Implementing a strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gotchas">2.2. Gotchas</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#limit-and-short-orders">2.2.1. Limit and Short Orders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#un-fulfilled-orders">2.2.2. Un-Fulfilled Orders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transaction-fees">2.2.3. Transaction Fees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#length-of-lookback-data">2.2.4. Length of lookback data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nans-in-close-data">2.2.5. NaNs in close data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backtest.html">3. Backtest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">4. Report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coin-test</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">2. </span>Strategies</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/strategies.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="strategies">
+<h1><span class="section-number">2. </span>Strategies<a class="headerlink" href="#strategies" title="Permalink to this heading"></a></h1>
+<p>The strategy is perhaps the component of the backtest that we care the most about. It is, after all, why we must run any backtest in the first place. Coin-test allows for the implementation of arbitrary strategies that can query and handle data of any frequency.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#implementing-a-strategy" id="id1">Implementing a strategy</a></p></li>
+<li><p><a class="reference internal" href="#gotchas" id="id2">Gotchas</a></p></li>
+</ul>
+</nav>
+<section id="implementing-a-strategy">
+<h2><span class="section-number">2.1. </span>Implementing a strategy<a class="headerlink" href="#implementing-a-strategy" title="Permalink to this heading"></a></h2>
+<p>Writing a strategy requires two things. Setting parameters of what the strategy is and what behavior it should have when it executes. These two pieces are used by the backtesting engine during runtime to generate buy and sell signals</p>
+<p>The parameter setting is fairly straightforward. The block below shows a demo strategy named “Demo” that executes every day at 9 am and has a lookback of 3 days.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Demo</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_pair</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Demo strategy.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Demo&quot;</span><span class="p">,</span> <span class="n">asset_pairs</span><span class="o">=</span><span class="p">[</span><span class="n">asset_pair</span><span class="p">],</span> <span class="n">schedule</span><span class="o">=</span><span class="s2">&quot;0 9 * * *&quot;</span><span class="p">,</span> <span class="n">lookback</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">3</span><span class="p">),)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">__call__(self,</span> <span class="pre">time,</span> <span class="pre">portfolio,</span> <span class="pre">lookback_data):</span></code> function must be implemented on all strategies to determine strategy behavior. This is the core of the strategy and where the complicated logic goes. The strategy should make use of the <cite>lookback</cite> data. This lookback is a Pandas Dataframe containing OHLC data.  Accessing the first(oldest) date in the lookback for Close data is shown below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lookback_data</span><span class="p">[</span><span class="n">asset_pair</span><span class="p">][</span><span class="s2">&quot;Close&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The output of the <code class="docutils literal notranslate"><span class="pre">__call__</span></code> function should always be a list of <code class="docutils literal notranslate"><span class="pre">TradeRequest</span></code>. An empty list indicates no trades. The creation of a <code class="docutils literal notranslate"><span class="pre">TradeRequest</span></code> is accomplished as shown below. This is a Buy request to buy the asset with 90% of the available base currency.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MarketTradeRequest</span><span class="p">(</span><span class="n">asset_pair</span><span class="p">,</span> <span class="n">Side</span><span class="o">.</span><span class="n">BUY</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="n">portfolio</span><span class="o">.</span><span class="n">available_assets</span><span class="p">(</span><span class="n">base_ticker</span><span class="p">)</span><span class="o">.</span><span class="n">qty</span> <span class="o">*</span> <span class="mf">.9</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stitching all of these pieces togethers creates a strategy. A simple strategy that Buys/Sells based on if the data has trended up or down over the lookback is shown below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Demo</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_pair</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Demo strategy.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Demo&quot;</span><span class="p">,</span> <span class="n">asset_pairs</span><span class="o">=</span><span class="p">[</span><span class="n">asset_pair</span><span class="p">],</span> <span class="n">schedule</span><span class="o">=</span><span class="s2">&quot;0 9 * * *&quot;</span><span class="p">,</span> <span class="n">lookback</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">3</span><span class="p">),)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perc</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">portfolio</span><span class="p">,</span> <span class="n">lookback_data</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute test strategy.&quot;&quot;&quot;</span>
+        <span class="n">asset_ticker</span><span class="p">,</span> <span class="n">base_ticker</span> <span class="o">=</span> <span class="n">asset_pair</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">lookback</span> <span class="o">=</span> <span class="n">lookback_data</span><span class="p">[</span><span class="n">asset_pair</span><span class="p">][</span><span class="s2">&quot;Close&quot;</span><span class="p">]</span>
+
+        <span class="c1"># If the asset has gone up in price BUY</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">lookback</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">lookback</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">MarketTradeRequest</span><span class="p">(</span><span class="n">asset_pair</span><span class="p">,</span> <span class="n">Side</span><span class="o">.</span><span class="n">BUY</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="n">portfolio</span><span class="o">.</span><span class="n">available_assets</span><span class="p">(</span><span class="n">base_ticker</span><span class="p">)</span><span class="o">.</span><span class="n">qty</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">perc</span><span class="p">,)]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># the asset has gone down SELL</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">MarketTradeRequest</span><span class="p">(</span><span class="n">asset_pair</span><span class="p">,</span> <span class="n">Side</span><span class="o">.</span><span class="n">SELL</span><span class="p">,</span> <span class="n">qty</span><span class="o">=</span><span class="n">portfolio</span><span class="o">.</span><span class="n">available_assets</span><span class="p">(</span><span class="n">asset_ticker</span><span class="p">)</span><span class="o">.</span><span class="n">qty</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">perc</span><span class="p">,)]</span>
+</pre></div>
+</div>
+</section>
+<section id="gotchas">
+<h2><span class="section-number">2.2. </span>Gotchas<a class="headerlink" href="#gotchas" title="Permalink to this heading"></a></h2>
+<p>We strive to make coin-test as easy to use as possible. However, there are still some common pitfalls for strategy development.</p>
+<section id="limit-and-short-orders">
+<h3><span class="section-number">2.2.1. </span>Limit and Short Orders<a class="headerlink" href="#limit-and-short-orders" title="Permalink to this heading"></a></h3>
+<p>Notably, coin-test does not currently support limit orders or short orders. This is a feature that is in development.</p>
+</section>
+<section id="un-fulfilled-orders">
+<h3><span class="section-number">2.2.2. </span>Un-Fulfilled Orders<a class="headerlink" href="#un-fulfilled-orders" title="Permalink to this heading"></a></h3>
+<p>If an order exceeds the amount of currency available to the strategy, it will fail to execute. Currently, the strategy gives no direct feedback of this occurrence. However, a strategy can check whether an order was fulfilled by checking its current portfolio value against the previous portfolio values.</p>
+</section>
+<section id="transaction-fees">
+<h3><span class="section-number">2.2.3. </span>Transaction Fees<a class="headerlink" href="#transaction-fees" title="Permalink to this heading"></a></h3>
+<p>When filing a buy order by notional, slippage will automatically be accounted for. That is, the total price of assets plus the slippage will equal the notional. However, the transaction fees are not accounted for in the notional. As a result, filing an order to sell all the assets of a single type will fail.</p>
+</section>
+<section id="length-of-lookback-data">
+<h3><span class="section-number">2.2.4. </span>Length of lookback data<a class="headerlink" href="#length-of-lookback-data" title="Permalink to this heading"></a></h3>
+<p>The length of lookback data the strategy receives is variable and dependent on the dataset. A lookback of five days may receive 24 * 5 datapoints if the dataset is in an hour frequency. Additionally, if the timestep is near the beginning of the dataset, the entire time range may not be fulfilled. For example, if the backtest starts on the first day of the dataset, the first call of the strategy will contain very little data as the dataset does not contain the data within the range. This issue can be avoided by running backtest shorter than the dataset length.</p>
+</section>
+<section id="nans-in-close-data">
+<h3><span class="section-number">2.2.5. </span>NaNs in close data<a class="headerlink" href="#nans-in-close-data" title="Permalink to this heading"></a></h3>
+<p>The lookback data the strategy receives also contains open price data for the current day. However, the high, low and close data for the current day are NaN, as the strategy should not have access to this data. If your strategy is aggregating, for example, across the close column of the lookback data, then remember to trim the last day to avoid NaNs.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data.html" class="btn btn-neutral float-left" title="1. Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="backtest.html" class="btn btn-neutral float-right" title="3. Backtest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Olin SCOPE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

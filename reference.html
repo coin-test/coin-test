@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference &mdash; coin-test 0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="4. Report" href="userguide/report.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/coin-test-logo-sphinx.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="userguide/data.html">1. Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/strategies.html">2. Strategies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/backtest.html">3. Backtest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/report.html">4. Report</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-coin_test.data">coin_test.data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.BinanceDataset"><code class="docutils literal notranslate"><span class="pre">BinanceDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.BinanceDataset.metadata"><code class="docutils literal notranslate"><span class="pre">BinanceDataset.metadata</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.Composer"><code class="docutils literal notranslate"><span class="pre">Composer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Composer.get_lookback"><code class="docutils literal notranslate"><span class="pre">Composer.get_lookback()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Composer.get_range"><code class="docutils literal notranslate"><span class="pre">Composer.get_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Composer.get_timestep"><code class="docutils literal notranslate"><span class="pre">Composer.get_timestep()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.CustomDataset"><code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.CustomDataset.metadata"><code class="docutils literal notranslate"><span class="pre">CustomDataset.metadata</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.Datasaver"><code class="docutils literal notranslate"><span class="pre">Datasaver</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Datasaver.load"><code class="docutils literal notranslate"><span class="pre">Datasaver.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Datasaver.save"><code class="docutils literal notranslate"><span class="pre">Datasaver.save()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Dataset.process"><code class="docutils literal notranslate"><span class="pre">Dataset.process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.Dataset.split"><code class="docutils literal notranslate"><span class="pre">Dataset.split()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.DatasetGenerator"><code class="docutils literal notranslate"><span class="pre">DatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.DatasetGenerator.generate"><code class="docutils literal notranslate"><span class="pre">DatasetGenerator.generate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.FillProcessor"><code class="docutils literal notranslate"><span class="pre">FillProcessor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.DATASET_TYPE"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.DATASET_TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_extreme_bar_open_and_close"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.from_pct_change_based_on_extreme_bar_open_and_close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_starting_value"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.from_pct_change_based_on_starting_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.generate"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.get_garch_model_parameters"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.get_garch_model_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.sample_series"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.sample_series()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.GarchDatasetGenerator.to_pct_change_based_on_extreme_bar_open_and_close"><code class="docutils literal notranslate"><span class="pre">GarchDatasetGenerator.to_pct_change_based_on_extreme_bar_open_and_close()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.GarchSettings"><code class="docutils literal notranslate"><span class="pre">GarchSettings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.IdentityProcessor"><code class="docutils literal notranslate"><span class="pre">IdentityProcessor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.MetaData"><code class="docutils literal notranslate"><span class="pre">MetaData</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.MetaData.freq"><code class="docutils literal notranslate"><span class="pre">MetaData.freq</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.MetaData.pair"><code class="docutils literal notranslate"><span class="pre">MetaData.pair</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.PriceDataset"><code class="docutils literal notranslate"><span class="pre">PriceDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.PriceDataset.metadata"><code class="docutils literal notranslate"><span class="pre">PriceDataset.metadata</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.Processor"><code class="docutils literal notranslate"><span class="pre">Processor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.ReturnsDatasetGenerator"><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.ReturnsDatasetGenerator.DATASET_TYPE"><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator.DATASET_TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.ReturnsDatasetGenerator.generate"><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.ReturnsDatasetGenerator.select_data"><code class="docutils literal notranslate"><span class="pre">ReturnsDatasetGenerator.select_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.SamplingDatasetGenerator"><code class="docutils literal notranslate"><span class="pre">SamplingDatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.SamplingDatasetGenerator.create_index"><code class="docutils literal notranslate"><span class="pre">SamplingDatasetGenerator.create_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.SamplingDatasetGenerator.normalize_row_data"><code class="docutils literal notranslate"><span class="pre">SamplingDatasetGenerator.normalize_row_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.SamplingDatasetGenerator.unnormalize"><code class="docutils literal notranslate"><span class="pre">SamplingDatasetGenerator.unnormalize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.StitchedChunkDatasetGenerator"><code class="docutils literal notranslate"><span class="pre">StitchedChunkDatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.StitchedChunkDatasetGenerator.DATASET_TYPE"><code class="docutils literal notranslate"><span class="pre">StitchedChunkDatasetGenerator.DATASET_TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.StitchedChunkDatasetGenerator.generate"><code class="docutils literal notranslate"><span class="pre">StitchedChunkDatasetGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.StitchedChunkDatasetGenerator.select_data"><code class="docutils literal notranslate"><span class="pre">StitchedChunkDatasetGenerator.select_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator.DATASET_TYPE"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator.DATASET_TYPE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator.calc_window_length"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator.calc_window_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator.extract_windows"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator.extract_windows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator.generate"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.data.WindowStepDatasetGenerator.make_slices"><code class="docutils literal notranslate"><span class="pre">WindowStepDatasetGenerator.make_slices()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coin_test.backtest">coin_test.backtest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.BacktestResults"><code class="docutils literal notranslate"><span class="pre">BacktestResults</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.BacktestResults.create_date_price_df"><code class="docutils literal notranslate"><span class="pre">BacktestResults.create_date_price_df()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.BacktestResults.load"><code class="docutils literal notranslate"><span class="pre">BacktestResults.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.BacktestResults.save"><code class="docutils literal notranslate"><span class="pre">BacktestResults.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.BacktestResults.value_from_portfolio"><code class="docutils literal notranslate"><span class="pre">BacktestResults.value_from_portfolio()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.ConstantSlippage"><code class="docutils literal notranslate"><span class="pre">ConstantSlippage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.ConstantTransactionFeeCalculator"><code class="docutils literal notranslate"><span class="pre">ConstantTransactionFeeCalculator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.GaussianSlippage"><code class="docutils literal notranslate"><span class="pre">GaussianSlippage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.LimitTradeRequest"><code class="docutils literal notranslate"><span class="pre">LimitTradeRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.LimitTradeRequest.should_execute"><code class="docutils literal notranslate"><span class="pre">LimitTradeRequest.should_execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.MarketTradeRequest"><code class="docutils literal notranslate"><span class="pre">MarketTradeRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.MarketTradeRequest.build_trade"><code class="docutils literal notranslate"><span class="pre">MarketTradeRequest.build_trade()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.MarketTradeRequest.should_execute"><code class="docutils literal notranslate"><span class="pre">MarketTradeRequest.should_execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.Portfolio"><code class="docutils literal notranslate"><span class="pre">Portfolio</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.Portfolio.adjust"><code class="docutils literal notranslate"><span class="pre">Portfolio.adjust()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.Portfolio.available_assets"><code class="docutils literal notranslate"><span class="pre">Portfolio.available_assets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.Simulator.run"><code class="docutils literal notranslate"><span class="pre">Simulator.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.Simulator.run_strategies"><code class="docutils literal notranslate"><span class="pre">Simulator.run_strategies()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.SlippageCalculator"><code class="docutils literal notranslate"><span class="pre">SlippageCalculator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.StopLimitTradeRequest"><code class="docutils literal notranslate"><span class="pre">StopLimitTradeRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.StopLimitTradeRequest.should_execute"><code class="docutils literal notranslate"><span class="pre">StopLimitTradeRequest.should_execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.Strategy"><code class="docutils literal notranslate"><span class="pre">Strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.Trade"><code class="docutils literal notranslate"><span class="pre">Trade</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.TradeRequest"><code class="docutils literal notranslate"><span class="pre">TradeRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.TradeRequest.build_trade"><code class="docutils literal notranslate"><span class="pre">TradeRequest.build_trade()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.backtest.TradeRequest.should_execute"><code class="docutils literal notranslate"><span class="pre">TradeRequest.should_execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.backtest.TransactionFeeCalculator"><code class="docutils literal notranslate"><span class="pre">TransactionFeeCalculator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coin_test.util">coin_test.util</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.util.AssetPair"><code class="docutils literal notranslate"><span class="pre">AssetPair</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.util.AssetPair.asset"><code class="docutils literal notranslate"><span class="pre">AssetPair.asset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.util.AssetPair.currency"><code class="docutils literal notranslate"><span class="pre">AssetPair.currency</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin_test.util.AssetPair.from_str"><code class="docutils literal notranslate"><span class="pre">AssetPair.from_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.util.Money"><code class="docutils literal notranslate"><span class="pre">Money</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.util.Side"><code class="docutils literal notranslate"><span class="pre">Side</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.util.Ticker"><code class="docutils literal notranslate"><span class="pre">Ticker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.util.TradeType"><code class="docutils literal notranslate"><span class="pre">TradeType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coin_test.analysis">coin_test.analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coin_test.analysis.build_datapane"><code class="docutils literal notranslate"><span class="pre">build_datapane()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">coin-test</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reference">
+<h1>Reference<a class="headerlink" href="#reference" title="Permalink to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-coin_test.data" id="id1">coin_test.data</a></p></li>
+<li><p><a class="reference internal" href="#module-coin_test.backtest" id="id2">coin_test.backtest</a></p></li>
+<li><p><a class="reference internal" href="#module-coin_test.util" id="id3">coin_test.util</a></p></li>
+<li><p><a class="reference internal" href="#module-coin_test.analysis" id="id4">coin_test.analysis</a></p></li>
+<li><p><a class="reference internal" href="#indices-and-tables" id="id5">Indices and tables</a></p></li>
+</ul>
+</nav>
+<section id="module-coin_test.data">
+<span id="coin-test-data"></span><h2>coin_test.data<a class="headerlink" href="#module-coin_test.data" title="Permalink to this heading"></a></h2>
+<p>Data loading / processing module.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.BinanceDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">BinanceDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'d'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.BinanceDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Create datasets from downloaded Binance data.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="coin_test.data.BinanceDataset.metadata">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.data.MetaData" title="coin_test.data.metadata.MetaData"><span class="pre">MetaData</span></a></em><a class="headerlink" href="#coin_test.data.BinanceDataset.metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Get metadata.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.Composer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">Composer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Composer" title="Permalink to this definition"></a></dt>
+<dd><p>Manages datasets for simulation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Composer.get_lookback">
+<span class="sig-name descname"><span class="pre">get_lookback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Composer.get_lookback" title="Permalink to this definition"></a></dt>
+<dd><p>Get lookback of data.</p>
+<p>Wrapper for <cite>get_range</cite>. Convert integer number of lookback timesteps
+into a time range based of Composer's <cite>freq</cite> attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) -- Starting timestamp of lookback.</p></li>
+<li><p><strong>lookback</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Number of timesteps to lookback.</p></li>
+<li><p><strong>keys</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a>]]) -- Optional. AssetPairs to filter results on.</p></li>
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- Optional. Whether to mask non-Open data to NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary mapping asset pairs to retrieved rows of data per</dt><dd><p>asset pair. Dictionary default to all datasets, but is filtered
+based on <cite>keys</cite> parameter.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Composer.get_range">
+<span class="sig-name descname"><span class="pre">get_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Composer.get_range" title="Permalink to this definition"></a></dt>
+<dd><p>Get range of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) -- Starting timestamp of range.</p></li>
+<li><p><strong>end_time</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) -- Ending timestamp of range.</p></li>
+<li><p><strong>keys</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a>]]) -- Optional. AssetPairs to filter results on.</p></li>
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- Optional. Whether to mask non-Open data to NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary mapping asset pairs to retrieved rows of data per</dt><dd><p>asset pair. Dictionary default to all datasets, but is filtered
+based on <cite>keys</cite> parameter.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Composer.get_timestep">
+<span class="sig-name descname"><span class="pre">get_timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Composer.get_timestep" title="Permalink to this definition"></a></dt>
+<dd><p>Get single timestep of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) -- Timestamp to get data for.</p></li>
+<li><p><strong>keys</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a>]]) -- Optional. AssetPairs to filter results on.</p></li>
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- Optional. Whether to mask non-Open data to NaN.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary mapping asset pairs to timestamp data per asset</dt><dd><p>pair. Dictionary default to all datasets, but is filtered based
+on <cite>keys</cite> parameter.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.CustomDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">CustomDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synthetic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.CustomDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Load a DataFrame in the expected format of price data.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="coin_test.data.CustomDataset.metadata">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.data.MetaData" title="coin_test.data.metadata.MetaData"><span class="pre">MetaData</span></a></em><a class="headerlink" href="#coin_test.data.CustomDataset.metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Price data metadata.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.Datasaver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">Datasaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Datasaver" title="Permalink to this definition"></a></dt>
+<dd><p>Hold collections of datasets to save.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Datasaver.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Datasaver.load" title="Permalink to this definition"></a></dt>
+<dd><p>Load Datasaver from disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fp</strong> (<em>str</em>) -- filepath to load from</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Datasaver stored at the location</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.data.Datasaver" title="coin_test.data.Datasaver">Datasaver</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> -- raises ValueError if the specified file path is not a file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Datasaver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Datasaver.save" title="Permalink to this definition"></a></dt>
+<dd><p>Pickle a Datasaver to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directory</strong> (<em>str</em>) -- Filepath to save to</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.Dataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Load some data into a DataFrame.</p>
+<p>Use to provide the Dataset class a consistent interface to access data
+loaded from different sources. Note that extending classes MUST set the <cite>df</cite>
+attribute in their <cite>__init__</cite> method, else an error will be raised. Also
+note that setting <cite>df</cite> will trigger validation of the new dataframe.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Dataset.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Dataset.process" title="Permalink to this definition"></a></dt>
+<dd><p>Process the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.data.Dataset" title="coin_test.data.datasets.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.Dataset.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_pre'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_post'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.Dataset.split" title="Permalink to this definition"></a></dt>
+<dd><p>Split Dataset into Pre and Post split Datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]) -- [Optional] Timestamp to split Dataset on</p></li>
+<li><p><strong>length</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>]) -- [Optional] pd.Timedelta to specify length of the pre-split dataset</p></li>
+<li><p><strong>percent</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) -- [Optional] float percentage of the data to split on</p></li>
+<li><p><strong>pre_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Suffix to append to dataset name for pre section of the split</p></li>
+<li><p><strong>post_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Suffix to append to dataset name for post section of the split</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pre and post split datasets of the same type as the original dataset</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.DatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">DatasetGenerator</span></span><a class="headerlink" href="#coin_test.data.DatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Create synthetic datasets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.DatasetGenerator.generate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.DatasetGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Create synthetic datasets from the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- A time range for the new datasets</p></li>
+<li><p><strong>seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- A random seed for the generated datasets</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of datasets to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic datasets</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[DATASET_TYPE]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.FillProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">FillProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pad'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.FillProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Fill missing periods for a dataset.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">GarchDatasetGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Constant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GARCH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hold_back</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Synthetic Dataset Generator with GARCH.</p>
+<p>Use Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model.
+Default values initialize a GARCH(1,1) model with constant mean.</p>
+<p>Close prices are simulated with univariate GARCH model.
+Open prices are set as previous day's close.
+High and Low prices are randomly sampled chunks transformed into and reverted from
+percent changes relative to min/max Open/Close of each period bar.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.DATASET_TYPE">
+<span class="sig-name descname"><span class="pre">DATASET_TYPE</span></span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.DATASET_TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#coin_test.data.CustomDataset" title="coin_test.data.datasets.CustomDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomDataset</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_extreme_bar_open_and_close">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pct_change_based_on_extreme_bar_open_and_close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pct_change_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extreme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close_series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_extreme_bar_open_and_close" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates values from percent change and min/max of Open and Close.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pct_change_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- a series of percent change to turn into values</p></li>
+<li><p><strong>extreme</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'max'</span></code>, <code class="docutils literal notranslate"><span class="pre">'min'</span></code>]) -- selects either min or max when calculating extreme series</p></li>
+<li><p><strong>open_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series of open price values</p></li>
+<li><p><strong>close_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series of close price values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>extreme_series + extreme_series * pct_change_series</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>series</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> -- open_series should be same length as close_series.</p></li>
+<li><p><strong>ValueError</strong> -- pct_change_series should be same length as open_series.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_starting_value">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pct_change_based_on_starting_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pct_change_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_price</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.from_pct_change_based_on_starting_value" title="Permalink to this definition"></a></dt>
+<dd><p>Generate synthetic series from GARCH model fit to univariate data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Create synthetic datasets from GARCH model fit to given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- A time range for the new datasets</p></li>
+<li><p><strong>seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- A random seed for the generated datasets</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of datasets to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic datasets</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#coin_test.data.PriceDataset" title="coin_test.data.PriceDataset">PriceDataset</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.get_garch_model_parameters">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_garch_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">univariate_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">garch_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.get_garch_model_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Gets GARCH model parameters estimated from given univariate series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>univariate_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series of data</p></li>
+<li><p><strong>garch_settings</strong> (<a class="reference internal" href="#coin_test.data.GarchSettings" title="coin_test.data.dataset_generator.GarchSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">GarchSettings</span></code></a>) -- arguments to contruct the GARCH model with</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>dictionary of model parameters</dt><dd><p>estimated from fitting to univariate series.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>res_garch_model.params</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.sample_series">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.sample_series" title="Permalink to this definition"></a></dt>
+<dd><p>Randomly samples a new series from a given series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series to sample from</p></li>
+<li><p><strong>num_rows</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of rows in the new series</p></li>
+<li><p><strong>chunk_size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The amount of rows to combine in each chunk</p></li>
+<li><p><strong>rng</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code>) -- A numpy random number generator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a new sampled series</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.GarchDatasetGenerator.to_pct_change_based_on_extreme_bar_open_and_close">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_pct_change_based_on_extreme_bar_open_and_close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_to_pct_change</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extreme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close_series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchDatasetGenerator.to_pct_change_based_on_extreme_bar_open_and_close" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates percent change relative to min/max of Open and Close.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series_to_pct_change</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- a series of values to turn into percent change</p></li>
+<li><p><strong>extreme</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'max'</span></code>, <code class="docutils literal notranslate"><span class="pre">'min'</span></code>]) -- selects either min or max when calculating extreme series</p></li>
+<li><p><strong>open_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series of open price values</p></li>
+<li><p><strong>close_series</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>) -- series of close price values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>difference of series_to_pct_change and extreme_series
+as proportion of extreme_series.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pct_change_series</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.GarchSettings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">GarchSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hold_back</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.GarchSettings" title="Permalink to this definition"></a></dt>
+<dd><p>Class for keeping track of settings to intialize a GARCH model.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.IdentityProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">IdentityProcessor</span></span><a class="headerlink" href="#coin_test.data.IdentityProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Identity Transform.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.MetaData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">MetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><span class="pre">AssetPair</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.MetaData" title="Permalink to this definition"></a></dt>
+<dd><p>Historical data metadata.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.MetaData.freq">
+<span class="sig-name descname"><span class="pre">freq</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#coin_test.data.MetaData.freq" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.MetaData.pair">
+<span class="sig-name descname"><span class="pre">pair</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a></em><a class="headerlink" href="#coin_test.data.MetaData.pair" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.PriceDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">PriceDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.PriceDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Load a DataFrame with associated MetaData.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="coin_test.data.PriceDataset.metadata">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.data.MetaData" title="coin_test.data.metadata.MetaData"><span class="pre">MetaData</span></a></em><a class="headerlink" href="#coin_test.data.PriceDataset.metadata" title="Permalink to this definition"></a></dt>
+<dd><p>The dataframe metadata.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.Processor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">Processor</span></span><a class="headerlink" href="#coin_test.data.Processor" title="Permalink to this definition"></a></dt>
+<dd><p>Transform a DataFrame.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.ReturnsDatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">ReturnsDatasetGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.ReturnsDatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Create synthetic datasets by shuffling the percentage gains each day.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.ReturnsDatasetGenerator.DATASET_TYPE">
+<span class="sig-name descname"><span class="pre">DATASET_TYPE</span></span><a class="headerlink" href="#coin_test.data.ReturnsDatasetGenerator.DATASET_TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#coin_test.data.CustomDataset" title="coin_test.data.datasets.CustomDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomDataset</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.ReturnsDatasetGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.ReturnsDatasetGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Create returns-based synthetic datasets from the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- A time range for the new datasets</p></li>
+<li><p><strong>seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- A random seed for the generated datasets</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of datasets to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic datasets</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[DATASET_TYPE]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.ReturnsDatasetGenerator.select_data">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">select_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_norm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.ReturnsDatasetGenerator.select_data" title="Permalink to this definition"></a></dt>
+<dd><p>Take a normalized Dataframe and create a synthetic dataset from it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) -- Normalized Dataframe of original data</p></li>
+<li><p><strong>starting_price</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- The first open price for the data</p></li>
+<li><p><strong>num_rows</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of rows in the dataset</p></li>
+<li><p><strong>rng</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code>) -- A numpy random number generator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic dataset</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.SamplingDatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">SamplingDatasetGenerator</span></span><a class="headerlink" href="#coin_test.data.SamplingDatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>ABC for sampling dataset generators.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.SamplingDatasetGenerator.create_index">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.SamplingDatasetGenerator.create_index" title="Permalink to this definition"></a></dt>
+<dd><p>Create a PeriodIndex given a start time, timedelta, and frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">PeriodIndex</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.SamplingDatasetGenerator.normalize_row_data">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_row_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.SamplingDatasetGenerator.normalize_row_data" title="Permalink to this definition"></a></dt>
+<dd><p>Normalize the row data so that it can be sampled with returns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.SamplingDatasetGenerator.unnormalize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unnormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">synthetic_df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.SamplingDatasetGenerator.unnormalize" title="Permalink to this definition"></a></dt>
+<dd><p>Take a normalized Dataframe and unnormalize it.</p>
+<p>Essentially, convert columns from representing percentage increases
+to actual prices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>synthetic_df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) -- Normalized Dataframe</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The unnormalized Dataframe</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.StitchedChunkDatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">StitchedChunkDatasetGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.StitchedChunkDatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Synthetic Dataset Generator with chunks of data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.StitchedChunkDatasetGenerator.DATASET_TYPE">
+<span class="sig-name descname"><span class="pre">DATASET_TYPE</span></span><a class="headerlink" href="#coin_test.data.StitchedChunkDatasetGenerator.DATASET_TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#coin_test.data.CustomDataset" title="coin_test.data.datasets.CustomDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomDataset</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.StitchedChunkDatasetGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.StitchedChunkDatasetGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Create chunk-based synthetic datasets from the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- A time range for the new datasets</p></li>
+<li><p><strong>seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- A random seed for the generated datasets</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of datasets to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic datasets</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[DATASET_TYPE]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.StitchedChunkDatasetGenerator.select_data">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">select_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_norm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.StitchedChunkDatasetGenerator.select_data" title="Permalink to this definition"></a></dt>
+<dd><p>Take a normalized Dataframe and create a synthetic dataset from it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) -- Normalized Dataframe of original data</p></li>
+<li><p><strong>starting_price</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- The first open price for the data</p></li>
+<li><p><strong>num_rows</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of rows in the dataset</p></li>
+<li><p><strong>chunk_size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The amount of rows to combine in each chunk</p></li>
+<li><p><strong>rng</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code>) -- A numpy random number generator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic dataset</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.data.</span></span><span class="sig-name descname"><span class="pre">WindowStepDatasetGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Windows of data as separate datasets.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator.DATASET_TYPE">
+<span class="sig-name descname"><span class="pre">DATASET_TYPE</span></span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator.DATASET_TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#coin_test.data.CustomDataset" title="coin_test.data.datasets.CustomDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomDataset</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator.calc_window_length">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_window_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator.calc_window_length" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the number of rows in each window of length timedelta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator.extract_windows">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extract_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator.extract_windows" title="Permalink to this definition"></a></dt>
+<dd><p>Take a DataFrame and create windows from it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_total</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) -- Entire original DataFrame</p></li>
+<li><p><strong>freq</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- The frequency of the DataFrame PeriodIndex</p></li>
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- The length in time per window</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of windows</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The windows</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[pd.DataFrame]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timedelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Create uniformly distributed window+step datasets.</p>
+<p>Given a length of time for each dataset, along with a number of
+datasets to create, make new datasets of a given length that are
+equally spaced from each other, creating overlapping datasets
+if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timedelta</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>) -- A time range for the new datasets</p></li>
+<li><p><strong>seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- Irrelevant for this implementation</p></li>
+<li><p><strong>n</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- The number of datasets to generate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The synthetic datasets</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[DATASET_TYPE]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.data.WindowStepDatasetGenerator.make_slices">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.data.WindowStepDatasetGenerator.make_slices" title="Permalink to this definition"></a></dt>
+<dd><p>Given the total dataset length and window length, make slices for the df.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">slice</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-coin_test.backtest">
+<span id="coin-test-backtest"></span><h2>coin_test.backtest<a class="headerlink" href="#module-coin_test.backtest" title="Permalink to this heading"></a></h2>
+<p>Backtesting module of the coin-test library.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.BacktestResults">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">BacktestResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_portfolio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage_calculator_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee_calculator_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.BacktestResults" title="Permalink to this definition"></a></dt>
+<dd><p>Record the results of a backtest.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.BacktestResults.create_date_price_df">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_date_price_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.BacktestResults.create_date_price_df" title="Permalink to this definition"></a></dt>
+<dd><p>Create a TimeSeries dataframe for portfolio value over time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.BacktestResults.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.BacktestResults.load" title="Permalink to this definition"></a></dt>
+<dd><p>Load BacktestResults from disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fp</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- filepath to pickle file to load from</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>BacktestResults stored at the location</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.backtest.BacktestResults" title="coin_test.backtest.BacktestResults">BacktestResults</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> -- raises ValueError if the specified file path is not a file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.BacktestResults.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.BacktestResults.save" title="Permalink to this definition"></a></dt>
+<dd><p>Save to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Path to save to.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.BacktestResults.value_from_portfolio">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_from_portfolio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.BacktestResults.value_from_portfolio" title="Permalink to this definition"></a></dt>
+<dd><p>Get the monetary value of a portfolio.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.ConstantSlippage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">ConstantSlippage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.ConstantSlippage" title="Permalink to this definition"></a></dt>
+<dd><p>A Constant slippage Calculator.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.ConstantTransactionFeeCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">ConstantTransactionFeeCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.ConstantTransactionFeeCalculator" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate Constant the transactions fees for a trade.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.GaussianSlippage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">GaussianSlippage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_bp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_dev_bp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.GaussianSlippage" title="Permalink to this definition"></a></dt>
+<dd><p>A Constant slippage Calculator.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.LimitTradeRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">LimitTradeRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.LimitTradeRequest" title="Permalink to this definition"></a></dt>
+<dd><p>A TradeRequest implementation for limit orders.</p>
+<p>If buying, buy when the current price is less than the limit price.
+If selling, sell when the current price is greater than the limit price.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.LimitTradeRequest.should_execute">
+<span class="sig-name descname"><span class="pre">should_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">price</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.LimitTradeRequest.should_execute" title="Permalink to this definition"></a></dt>
+<dd><p>Execute when the limit price condition is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.MarketTradeRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">MarketTradeRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.MarketTradeRequest" title="Permalink to this definition"></a></dt>
+<dd><p>A TradeRequest implementation for market (GTC) orders.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.MarketTradeRequest.build_trade">
+<span class="sig-name descname"><span class="pre">build_trade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_asset_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage_calculator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee_calculator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.MarketTradeRequest.build_trade" title="Permalink to this definition"></a></dt>
+<dd><p>Build Trade that represents a TradeRequest for a MarketTradeRequest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current_asset_price</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>]) -- Current price data from composer</p></li>
+<li><p><strong>slippage_calculator</strong> (<a class="reference internal" href="#coin_test.backtest.SlippageCalculator" title="coin_test.backtest.market.SlippageCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SlippageCalculator</span></code></a>) -- Slippage Calculator implementation</p></li>
+<li><p><strong>transaction_fee_calculator</strong> (<a class="reference internal" href="#coin_test.backtest.TransactionFeeCalculator" title="coin_test.backtest.market.TransactionFeeCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionFeeCalculator</span></code></a>) -- TransactionFeeCalculator implementation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#coin_test.backtest.Trade" title="coin_test.backtest.trade.Trade"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trade</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Trade that the TradeRequest represents</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.MarketTradeRequest.should_execute">
+<span class="sig-name descname"><span class="pre">should_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">price</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.MarketTradeRequest.should_execute" title="Permalink to this definition"></a></dt>
+<dd><p>A MarketTrade object should always execute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.Portfolio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">Portfolio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_currency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Portfolio" title="Permalink to this definition"></a></dt>
+<dd><p>Manage a portfolio.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.Portfolio.adjust">
+<span class="sig-name descname"><span class="pre">adjust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trade</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Portfolio.adjust" title="Permalink to this definition"></a></dt>
+<dd><p>Adjust the portfolio after a given Trade is performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>trade</strong> (<a class="reference internal" href="#coin_test.backtest.Trade" title="coin_test.backtest.trade.Trade"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trade</span></code></a>) -- The Trade object that is completed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new adjusted portfolio or None if insufficient Money</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.backtest.Portfolio" title="coin_test.backtest.Portfolio">Portfolio</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.Portfolio.available_assets">
+<span class="sig-name descname"><span class="pre">available_assets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Portfolio.available_assets" title="Permalink to this definition"></a></dt>
+<dd><p>Return the available assets for a given ticker in a portfolio.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>asset</strong> (<a class="reference internal" href="#coin_test.util.Ticker" title="coin_test.util.ticker.Ticker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ticker</span></code></a>) -- The desired ticker</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The amount of money available for the given ticker</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.util.Money" title="coin_test.util.Money">Money</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> -- If the ticker is not in the portfolio</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.Simulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_portfolio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage_calculator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee_calculator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn_on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Simulator" title="Permalink to this definition"></a></dt>
+<dd><p>Manage the simulation of a backtest.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.Simulator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Simulator.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.backtest.BacktestResults" title="coin_test.backtest.backtest_results.BacktestResults"><code class="xref py py-class docutils literal notranslate"><span class="pre">BacktestResults</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.Simulator.run_strategies">
+<span class="sig-name descname"><span class="pre">run_strategies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schedule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portfolio</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Simulator.run_strategies" title="Permalink to this definition"></a></dt>
+<dd><p>Create TradeRequests for a given timestamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>schedule</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#coin_test.backtest.Strategy" title="coin_test.backtest.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">croniter</span></code>]]) -- List of strategies indicating their next run time</p></li>
+<li><p><strong>time</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>) -- Current timestamp used to determine which strategies should run</p></li>
+<li><p><strong>portfolio</strong> (<a class="reference internal" href="#coin_test.backtest.Portfolio" title="coin_test.backtest.portfolio.Portfolio"><code class="xref py py-class docutils literal notranslate"><span class="pre">Portfolio</span></code></a>) -- Current Portfolio at given timestamp</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> -- If a strategy raises an error and warn_on_error is False</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#coin_test.backtest.TradeRequest" title="coin_test.backtest.trade_request.TradeRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">TradeRequest</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of TradeRequests to handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.SlippageCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">SlippageCalculator</span></span><a class="headerlink" href="#coin_test.backtest.SlippageCalculator" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the slippage of an asset.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.StopLimitTradeRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">StopLimitTradeRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_limit_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.StopLimitTradeRequest" title="Permalink to this definition"></a></dt>
+<dd><p>A TradeRequest implementation for stop limit orders.</p>
+<p>If buying, buy when the current price is greater than the limit price.
+If selling, sell when the current price is less than the limit price.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.StopLimitTradeRequest.should_execute">
+<span class="sig-name descname"><span class="pre">should_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">price</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.StopLimitTradeRequest.should_execute" title="Permalink to this definition"></a></dt>
+<dd><p>Execute when the stop limit price condition is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.Strategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">Strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schedule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Strategy" title="Permalink to this definition"></a></dt>
+<dd><p>Strategy generates TradeRequests.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.Trade">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">Trade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.Trade" title="Permalink to this definition"></a></dt>
+<dd><p>Store the details of a trade.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.TradeRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">TradeRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.TradeRequest" title="Permalink to this definition"></a></dt>
+<dd><p>Request a trade with given specifications.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.TradeRequest.build_trade">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_trade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_asset_price</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage_calculator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee_calculator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.TradeRequest.build_trade" title="Permalink to this definition"></a></dt>
+<dd><p>Build Trade that represents a TradeRequest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current_asset_price</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>]) -- Current price data from composer</p></li>
+<li><p><strong>slippage_calculator</strong> (<a class="reference internal" href="#coin_test.backtest.SlippageCalculator" title="coin_test.backtest.market.SlippageCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SlippageCalculator</span></code></a>) -- Slippage Calculator implementation</p></li>
+<li><p><strong>transaction_fee_calculator</strong> (<a class="reference internal" href="#coin_test.backtest.TransactionFeeCalculator" title="coin_test.backtest.market.TransactionFeeCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionFeeCalculator</span></code></a>) -- TransactionFeeCalculator implementation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#coin_test.backtest.Trade" title="coin_test.backtest.trade.Trade"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trade</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Trade that the TradeRequest represents</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.backtest.TradeRequest.should_execute">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">should_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">price</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.backtest.TradeRequest.should_execute" title="Permalink to this definition"></a></dt>
+<dd><p>Determine if a trade can execute given the current price.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>price</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- The current price of the asset</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the trade can execute</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.backtest.TransactionFeeCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.backtest.</span></span><span class="sig-name descname"><span class="pre">TransactionFeeCalculator</span></span><a class="headerlink" href="#coin_test.backtest.TransactionFeeCalculator" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the transactions fees for a trade.</p>
+</dd></dl>
+
+</section>
+<section id="module-coin_test.util">
+<span id="coin-test-util"></span><h2>coin_test.util<a class="headerlink" href="#module-coin_test.util" title="Permalink to this heading"></a></h2>
+<p>Initialize utilities for the coin-test package.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.util.AssetPair">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.util.</span></span><span class="sig-name descname"><span class="pre">AssetPair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coin_test.util.Ticker" title="coin_test.util.ticker.Ticker"><span class="pre">Ticker</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">currency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coin_test.util.Ticker" title="coin_test.util.ticker.Ticker"><span class="pre">Ticker</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.AssetPair" title="Permalink to this definition"></a></dt>
+<dd><p>Pair of tickers that can be traded.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.util.AssetPair.asset">
+<span class="sig-name descname"><span class="pre">asset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.util.Ticker" title="coin_test.util.ticker.Ticker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ticker</span></code></a></em><a class="headerlink" href="#coin_test.util.AssetPair.asset" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="coin_test.util.AssetPair.currency">
+<span class="sig-name descname"><span class="pre">currency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#coin_test.util.Ticker" title="coin_test.util.ticker.Ticker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ticker</span></code></a></em><a class="headerlink" href="#coin_test.util.AssetPair.currency" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coin_test.util.AssetPair.from_str">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">currency_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.AssetPair.from_str" title="Permalink to this definition"></a></dt>
+<dd><p>Create an AssetPair from strings that represent tickers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#coin_test.util.AssetPair" title="coin_test.util.ticker.AssetPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssetPair</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.util.Money">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.util.</span></span><span class="sig-name descname"><span class="pre">Money</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ticker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.Money" title="Permalink to this definition"></a></dt>
+<dd><p>Store a quantity of a given currency.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.util.Side">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.util.</span></span><span class="sig-name descname"><span class="pre">Side</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.Side" title="Permalink to this definition"></a></dt>
+<dd><p>The side for a trade.</p>
+<p>BUY, SELL</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.util.Ticker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.util.</span></span><span class="sig-name descname"><span class="pre">Ticker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.Ticker" title="Permalink to this definition"></a></dt>
+<dd><p>Represent an asset.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coin_test.util.TradeType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coin_test.util.</span></span><span class="sig-name descname"><span class="pre">TradeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.util.TradeType" title="Permalink to this definition"></a></dt>
+<dd><p>The type of trade being performed.</p>
+<p>Currently the only option is MARKET</p>
+</dd></dl>
+
+</section>
+<section id="module-coin_test.analysis">
+<span id="coin-test-analysis"></span><h2>coin_test.analysis<a class="headerlink" href="#module-coin_test.analysis" title="Permalink to this heading"></a></h2>
+<p>Analysis module of the coin-test library.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="coin_test.analysis.build_datapane">
+<span class="sig-prename descclassname"><span class="pre">coin_test.analysis.</span></span><span class="sig-name descname"><span class="pre">build_datapane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coin_test.analysis.build_datapane" title="Permalink to this definition"></a></dt>
+<dd><p>Build Datapane from large set of results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<a class="reference internal" href="#coin_test.backtest.BacktestResults" title="coin_test.backtest.backtest_results.BacktestResults"><code class="xref py py-class docutils literal notranslate"><span class="pre">BacktestResults</span></code></a>]) -- List of BacktestResults.</p></li>
+<li><p><strong>output_dir</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Directory to save report and assets to. Defaults to local directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="userguide/report.html" class="btn btn-neutral float-left" title="4. Report" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Olin SCOPE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
