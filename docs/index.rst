@@ -3,8 +3,8 @@
 ..    You can adapt this file completely to your liking, but it should at least
 ..    contain the root `toctree` directive.
 
-Welcome to coin-test's documentation!
-=====================================
+Welcome to coin-test's documentation
+====================================
 
 .. toctree::
    :caption: Getting Started
@@ -21,7 +21,6 @@ Welcome to coin-test's documentation!
    :hidden:
 
    userguide/data
-   userguide/datagen
    userguide/strategies
    userguide/backtest
    userguide/report
