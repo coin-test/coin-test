@@ -29,13 +29,14 @@ from coin_test.data import BinanceDataset, FillProcessor, GarchDatasetGenerator
 from coin_test.util import AssetPair, Money, Side
 ```
 
-Then define the assets to trade and your starting portfolio.
+Then, define the assets to trade and your starting portfolio.
 ```python
 # Define assets traded and an initial portfolio
 eth, usdt = eth_usdt = AssetPair.from_str("ETH", "USDT")
 portfolio = Portfolio(base_currency=usdt, assets={eth: Money(eth, 0), usdt: Money(usdt, 10000)})
 ```
-Then, import daily historical data from Binance for the backtest and fill gaps.
+
+Next, import daily historical data from Binance for the backtest and fill gaps.
 ```python
 # Download the last 150 days of data
 freq ='d'
@@ -43,7 +44,7 @@ dataset = BinanceDataset("ETH/USDT Daily Data", eth_usdt, freq=freq, start=dt.da
 dataset.process([FillProcessor(freq)])
 ```
 
-Next we wish to generate synthetic data to allow backtesting on a variety of future market conditions.
+Now we wish to generate synthetic data to allow backtesting on a variety of future market conditions.
 The existing data is split into a train/test split and then fed to a GARCH statistical model to generate new data.
 ```python
 # Split the data into train test split
@@ -54,12 +55,13 @@ datasets = GarchDatasetGenerator(train).generate(timedelta=pd.Timedelta(days=90)
 datasets = [[d] for d in datasets] # Package the datasets for backtesting
 ```
 
-Strategies are stored in classes as shown below. Each strategy
-should have a schedule, which is a cron string representing
-when this strategy is run, a lookback, which is how much
-data is accessed in the strategy, and a `__call__` method
-which returns a list of TradeRequest objects, which represent
-trades the strategy wants to make.
+To implement a custom strategy, extend the `Strategy` class. Each strategy should have 
+* a schedule, which is a cron string representing
+when this strategy is run
+* a lookback, which is how much data is accessed in the strategy
+* a `__call__` method, which returns a list of TradeRequest objects representing trades the strategy wants to make.
+
+A code example for implementing `MACD_discrete_days` strategy is shown below. 
 
 ```python
 class MACD_discrete_days(Strategy):
@@ -100,9 +102,8 @@ class MACD_discrete_days(Strategy):
         else:
             return []
 ```
-To run the backtest, create a portfolio with starting values of
-assets and call the `run` method. This package supports multiple strategies,
-and further customization, see our user guide and docs for more advanced features. 
+
+To run the backtest, create a portfolio with starting values of assets and call the `run` method. This package supports testing multiple strategies at once. See our [user guide in docs](https://coin-test.github.io/coin-test/) for more advanced features and customization options.
 
 ```python
 # Package the strategies before backtesting
