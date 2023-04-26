@@ -6,7 +6,7 @@
 [![Version](https://img.shields.io/pypi/v/coin-test)](https://pypi.org/project/coin-test/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coin-test)](https://pypi.org/project/coin-test/)
 
-Coin-test is a backtesting library designed for cryptocurrency trading. It supports trading strategies across multiple currencies and advanced configurations of tests, including cron-based scheduled execution of strategies, synthetic data generation, slippage modeling, and trading fees.
+Coin-test is a backtesting library designed for cryptocurrency trading. It supports trading strategies across multiple currencies and advanced configurations of tests, including cron-based scheduled execution of strategies, synthetic data generation, slippage modeling, and trading fees. ***View example analysis [here.](https://coin-test.github.io/analysis-demo/)***
 
 ## Quick Start
 
@@ -109,3 +109,5 @@ strategies = [[MACD_discrete_days(eth_usdt)]]
 # Run the backtest and generate the report
 results = coin_test.run(datasets, strategies, portfolio, backtest_length=pd.Timedelta(days=90), n_parallel=8)
 ```
+
+**[Check out the report genreated by this example](https://coin-test.github.io/analysis-demo/)**
