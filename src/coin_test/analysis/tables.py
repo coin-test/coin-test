@@ -5,7 +5,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from .graphs import _get_strategy_results
+from .utils import get_strategy_results
 from ..backtest import BacktestResults
 
 
@@ -135,7 +135,7 @@ class SummaryTearSheet(DataframeGeneratorMultiple):
             DataFrame: DataFrame of summary metrics. Columns are metrics and
                 rows are strategies.
         """
-        strategy_results = _get_strategy_results(backtest_results_list)
+        strategy_results = get_strategy_results(backtest_results_list)
         summary_metrics = {}
         for strategy, results in strategy_results.items():
             tear_sheet = TearSheet.create(results)
