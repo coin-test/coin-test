@@ -11,8 +11,8 @@ Welcome to coin-test's documentation!
    :hidden:
    :maxdepth: 3
 
-   installing
    gettingstarted
+   installing
 
 .. toctree::
    :maxdepth: 3
