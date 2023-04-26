@@ -17,61 +17,47 @@ The parameter setting is fairly straightforward. The block below shows a demo st
 
 .. code-block:: python
 
-class Demo(Strategy):
+    class Demo(Strategy):
 
-    def __init__(self, asset_pair) -> None:
-
-        """Initialize a Demo strategy."""
-
-        super().__init__(name="Demo", asset_pairs=[asset_pair], schedule="0 9 * * *", lookback=dt.timedelta(days=3),)
+        def __init__(self, asset_pair) -> None:
+            """Initialize a Demo strategy."""
+            super().__init__(name="Demo", asset_pairs=[asset_pair], schedule="0 9 * * *", lookback=dt.timedelta(days=3),)
 
 The ``def __call__(self, time, portfolio, lookback_data):`` function must be implemented on all strategies to determine strategy behavior. This is the core of the strategy and where the complicated logic goes. The strategy should make use of the `lookback` data. This lookback is a Pandas Dataframe containing OHLC data.  Accessing the first(oldest) date in the lookback for Close data is shown below.
 
 .. code-block:: python
 
-lookback_data[asset_pair]["Close"].iloc[0]
+    lookback_data[asset_pair]["Close"].iloc[0]
 
 The output of the ``__call__`` function should always be a list of ``TradeRequest``. An empty list indicates no trades. The creation of a ``TradeRequest`` is accomplished as shown below. This is a Buy request to buy the asset with 90% of the available base currency.
 
 .. code-block:: python
 
-MarketTradeRequest(asset_pair, Side.BUY, notional=portfolio.available_assets(base_ticker).qty * .9)
+    MarketTradeRequest(asset_pair, Side.BUY, notional=portfolio.available_assets(base_ticker).qty * .9)
 
 Stitching all of these pieces togethers creates a strategy. A simple strategy that Buys/Sells based on if the data has trended up or down over the lookback is shown below.
 
 .. code-block:: python
 
-class Demo(Strategy):
+    class Demo(Strategy):
 
-    def __init__(self, asset_pair) -> None:
-
-        """Initialize a Demo strategy."""
-
-        super().__init__(name="Demo", asset_pairs=[asset_pair], schedule="0 9 * * *", lookback=dt.timedelta(days=3),)
-
-        self.perc = 0.5
+        def __init__(self, asset_pair) -> None:
+            """Initialize a Demo strategy."""
+            super().__init__(name="Demo", asset_pairs=[asset_pair], schedule="0 9 * * *", lookback=dt.timedelta(days=3),)
+            self.perc = 0.5
 
 
+        def __call__(self, time, portfolio, lookback_data):
 
-    def __call__(self, time, portfolio, lookback_data):
+            """Execute test strategy."""
+            asset_ticker, base_ticker = asset_pair = self.asset_pairs[0]
+            lookback = lookback_data[asset_pair]["Close"]
 
-        """Execute test strategy."""
-
-        asset_ticker, base_ticker = asset_pair = self.asset_pairs[0]
-
-        lookback = lookback_data[asset_pair]["Close"]
-
-
-
-        # If the asset has gone up in price BUY
-
-        if (lookback.iloc[-2] - lookback.iloc[0]) > 0:
-
-            return [MarketTradeRequest(asset_pair, Side.BUY, notional=portfolio.available_assets(base_ticker).qty * self.perc,)]
-
-        else: # the asset has gone down SELL
-
-            return [MarketTradeRequest(asset_pair, Side.SELL, qty=portfolio.available_assets(asset_ticker).qty * self.perc,)]
+            # If the asset has gone up in price BUY
+            if (lookback.iloc[-2] - lookback.iloc[0]) > 0:
+                return [MarketTradeRequest(asset_pair, Side.BUY, notional=portfolio.available_assets(base_ticker).qty * self.perc,)]
+            else: # the asset has gone down SELL
+                return [MarketTradeRequest(asset_pair, Side.SELL, qty=portfolio.available_assets(asset_ticker).qty * self.perc,)]
 
 Gotchas
 -------
