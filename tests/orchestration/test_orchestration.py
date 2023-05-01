@@ -409,7 +409,7 @@ def test_run(mocker: MockerFixture) -> None:
         portfolio,
         length,
         n_parallel,
-        output_folder,
+        os.path.join(output_folder, "backtest_results"),
     )
 
     assert results == mock_results
@@ -430,7 +430,11 @@ def test_run_from_save(mocker: MockerFixture) -> None:
     mocker.patch("coin_test.orchestration.orchestration._load")
     orc._load.return_value = mock_results
 
-    results = orc.run(build_from_saved_results=saved_results_folder)
+    output_dir = Mock()
+
+    results = orc.run(
+        build_from_saved_results=saved_results_folder, output_dir=output_dir
+    )
 
     assert results == mock_results
     orc._load.assert_called_once_with(saved_results_folder)
@@ -527,7 +531,7 @@ def test_run_defaults(mocker: MockerFixture) -> None:
         portfolio,
         length,
         n_parallel,
-        output_folder,
+        os.path.join(output_folder, "backtest_results"),
     )
 
     assert results == mock_results

@@ -118,7 +118,7 @@ def _gen_multiprocessed(
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
     n_parallel: int,
-    output_folder: str | None = None,
+    output_dir: str | None = None,
 ) -> list[BacktestResults]:
     """Run multiprocessed backtests."""
     main_to_worker = Queue()
@@ -159,7 +159,7 @@ def _gen_multiprocessed(
         if isinstance(child_ret, Exception):
             raise child_ret
         i, result = child_ret
-        _save(result, output_folder, i)
+        _save(result, output_dir, i)
         results.append(result)
         main_to_worker.put(msg)
 
@@ -176,7 +176,7 @@ def _gen_serial(
     tx_calculator: TransactionFeeCalculator,
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
-    output_folder: str | None = None,
+    output_dir: str | None = None,
 ) -> list[BacktestResults]:
     """Run serial backtests."""
     print("Starting backtests...")
@@ -191,7 +191,7 @@ def _gen_serial(
             starting_portfolio,
             backtest_length,
         )
-        _save(result, output_folder, i)
+        _save(result, output_dir, i)
         results.append(result)
     return results
 
@@ -204,7 +204,7 @@ def _gen_results(
     starting_portfolio: Portfolio,
     backtest_length: pd.Timedelta | pd.DateOffset,
     n_parallel: int,
-    output_folder: str | None = None,
+    output_dir: str | None = None,
 ) -> list[BacktestResults]:
     """Run backtests."""
     if n_parallel > 1:
@@ -216,7 +216,7 @@ def _gen_results(
             starting_portfolio,
             backtest_length,
             n_parallel,
-            output_folder,
+            output_dir,
         )
     else:
         return _gen_serial(
@@ -226,7 +226,7 @@ def _gen_results(
             tx_calculator,
             starting_portfolio,
             backtest_length,
-            output_folder,
+            output_dir,
         )
 
 
@@ -236,7 +236,7 @@ def run(
     starting_portfolio: Portfolio | None = None,
     backtest_length: pd.Timedelta | None = None,
     n_parallel: int = 1,
-    output_folder: str | None = None,
+    output_dir: str | None = None,
     slippage_calculator: SlippageCalculator | None = None,
     tx_calculator: TransactionFeeCalculator | None = None,
     build_from_saved_results: None | str = None,
@@ -252,7 +252,7 @@ def run(
         starting_portfolio: Starting portfolio to use in simulations.
         backtest_length: Length of each backtest.
         n_parallel: Number of parallel simulations to run.
-        output_folder: Folder to save backtest results to. If None, results are
+        output_dir: Folder to save backtest results to. If None, results are
             not saved to disk.
         slippage_calculator: Slippage calc to use in simulations. Defaults to Constant
         tx_calculator: Transaction calc to use in simulations. Defaults to Constant_tx
@@ -270,7 +270,6 @@ def run(
             f"Building analysis from saved results from: {build_from_saved_results}"
         )
         results = _load(build_from_saved_results)
-
     else:
         if (
             all_datasets is None
@@ -290,8 +289,11 @@ def run(
             tx_calculator = ConstantTransactionFeeCalculator()
             logger.info("Backtesting with ConstantTransactionFeeCalculator tx fees.")
 
-        if output_folder is None:
+        results_output_dir = None
+        if output_dir is None:
             logger.info("BacktestResults are not being saved.")
+        else:
+            results_output_dir = os.path.join(output_dir, "backtest_results")
         results = _gen_results(
             all_datasets,
             all_strategies,
@@ -300,7 +302,7 @@ def run(
             starting_portfolio,
             backtest_length,
             n_parallel,
-            output_folder,
+            results_output_dir,
         )
 
     build_datapane(results)

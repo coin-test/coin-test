@@ -26,7 +26,7 @@ def _build_backtest_results(
     backtest_results.starting_portfolio = Mock()
     backtest_results.slippage_type = Mock()
     backtest_results.strategy_names = ["Mockery"]
-    backtest_results.strategy_lookbacks = [pd.Timedelta(days=14)]
+    backtest_results.strategy_lookbacks = [pd.Timedelta(hours=1)]
 
     backtest_results.data_dict = {
         MetaData(AssetPair(Ticker("a"), Ticker("b")), "H"): asset_data
@@ -40,7 +40,7 @@ def _build_backtest_results(
 
     sim_data_df = pd.read_csv(portfolio_data, dtype=dtypes)  # type: ignore
     index = pd.DatetimeIndex(
-        pd.to_datetime(sim_data_df["Open Time"], unit="s", utc=True),
+        pd.to_datetime(sim_data_df["Open Time"], unit="s"),
     )
     sim_data_df.set_index(index, inplace=True)
     sim_data_df.drop(columns=["Open Time"], inplace=True)
